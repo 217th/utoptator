@@ -93,7 +93,7 @@ class Candidate:
 #   acceptTask - включить задачу в состав-кандидат
 #   getScore - получить суммарную ценность состав-кандидата
 #   printCandidate - напечатать список вошедших задач
-#	execScenario - заполнить кандидата с помощью набора сценариев
+#   tryToPutSingleTask - попытаться включить одну задачу
 
     def hl(self, funcName, color = "g"):
         silentMode = False
@@ -134,7 +134,23 @@ class Candidate:
             print("Задача %s - тип %s - приоритет %s - оценки %s" % (task.taskId, task.taskType, task.taskPrior, task.taskEstimates))
         print("Осталось часов: %s" % (self.hoursUnused))
 
-
+    def tryToPutSingleTask(self, task, silentMode = "silent"):
+        taskIsFit = [x <= y for x, y in zip(task.taskEstimates, self.hoursUnused)]
+        if False in taskIsFit:
+            task.declineFromCand(self.candId, "babble")
+            if silentMode is not "silent":
+                print(self.hl("Candidate.tryToPutSingleTask", "y") + "--- Задача %s. Есть часов: %s, надо часов: %s" % (task.taskId, self.hoursUnused, task.taskEstimates))
+                print(self.hl("Candidate.tryToPutSingleTask", "y") + "Задача %s не влезает" % task.taskId)
+        else:
+            if silentMode is not "silent":
+                print(self.hl("Candidate.tryToPutSingleTask", "y") + "--- Задача %s. Есть часов: %s, надо часов: %s." % (task.taskId, self.hoursUnused, task.taskEstimates))
+                print(self.hl("Candidate.tryToPutSingleTask", "y") + "Задача %s влезает" % task.taskId)
+            self.hoursUnused = [y - x for x, y in zip(task.taskEstimates, self.hoursUnused)]
+            if silentMode is not "silent":
+                print(self.hl("Candidate.tryToPutSingleTask", "y") + "Остаётся часов:", self.hoursUnused)
+        # Используем "двойную запись". Информация о включении заносится как в объект класса Task, так и в объект класса Candidate. Непонятно пока, зачем
+            self.acceptTask(task, "babble")
+            task.acceptToCand(self.candId, "babble")
 
 '''
 

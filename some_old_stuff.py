@@ -31,27 +31,7 @@ def GetCandidate(tasksArray, hourQuotas, ruleSet = "simple", silentMode = True):
         else:
             print("Нет задач с приоритетом 0.")    
     return ([]) '''
-    
 
-
-''' На удаление после перехода на класс Task
-
-def GetTaskScore(taskPrior, taskEstimates):
-    if taskPrior == 0:          # Немедленный
-        taskScore = 5.0 * sum(taskEstimates)
-    elif taskPrior == 1:        # Очень высокий
-        taskScore = 2.0 * sum(taskEstimates)        
-    elif taskPrior == 2:        # Высокий
-        taskScore = 1.0 * sum(taskEstimates)
-    elif taskPrior == 3:        # Высокенький
-        taskScore = 0.7 * sum(taskEstimates)
-    elif taskPrior == 4:        # Нормальный
-        taskScore = 0.4 * sum(taskEstimates)
-    elif taskPrior == 5:        # Низкий
-        taskScore = 0.2 * sum(taskEstimates)
-    else:
-        taskScore = 0.4 * sum(taskEstimates)
-    return (taskScore) '''
     
     
 ''' 
@@ -145,28 +125,7 @@ for groupMeta in tasksGroupsMeta:
 		
 		
 '''
-scenarios = []
-for group in taskGroups:
-    if group.importance == "h":
-        scenarios.append(utptr_classes.Scenario(group.groupId, "direct", "babble"))
-        for i in range(0, len(group.tasks)):
-            scenarios.append(utptr_classes.Scenario(group.groupId, "minus1", "babble", i))
-        for i in range(0, len(group.tasks)):
-            scenarios.append(utptr_classes.Scenario(group.groupId, "minus1+shuffle", "babble", i))
-        for i in range(0, len(group.tasks)):
-            scenarios.append(utptr_classes.Scenario(group.groupId, "shuffle", "babble", i))
-    if group.importance == "n":
-        scenarios.append(utptr_classes.Scenario(group.groupId, "direct", "babble"))
-        for i in range(0, len(group.tasks)):
-            scenarios.append(utptr_classes.Scenario(group.groupId, "minus1+shuffle", "babble", i))
-        for i in range(0, len(group.tasks)):
-            scenarios.append(utptr_classes.Scenario(group.groupId, "shuffle", "babble", i))
-    if group.importance == "l":
-        scenarios.append(utptr_classes.Scenario(group.groupId, "direct", "babble"))
-        for i in range(0, len(group.tasks)):
-            scenarios.append(utptr_classes.Scenario(group.groupId, "shuffle", "babble", i))
-		
-print("------------------------------\nВсего сценариев: %s" % (len(scenarios)))
+
 
 macroScen = []
 macroScenarios = []
