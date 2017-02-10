@@ -27,7 +27,7 @@ originalTasksArray = CreateTasksArray(20, silentMode)
 
 taskGroups = []
 i = 0
-'''
+
 for groupMeta in [     # ТЕСТОВЫЙ НАБОР МЕТАДАННЫХ
     [[2], [0], "h"], [[2], [1], "h"], [[2], [2], "n"],
     [[3, 1], [5], "l"]
@@ -47,7 +47,7 @@ for groupMeta in [  # ПРОМЫШЛЕННЫЙ НАБОР МЕТАДАННЫХ
 ]:
     taskGroups.append(utptr_classes.Group(i, groupMeta[0], groupMeta[1], groupMeta[2], "bubble"))
     i += 1
-
+'''
 for group in taskGroups:
     group.fillAndSort(originalTasksArray, "babble")
 
@@ -57,7 +57,6 @@ candId = 0  # Потом нужно будет где-то сделать при
 firstCand = utptr_classes.Candidate(candId, listLabourHoursQuotas)
 
 def tryToPutSingleTask(task, silentMode = "silent"):
-
     taskIsFit = [x <= y for x, y in zip(task.taskEstimates, firstCand.hoursUnused)]
     if False in taskIsFit:
         task.declineFromCand(firstCand.candId, "babble")
@@ -68,37 +67,18 @@ def tryToPutSingleTask(task, silentMode = "silent"):
         if silentMode is not "silent":
             print("--- Задача %s. Есть часов: %s, надо часов: %s." % (task.taskId, firstCand.hoursUnused, task.taskEstimates))
             print("Задача %s влезает" % task.taskId)
-        firstCand.tasks.append(task)
         firstCand.hoursUnused = [y - x for x, y in zip(task.taskEstimates, firstCand.hoursUnused)]
         if silentMode is not "silent":
             print("Остаётся часов:", firstCand.hoursUnused)
         # Используем "двойную запись". Информация о включении заносится как в объект класса Task, так и в объект класса Candidate. Непонятно пока, зачем
-		firstCand.acceptTask(task, "babble")
+        firstCand.acceptTask(task, "babble")
         task.acceptToCand(firstCand.candId, "babble")
 
-'''
 for group in taskGroups:
     if group.tasks:
         for task in group.tasks:
-			tryToPutSingleTask(task, "bubble")
+            tryToPutSingleTask(task, "bubble")
 
-			taskIsFit = [x <= y for x, y in zip(task.taskEstimates, firstCand.hoursUnused)]
-            if False in taskIsFit:
-                print("--- Задача %s. Есть часов: %s, надо часов: %s" % (
-                    task.taskId, firstCand.hoursUnused, task.taskEstimates))
-                print("Задача %s не влезает" % task.taskId)
-                task.declineFromCand(firstCand.candId, "babble")
-            else:
-                print("--- Задача %s. Есть часов: %s, надо часов: %s." % (
-                    task.taskId, firstCand.hoursUnused, task.taskEstimates))
-                print("Задача %s влезает" % task.taskId)
-                firstCand.hoursUnused = [y - x for x, y in zip(task.taskEstimates, firstCand.hoursUnused)]
-                print("Остаётся часов:", firstCand.hoursUnused)
-                # Используем "двойную запись". Информация о включении заносится как в объект класса Task, так и в объект класса Candidate. Непонятно пока, зачем
-                firstCand.acceptTask(task, "babble")
-                task.acceptToCand(firstCand.candId, "babble")
-'''
-				
 # Анализируем список кандидатов и определяем диагнозы для групп
 if firstCand.tasks:
     firstCand.printCandidate()
