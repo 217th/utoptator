@@ -56,43 +56,32 @@ for group in taskGroups:
 candId = 0  # Потом нужно будет где-то сделать приращение
 firstCand = utptr_classes.Candidate(candId, listLabourHoursQuotas)
 
-def tryToPutTask(task):
-    taskIsFit = [x <= y for x, y in zip(task.taskEstimates, bufferCand.hoursUnused)]
+def tryToPutSingleTask(task, silentMode = "silent"):
+    taskIsFit = [x <= y for x, y in zip(task.taskEstimates, firstCand.hoursUnused)]
     if False in taskIsFit:
-        if silentMode is not "silent":
-            print(self.hl("Scenario.execute", "g") + "--- Задача %s. Есть часов: %s, надо часов: %s" % (task.taskId, bufferCand.hoursUnused, task.taskEstimates))
-            print(self.hl("Scenario.execute", "g") + "Задача %s не влезает" % task.taskId)
-    else:
-        if silentMode is not "silent":
-            print(self.hl("Scenario.execute", "g") + "--- Задача %s. Есть часов: %s, надо часов: %s." % (task.taskId, bufferCand.hoursUnused, task.taskEstimates))
-            print(self.hl("Scenario.execute", "g") + "Задача %s влезает" % task.taskId)
-        bufferCand.tasks.append(task)
-        bufferCand.hoursUnused = [y - x for x, y in zip(task.taskEstimates, bufferCand.hoursUnused)]
-        if silentMode is not "silent":
-            print(self.hl("Scenario.execute", "g") + "Остаётся часов:", bufferCand.hoursUnused)
+		task.declineFromCand(firstCand.candId, "babble")
+		if silentMode is not "silent":
+            print("--- Задача %s. Есть часов: %s, надо часов: %s" % (task.taskId, firstCand.hoursUnused, task.taskEstimates))
+            print("Задача %s не влезает" % task.taskId)
+	else:
+		if silentMode is not "silent":
+			print("--- Задача %s. Есть часов: %s, надо часов: %s." % (task.taskId, firstCand.hoursUnused, task.taskEstimates))
+			print("Задача %s влезает" % task.taskId)
+		firstCand.tasks.append(task)
+		firstCand.hoursUnused = [y - x for x, y in zip(task.taskEstimates, firstCand.hoursUnused)]
+		if silentMode is not "silent":
+			print("Остаётся часов:", firstCand.hoursUnused)
+		# Используем "двойную запись". Информация о включении заносится как в объект класса Task, так и в объект класса Candidate. Непонятно пока, зачем
+		firstCand.acceptTask(task, "babble")
+		task.acceptToCand(firstCand.candId, "babble")
 
-    if self.scenType == "direct":
-            if self.group.tasks:
-                for task in self.group.tasks:
-                    tryToPutTask(task)
-
-        elif self.scenType == "minus1":
-            if silentMode is not "silent": 
-                print(self.hl("Group.execScenario", "g") + "Minus1")
-            
-        elif self.scenType == "minus1+shuffle":
-            if silentMode is not "silent": 
-                print(self.hl("Group.execScenario", "g") + "Minus1+shuffle")
-
-        elif self.scenType == "shuffle":
-            if silentMode is not "silent": 
-                print(self.hl("Group.execScenario", "g") + "Shuffle")
-
-
+'''
 for group in taskGroups:
     if group.tasks:
         for task in group.tasks:
-            taskIsFit = [x <= y for x, y in zip(task.taskEstimates, firstCand.hoursUnused)]
+			tryToPutSingleTask(task, "bubble")
+
+			taskIsFit = [x <= y for x, y in zip(task.taskEstimates, firstCand.hoursUnused)]
             if False in taskIsFit:
                 print("--- Задача %s. Есть часов: %s, надо часов: %s" % (
                     task.taskId, firstCand.hoursUnused, task.taskEstimates))
@@ -107,7 +96,8 @@ for group in taskGroups:
                 # Используем "двойную запись". Информация о включении заносится как в объект класса Task, так и в объект класса Candidate. Непонятно пока, зачем
                 firstCand.acceptTask(task, "babble")
                 task.acceptToCand(firstCand.candId, "babble")
-
+'''
+				
 # Анализируем список кандидатов и определяем диагнозы для групп
 if firstCand.tasks:
     firstCand.printCandidate()
