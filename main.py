@@ -57,23 +57,24 @@ candId = 0  # Потом нужно будет где-то сделать при
 firstCand = utptr_classes.Candidate(candId, listLabourHoursQuotas)
 
 def tryToPutSingleTask(task, silentMode = "silent"):
+
     taskIsFit = [x <= y for x, y in zip(task.taskEstimates, firstCand.hoursUnused)]
     if False in taskIsFit:
-		task.declineFromCand(firstCand.candId, "babble")
-		if silentMode is not "silent":
+        task.declineFromCand(firstCand.candId, "babble")
+        if silentMode is not "silent":
             print("--- Задача %s. Есть часов: %s, надо часов: %s" % (task.taskId, firstCand.hoursUnused, task.taskEstimates))
             print("Задача %s не влезает" % task.taskId)
-	else:
-		if silentMode is not "silent":
-			print("--- Задача %s. Есть часов: %s, надо часов: %s." % (task.taskId, firstCand.hoursUnused, task.taskEstimates))
-			print("Задача %s влезает" % task.taskId)
-		firstCand.tasks.append(task)
-		firstCand.hoursUnused = [y - x for x, y in zip(task.taskEstimates, firstCand.hoursUnused)]
-		if silentMode is not "silent":
-			print("Остаётся часов:", firstCand.hoursUnused)
-		# Используем "двойную запись". Информация о включении заносится как в объект класса Task, так и в объект класса Candidate. Непонятно пока, зачем
+    else:
+        if silentMode is not "silent":
+            print("--- Задача %s. Есть часов: %s, надо часов: %s." % (task.taskId, firstCand.hoursUnused, task.taskEstimates))
+            print("Задача %s влезает" % task.taskId)
+        firstCand.tasks.append(task)
+        firstCand.hoursUnused = [y - x for x, y in zip(task.taskEstimates, firstCand.hoursUnused)]
+        if silentMode is not "silent":
+            print("Остаётся часов:", firstCand.hoursUnused)
+        # Используем "двойную запись". Информация о включении заносится как в объект класса Task, так и в объект класса Candidate. Непонятно пока, зачем
 		firstCand.acceptTask(task, "babble")
-		task.acceptToCand(firstCand.candId, "babble")
+        task.acceptToCand(firstCand.candId, "babble")
 
 '''
 for group in taskGroups:
