@@ -4,13 +4,14 @@ from filloriginaldata import (CreateDictDevs, CreateDictPriors, CreateDictTaskTy
 import copy
 import utptr_classes
 
-silentMode = "babble" # Режим тишины. "silent" - сокращённые сообщения. "babble" - полные сообщения
+silentMode = "babble"  # Режим тишины. "silent" - сокращённые сообщения. "babble" - полные сообщения
 dictTaskTypes = CreateDictTaskTypes()
 dictPriors = CreateDictPriors()
 dictDevs = CreateDictDevs(silentMode)
 listLabourHoursQuotas = CreateArrayLabourQuotas(list(dictDevs.keys()), silentMode)
 
-def CreateTasksArray(n, silentMode = "silent"):
+
+def CreateTasksArray(n, silentMode="silent"):
     tasksArray = []
     if n > 0:
         for i in range(n):
@@ -20,7 +21,9 @@ def CreateTasksArray(n, silentMode = "silent"):
         print('Попросили слишком мало задач. Массив задач не заполнен.')
     return (tasksArray)
 
+	
 originalTasksArray = CreateTasksArray(20, silentMode)
+
 
 taskGroups = []
 i = 0
@@ -33,15 +36,17 @@ for groupMeta in [     # ТЕСТОВЫЙ НАБОР МЕТАДАННЫХ
         i += 1
 
 '''
-for groupMeta in [     # ПРОМЫШЛЕННЫЙ НАБОР МЕТАДАННЫХ
-    [[2], [0], "h"], [[2], [1], "h"], [[2], [2], "h"], [[2], [3], "n"], [[2], [4], "n"], [[2], [5], "l"],     # Вся поддержка
-    [[3], [0], "h"], [[1], [0], "h"], [[3], [1], "h"], [[1], [1], "h"], [[3], [2], "h"], [[1], [2], "h"],     # Немедл., оч. выс., выс. - сначала ошибки, потом разработка
-    [[3, 1], [3], "n"],        # Высокенький - ошибки и разработка в одной группе
-    [[3, 1], [4], "n"],        # Нормальный - ошибки и разработка в одной группе
-    [[3, 1], [5], "l"]         # Низкий - ошибки и разрбаботка в одной группе
-    ]:
-        taskGroups.append(utptr_classes.Group(i, groupMeta[0], groupMeta[1], groupMeta[2], "bubble"))
-        i += 1
+for groupMeta in [  # ПРОМЫШЛЕННЫЙ НАБОР МЕТАДАННЫХ
+    [[2], [0], "h"], [[2], [1], "h"], [[2], [2], "h"], [[2], [3], "n"], [[2], [4], "n"], [[2], [5], "l"],
+    # Вся поддержка
+    [[3], [0], "h"], [[1], [0], "h"], [[3], [1], "h"], [[1], [1], "h"], [[3], [2], "h"], [[1], [2], "h"],
+    # Немедл., оч. выс., выс. - сначала ошибки, потом разработка
+    [[3, 1], [3], "n"],  # Высокенький - ошибки и разработка в одной группе
+    [[3, 1], [4], "n"],  # Нормальный - ошибки и разработка в одной группе
+    [[3, 1], [5], "l"]  # Низкий - ошибки и разрбаботка в одной группе
+]:
+    taskGroups.append(utptr_classes.Group(i, groupMeta[0], groupMeta[1], groupMeta[2], "bubble"))
+    i += 1
 
 for group in taskGroups:
     group.fillAndSort(originalTasksArray, "babble")
@@ -51,20 +56,55 @@ for group in taskGroups:
 candId = 0  # Потом нужно будет где-то сделать приращение
 firstCand = utptr_classes.Candidate(candId, listLabourHoursQuotas)
 
+def tryToPutTask(task):
+    taskIsFit = [x <= y for x, y in zip(task.taskEstimates, bufferCand.hoursUnused)]
+    if False in taskIsFit:
+        if silentMode is not "silent":
+            print(self.hl("Scenario.execute", "g") + "--- Задача %s. Есть часов: %s, надо часов: %s" % (task.taskId, bufferCand.hoursUnused, task.taskEstimates))
+            print(self.hl("Scenario.execute", "g") + "Задача %s не влезает" % task.taskId)
+    else:
+        if silentMode is not "silent":
+            print(self.hl("Scenario.execute", "g") + "--- Задача %s. Есть часов: %s, надо часов: %s." % (task.taskId, bufferCand.hoursUnused, task.taskEstimates))
+            print(self.hl("Scenario.execute", "g") + "Задача %s влезает" % task.taskId)
+        bufferCand.tasks.append(task)
+        bufferCand.hoursUnused = [y - x for x, y in zip(task.taskEstimates, bufferCand.hoursUnused)]
+        if silentMode is not "silent":
+            print(self.hl("Scenario.execute", "g") + "Остаётся часов:", bufferCand.hoursUnused)
+
+    if self.scenType == "direct":
+            if self.group.tasks:
+                for task in self.group.tasks:
+                    tryToPutTask(task)
+
+        elif self.scenType == "minus1":
+            if silentMode is not "silent": 
+                print(self.hl("Group.execScenario", "g") + "Minus1")
+            
+        elif self.scenType == "minus1+shuffle":
+            if silentMode is not "silent": 
+                print(self.hl("Group.execScenario", "g") + "Minus1+shuffle")
+
+        elif self.scenType == "shuffle":
+            if silentMode is not "silent": 
+                print(self.hl("Group.execScenario", "g") + "Shuffle")
+
+
 for group in taskGroups:
     if group.tasks:
         for task in group.tasks:
             taskIsFit = [x <= y for x, y in zip(task.taskEstimates, firstCand.hoursUnused)]
             if False in taskIsFit:
-                print("--- Задача %s. Есть часов: %s, надо часов: %s" % (task.taskId, firstCand.hoursUnused, task.taskEstimates))
+                print("--- Задача %s. Есть часов: %s, надо часов: %s" % (
+                    task.taskId, firstCand.hoursUnused, task.taskEstimates))
                 print("Задача %s не влезает" % task.taskId)
                 task.declineFromCand(firstCand.candId, "babble")
             else:
-                print("--- Задача %s. Есть часов: %s, надо часов: %s." % (task.taskId, firstCand.hoursUnused, task.taskEstimates))
+                print("--- Задача %s. Есть часов: %s, надо часов: %s." % (
+                    task.taskId, firstCand.hoursUnused, task.taskEstimates))
                 print("Задача %s влезает" % task.taskId)
                 firstCand.hoursUnused = [y - x for x, y in zip(task.taskEstimates, firstCand.hoursUnused)]
                 print("Остаётся часов:", firstCand.hoursUnused)
-# Используем "двойную запись". Информация о включении заносится как в объект класса Task, так и в объект класса Candidate. Непонятно пока, зачем
+                # Используем "двойную запись". Информация о включении заносится как в объект класса Task, так и в объект класса Candidate. Непонятно пока, зачем
                 firstCand.acceptTask(task, "babble")
                 task.acceptToCand(firstCand.candId, "babble")
 
@@ -76,45 +116,36 @@ if firstCand.tasks:
         amountIn = 0
         amountOut = 0
         for task in originalTasksArray:
-            if (task.taskType in group.meta[0]) and (task.taskPrior in group.meta[1]) and (firstCand.candId in task.candsTaskIncluded):
+            if (task.taskType in group.meta[0]) and (task.taskPrior in group.meta[1]) and (
+                        firstCand.candId in task.candsTaskIncluded):
                 amountIn += 1
-            elif (task.taskType in group.meta[0]) and (task.taskPrior in group.meta[1]) and (firstCand.candId in task.candsTaskExcluded):
-                amountOut += 1            
+            elif (task.taskType in group.meta[0]) and (task.taskPrior in group.meta[1]) and (
+                        firstCand.candId in task.candsTaskExcluded):
+                amountOut += 1
         if (amountIn == 0) and (amountOut == 0):
             firstCand.diagnosisForGroup[group.groupId] = "noTasksInGroup"
         elif (amountIn > 0) and (amountOut == 0):
             firstCand.diagnosisForGroup[group.groupId] = "completelyIn"
         elif (amountIn == 0) and (amountOut > 0):
             firstCand.diagnosisForGroup[group.groupId] = "completelyOut"
-        elif (amountIn > 0) and (amountOut > 0):
-            firstCand.diagnosisForGroup[group.groupId] = "partiallyIn"
-        print("Группа № %s. +%s -%s" % (group.groupId, amountIn, amountOut))
-    print("------------------------------")
-    print("Диагнозы групп: %s" % (firstCand.diagnosisForGroup))
-
-'''
-# Дальше необходимо прописать действия для разных диагнозов в зависимости от важности групп. Наверное, при этом нужно вынести какие-то предшествующие действия в функции или методы, чтобы потом было проще оборачивать их в циклы
-	for group in taskGroups:
-		if group.importance == "h":
-			if firstCand.diagnosisForGroup[group.groupId] == "completelyIn":
-				# Копировать задачи из первого кандидата
-				pass
-			elif firstCand.diagnosisForGroup[group.groupId] == "completelyOut":
-				# N проходов с принудительным исключением одной задачи
-				# N случайных проходов 
-				pass
-			elif firstCand.diagnosisForGroup[group.groupId] == "partiallyIn":
-				# N проходов с принудительным исключением одной задачи
-				# N случайных проходов 
-				pass
-		if group.importance == "n":
-			pass
-		if group.importance == "l":
-			pass
-
+        elif (amountIn > 0) and (amountOut > 0) and (amountIn / (amountIn + amountOut) >= 0.9):
+            firstCand.diagnosisForGroup[group.groupId] = "partiallyIn09"
+        elif (amountIn > 0) and (amountOut > 0) and (amountIn / (amountIn + amountOut) >= 0.6) and (amountIn / (amountIn + amountOut) < 0.9):
+            firstCand.diagnosisForGroup[group.groupId] = "partiallyIn06"
+        elif (amountIn > 0) and (amountOut > 0) and (amountIn / (amountIn + amountOut) >= 0.3) and (amountIn / (amountIn + amountOut) < 0.6):
+            firstCand.diagnosisForGroup[group.groupId] = "partiallyIn03"
+        elif (amountIn > 0) and (amountOut > 0) and (amountIn / (amountIn + amountOut) > 0) and (amountIn / (amountIn + amountOut) < 0.3):
+            firstCand.diagnosisForGroup[group.groupId] = "partiallyIn00"
+        print("Группа № %s. +%s -%s %s" % (group.groupId, amountIn, amountOut, firstCand.diagnosisForGroup[group.groupId]))
 else:
     print("Ни одной задачи не вошло в состав-кандидат.")
-'''
+
+# Создание шаблонных сценариев
+
+
+
+# Дальше необходимо прописать действия для разных диагнозов в зависимости от важности групп. Наверное, при этом нужно вынести какие-то предшествующие действия в функции или методы, чтобы потом было проще оборачивать их в циклы
+
 
 
 '''	

@@ -93,7 +93,7 @@ class Candidate:
 #   acceptTask - включить задачу в состав-кандидат
 #   getScore - получить суммарную ценность состав-кандидата
 #   printCandidate - напечатать список вошедших задач
-#   fillWithMacroScen - заполнение кандидата путём применения макросценария
+#	execScenario - заполнить кандидата с помощью набора сценариев
 
     def hl(self, funcName, color = "g"):
         silentMode = False
@@ -133,12 +133,7 @@ class Candidate:
         for task in self.tasks:
             print("Задача %s - тип %s - приоритет %s - оценки %s" % (task.taskId, task.taskType, task.taskPrior, task.taskEstimates))
         print("Осталось часов: %s" % (self.hoursUnused))
-        
-    def execMacroScen(self, macroScen, silentMode = "silent"):
-        if silentMode is not "silent":
-            print("------------------------------\n" + self.hl("Candidate.execMacroScen", "g") + "Запуск макросценария\n%s - %s - %s\n%s - %s - %s\n%s - %s - %s" % (macroScen[0].group.groupId, macroScen[0].group.meta, macroScen[0].scenType, macroScen[1].group.groupId, macroScen[1].group.meta, macroScen[1].scenType, macroScen[2].group.groupId, macroScen[2].group.meta, macroScen[2].scenType))
-        
-        
+     
         
         
 '''        
@@ -234,8 +229,6 @@ class Group:
             if silentMode is not "silent":
                 print(self.hl("Group.fillAndSort", "g") + "Группа пуста")
 
-
-
 class Scenario:
 # Атрибуты класса Scenario:
 #	targetGroupId - id группы задач (int), к которой применим сценарий
@@ -310,10 +303,4 @@ class Scenario:
                 print(self.hl("Group.execScenario", "g") + "Shuffle")
 
         return(bufferCand)
-'''
-
-'''
-class MacroScenario:
-# Атрибуты класса MacroScenario:
-#	scens - list of Scenario
 '''
