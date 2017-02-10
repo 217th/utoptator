@@ -83,7 +83,7 @@ class Candidate:
 #   candId - уникальный id кандидата (int, генерируется инкрементально)
 #   tasks - список задач, включённых в кандидат (list of Tasks)
 #   hoursUnused - количество нераспределённых часов (list)
-#   (???) diagnosisForGroup - словарь: {groupId : diagnosis}, возможные диагнозы:
+#   diagnosisForGroup - словарь: {groupId : diagnosis}, возможные диагнозы:
 #       - "noTasksInGroup"
 #       - "completelyIn"
 #       - "completelyOut"
@@ -93,7 +93,6 @@ class Candidate:
 #   acceptTask - включить задачу в состав-кандидат
 #   getScore - получить суммарную ценность состав-кандидата
 #   printCandidate - напечатать список вошедших задач
-#   (???) saveDiagnosisForGroup - сохранить диагноз для группы
 #   fillWithMacroScen - заполнение кандидата путём применения макросценария
 
     def hl(self, funcName, color = "g"):
@@ -134,9 +133,6 @@ class Candidate:
         for task in self.tasks:
             print("Задача %s - тип %s - приоритет %s - оценки %s" % (task.taskId, task.taskType, task.taskPrior, task.taskEstimates))
         print("Осталось часов: %s" % (self.hoursUnused))
-        
-    def saveDiagnosisForGroup(self, groupId, diagnosis):
-        self.diagnosisForGroup[groupId] = diagnosis
         
     def execMacroScen(self, macroScen, silentMode = "silent"):
         if silentMode is not "silent":

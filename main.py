@@ -24,7 +24,7 @@ originalTasksArray = CreateTasksArray(20, silentMode)
 
 taskGroups = []
 i = 0
-
+'''
 for groupMeta in [     # ТЕСТОВЫЙ НАБОР МЕТАДАННЫХ
     [[2], [0], "h"], [[2], [1], "h"], [[2], [2], "n"],
     [[3, 1], [5], "l"]
@@ -42,7 +42,7 @@ for groupMeta in [     # ПРОМЫШЛЕННЫЙ НАБОР МЕТАДАННЫ�
     ]:
         taskGroups.append(utptr_classes.Group(i, groupMeta[0], groupMeta[1], groupMeta[2], "bubble"))
         i += 1
-'''
+
 for group in taskGroups:
     group.fillAndSort(originalTasksArray, "babble")
 
@@ -81,51 +81,45 @@ if firstCand.tasks:
             elif (task.taskType in group.meta[0]) and (task.taskPrior in group.meta[1]) and (firstCand.candId in task.candsTaskExcluded):
                 amountOut += 1            
         if (amountIn == 0) and (amountOut == 0):
-            firstCand.saveDiagnosisForGroup(group.groupId, "noTasksInGroup")
+            firstCand.diagnosisForGroup[group.groupId] = "noTasksInGroup"
         elif (amountIn > 0) and (amountOut == 0):
-            firstCand.saveDiagnosisForGroup(group.groupId, "completelyIn")
+            firstCand.diagnosisForGroup[group.groupId] = "completelyIn"
         elif (amountIn == 0) and (amountOut > 0):
-            firstCand.saveDiagnosisForGroup(group.groupId, "completelyOut")
+            firstCand.diagnosisForGroup[group.groupId] = "completelyOut"
         elif (amountIn > 0) and (amountOut > 0):
-            firstCand.saveDiagnosisForGroup(group.groupId, "partiallyIn")
+            firstCand.diagnosisForGroup[group.groupId] = "partiallyIn"
         print("Группа № %s. +%s -%s" % (group.groupId, amountIn, amountOut))
     print("------------------------------")
     print("Диагнозы групп: %s" % (firstCand.diagnosisForGroup))
 
+'''
 # Дальше необходимо прописать действия для разных диагнозов в зависимости от важности групп. Наверное, при этом нужно вынести какие-то предшествующие действия в функции или методы, чтобы потом было проще оборачивать их в циклы
-
-for group in taskGroups:
-    if group.importance == "h":
-        if firstCand.diagnosisForGroup[group.groupId] == "completelyIn":
-            # Копировать задачи из первого кандидата
-            pass
-        elif firstCand.diagnosisForGroup[group.groupId] == "completelyOut":
-            # N проходов с принудительным исключением одной задачи
-            # N случайных проходов 
-            pass
-        elif firstCand.diagnosisForGroup[group.groupId] == "partiallyIn":
-            # N проходов с принудительным исключением одной задачи
-            # N случайных проходов 
-            pass
-    if group.importance == "n":
-        pass
-    if group.importance == "l":
-        pass
-
+	for group in taskGroups:
+		if group.importance == "h":
+			if firstCand.diagnosisForGroup[group.groupId] == "completelyIn":
+				# Копировать задачи из первого кандидата
+				pass
+			elif firstCand.diagnosisForGroup[group.groupId] == "completelyOut":
+				# N проходов с принудительным исключением одной задачи
+				# N случайных проходов 
+				pass
+			elif firstCand.diagnosisForGroup[group.groupId] == "partiallyIn":
+				# N проходов с принудительным исключением одной задачи
+				# N случайных проходов 
+				pass
+		if group.importance == "n":
+			pass
+		if group.importance == "l":
+			pass
 
 else:
     print("Ни одной задачи не вошло в состав-кандидат.")
-    '''	
+'''
 
 
-
-
-
-
+'''	
 # Нужно будет после того, как буферный кандидат присвоится реальному кандидату, всем задачам прописать этого кандидата как содержащего/несодержащего
 #    task.declineFromCand(bufferCand.candId, "babble")
 #                    firstCand.acceptTask(task, "babble")
 #                    task.acceptToCand(firstCand.candId, "babble")
-
-
 '''
