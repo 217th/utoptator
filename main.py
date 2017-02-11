@@ -106,6 +106,44 @@ if firstCand.tasks:
                 amountIn / (amountIn + amountOut) < 0.3):
             firstCand.diagnosisForGroup[group] = "partiallyIn00"
         print("Группа № %s %s. +%s -%s %s" % (group.groupId, group.importance, amountIn, amountOut, firstCand.diagnosisForGroup[group]))
+
+# Случай, если ВСЕ задачи вошли
+    if (("completelyOut" not in firstCand.diagnosisForGroup.values())
+        and ("partiallyIn09" not in firstCand.diagnosisForGroup.values())
+        and ("partiallyIn06" not in firstCand.diagnosisForGroup.values())
+        and ("partiallyIn03" not in firstCand.diagnosisForGroup.values())
+        and ("partiallyIn00" not in firstCand.diagnosisForGroup.values())):
+        print("Все задачи вошли")
+# Нужно что-то делать в ситуации, когда ВСЕ ЗАДАЧИ ВОШЛИ
+
+# Случай, если первые сколько-то групп вошли
+    elif ("completelyIn" in firstCand.diagnosisForGroup.values()):
+        tempGroupList = []
+        for group in taskGroups:
+            if firstCand.diagnosisForGroup[group] == "completelyIn":
+                tempGroupList.append(group)
+            else:
+                break
+        if tempGroupList:
+            candId += 1
+            nextCand = utptr_classes.Candidate(candId, listLabourHoursQuotas)
+            for group in tempGroupList:
+                for task in group.tasks:
+                    nextCand.tryToPutSingleTask(task, "buuble")
+
+# Случай, когда первые группы не вошли, нужно пробовать для них альтернативные заполнения
+    else:
+        pass
+
+
+
+
+
+
+
+
+
+
 '''
     def tryToFillCands(listOfPrevFixedTasks, scenType, n):
         candId += 1

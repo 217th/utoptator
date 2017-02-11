@@ -81,7 +81,7 @@ class Task:
 class Candidate:
 # Атрибуты класса Candidate.
 #   candId - уникальный id кандидата (int, генерируется инкрементально)
-#   groups - список групп (включающий задачи), включённых в кандидат (list of Group)
+#   wrapperOfCand - указываем кандидата, состав которого полностью включает данный кандидат
 #   tasks - список задач, включённых в кандидат (list of Tasks)
 #   hoursUnused - количество нераспределённых часов (list)
 #   diagnosisForGroup - словарь: {groupId : diagnosis}, возможные диагнозы:
@@ -113,6 +113,7 @@ class Candidate:
         self.candId = candId
         self.hoursUnused = hoursUnused
         self.tasks = []
+        self.wrapperOfCand = False
         if silentMode is not "silent":
             print(self.hl("Candidate.__init__", "g") + "----- Создан состав-кандидат №", self.candId)
             print(self.hl("Candidate.__init__", "g") + "Начальное количество часов:", self.hoursUnused)
