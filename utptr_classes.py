@@ -81,6 +81,7 @@ class Task:
 class Candidate:
 # Атрибуты класса Candidate.
 #   candId - уникальный id кандидата (int, генерируется инкрементально)
+#   groups - список групп (включающий задачи), включённых в кандидат (list of Group)
 #   tasks - список задач, включённых в кандидат (list of Tasks)
 #   hoursUnused - количество нераспределённых часов (list)
 #   diagnosisForGroup - словарь: {groupId : diagnosis}, возможные диагнозы:
@@ -272,13 +273,13 @@ class Scenario:
             return("\x1b[0;36;44m" + "(" + funcName + "):" + "\x1b[0m" + " ")
         else: return("")
 
-    def __init__(self, targetGroupId, scenType, silentMode = "silent", *taskI):
-        self.targetGroupId = targetGroupId
+    def __init__(self, targetGroup, scenType, silentMode = "silent", *taskI):
+        self.targetGroup = targetGroup
         self.scenType = scenType
         if taskI:
             self.taskI = taskI
         if silentMode is not "silent":
-            print(self.hl("Scenario.__init__", "g") + "Для группы %s - новый сценарий %s" % (self.targetGroupId, self.scenType))
+            print(self.hl("Scenario.__init__", "g") + "Для группы %s - новый сценарий %s" % (self.targetGroup.groupId, self.scenType))
 '''
     def execute(self, hoursUnused, silentMode = "silent"):
         if silentMode is not "silent":
