@@ -89,12 +89,14 @@ class Candidate:
 #       - "completelyIn"
 #       - "completelyOut"
 #       - "partiallyIn"
+#   isComplete - !!! НЕ РЕАЛИЗОВАНО !!! статус того, что кандидат полностью заполнен
 #
 # Методы класса Candidate.
 #   acceptTask - включить задачу в состав-кандидат
 #   getScore - получить суммарную ценность состав-кандидата
 #   printCandidate - напечатать список вошедших задач
 #   tryToPutSingleTask - попытаться включить одну задачу
+#   getCheckSum - расчёт хэша для сравнения кандидатов
 
     def hl(self, funcName, color = "g"):
         silentMode = False
@@ -122,7 +124,7 @@ class Candidate:
     def acceptTask(self, task, silentMode = "silent"):
         self.tasks.append(task)
         if silentMode is not "silent":
-            print(self.hl("Candidate.acceptTask", "g") + "-----\nВ состав-кандидат %s включена задача %s. Всего включено задач %s" %  (self.candId, self.tasks[len(self.tasks)-1].taskId, len(self.tasks)))
+            print(self.hl("Candidate.acceptTask", "g") + "В состав-кандидат %s включена задача %s. Всего включено задач %s" %  (self.candId, self.tasks[len(self.tasks)-1].taskId, len(self.tasks)))
 
     def getScore(self):
         score = 0
@@ -139,7 +141,7 @@ class Candidate:
     def tryToPutSingleTask(self, task, silentMode = "silent"):
         taskIsFit = [x <= y for x, y in zip(task.taskEstimates, self.hoursUnused)]
         if False in taskIsFit:
-            task.declineFromCand(self.candId, "babble")
+            task.declineFromCand(self.candId, silentMode)
             if silentMode is not "silent":
                 print(self.hl("Candidate.tryToPutSingleTask", "y") + "--- Задача %s. Есть часов: %s, надо часов: %s" % (task.taskId, self.hoursUnused, task.taskEstimates))
                 print(self.hl("Candidate.tryToPutSingleTask", "y") + "Задача %s не влезает" % task.taskId)
@@ -151,8 +153,18 @@ class Candidate:
             if silentMode is not "silent":
                 print(self.hl("Candidate.tryToPutSingleTask", "y") + "Остаётся часов:", self.hoursUnused)
         # Используем "двойную запись". Информация о включении заносится как в объект класса Task, так и в объект класса Candidate. Непонятно пока, зачем
-            self.acceptTask(task, "babble")
-            task.acceptToCand(self.candId, "babble")
+            self.acceptTask(task, silentMode)
+            task.acceptToCand(self.candId, silentMode)
+
+    def getCheckSum(self):
+        import copy
+        checkSum = float(0)
+        tasksCopy = copy.deepcopy(self.tasks)
+        tasksCopy.sort(key=lambda x: x.taskId)
+        for task in tasksCopy:
+            checkSum += task.taskId
+            checkSum += task.taskScore
+        return checkSum
 
 '''
 
@@ -205,7 +217,7 @@ class Group:
 # Методы класса Group:
 #   __init__ - в качестве каждого атрибута нужно передавать list
 #   fillAndSort - из переданного массива выбираем задачи с совпадающими метаданными
-
+#   scroll - делаем 0-ю задачу последней
 
     def hl(self, funcName, color = "g"):
         silentMode = False
@@ -246,6 +258,15 @@ class Group:
         else:
             if silentMode is not "silent":
                 print(self.hl("Group.fillAndSort", "g") + "Группа пуста")
+
+    def scroll(self, silentMode = "silent"):
+        if silentMode is not "silent":
+            print(self.hl("Group.scroll", "g") + "Группа %s. Задачу %s переносим в конец." % (self.groupId, self.tasks[0].taskId))
+        firstTask = [self.tasks[0]]
+        restTasks = self.tasks[1:]
+        self.tasks.clear()
+        self.tasks = restTasks + firstTask
+
 
 class Scenario:
 # Атрибуты класса Scenario:
