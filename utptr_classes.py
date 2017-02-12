@@ -89,14 +89,13 @@ class Candidate:
 #       - "completelyIn"
 #       - "completelyOut"
 #       - "partiallyIn"
-#   isComplete - !!! НЕ РЕАЛИЗОВАНО !!! статус того, что кандидат полностью заполнен
+#   isComplete - статус того, что кандидат полностью заполнен
 #
 # Методы класса Candidate.
 #   acceptTask - включить задачу в состав-кандидат
 #   getScore - получить суммарную ценность состав-кандидата
 #   printCandidate - напечатать список вошедших задач
 #   tryToPutSingleTask - попытаться включить одну задачу
-#   getCheckSum - расчёт хэша для сравнения кандидатов
 
     def hl(self, funcName, color = "g"):
         silentMode = False
@@ -116,10 +115,12 @@ class Candidate:
         self.hoursUnused = hoursUnused
         self.tasks = []
         self.wrapperOfCand = False
+        self.isComplete = False
         if silentMode is not "silent":
             print(self.hl("Candidate.__init__", "g") + "----- Создан состав-кандидат №", self.candId)
             print(self.hl("Candidate.__init__", "g") + "Начальное количество часов:", self.hoursUnused)
         self.diagnosisForGroup = {}
+        self.checkSum = 0
 
     def acceptTask(self, task, silentMode = "silent"):
         self.tasks.append(task)
@@ -155,16 +156,9 @@ class Candidate:
         # Используем "двойную запись". Информация о включении заносится как в объект класса Task, так и в объект класса Candidate. Непонятно пока, зачем
             self.acceptTask(task, silentMode)
             task.acceptToCand(self.candId, silentMode)
+            self.checkSum += task.taskId
+            self.checkSum += task.taskScore
 
-    def getCheckSum(self):
-        import copy
-        checkSum = float(0)
-        tasksCopy = copy.deepcopy(self.tasks)
-        tasksCopy.sort(key=lambda x: x.taskId)
-        for task in tasksCopy:
-            checkSum += task.taskId
-            checkSum += task.taskScore
-        return checkSum
 
 '''
 

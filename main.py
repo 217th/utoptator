@@ -73,8 +73,9 @@ for group in taskGroups:
     if group.tasks:
         for task in group.tasks:
             cands[0].tryToPutSingleTask(task, "bubble")
+        cands[0].isComplete = True
 
-# Анализируем список кандидатов и определяем диагнозы для групп
+# Анализируем нулевой список кандидатов и определяем диагнозы для групп
 if cands[0].tasks:
     for group in taskGroups:
         amountIn = 0
@@ -105,6 +106,15 @@ if cands[0].tasks:
             cands[0].diagnosisForGroup[group] = "partiallyIn00"
         print("Группа № %s %s. +%s -%s %s" % (group.groupId, group.importance, amountIn, amountOut, cands[0].diagnosisForGroup[group]))
 
+    def cleanCandsFromClones():
+        for cand in reversed(cands):
+            if cands.index(cand) > 0:
+                for candPrev in cands[0: cands.index(cand)]:
+                    if cand.checkSum == candPrev.checkSum:
+                        print("Дубли: %s, %s = %s, %s" % (cand.candId, cand.checkSum, candPrev.candId, candPrev.checkSum))
+                        cands.pop(cands.index(cand))
+                        break
+
 # Случай, если ВСЕ задачи вошли
     if (("completelyOut" not in cands[0].diagnosisForGroup.values())
         and ("partiallyIn09" not in cands[0].diagnosisForGroup.values())
@@ -128,17 +138,14 @@ if cands[0].tasks:
                     pass
                 else:   # Если группа вошла ЧАСТИЧНО, в ней обязательно более 1 задачи
                     if group.importance == "h":
-                        addedCandIdsList = []
                         for i in range(len(group.tasks)+1):
                             candId += 1
                             cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas))
-                            addedCandIdsList.append(candId)
                             group.scroll("silent")
                             for task in group.tasks:
                                 cands[candId].tryToPutSingleTask(task, "silent")
-                        for addedCandId in reversed(addedCandIdsList):  # Избавляемся от кандидатов-дублей. По крайней мере тех, что имеют соседние id
-                            if cands[addedCandId].getCheckSum() == cands[addedCandId-1].getCheckSum():
-                                cands.pop(addedCandId)
+                        cleanCandsFromClones()
+
 
 # Далее нужно прописать порядок работы с НЕпервыми группами. Такие кандидаты должны наследовать задачи из кандидатов, содержащих задачи из предыдущих групп
 
