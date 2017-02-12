@@ -111,11 +111,11 @@ class Candidate:
                 return("\x1b[0;36;44m" + "(" + funcName + "):" + "\x1b[0m" + " ")
         else: return("")
 
-    def __init__(self, candId, hoursUnused, silentMode = "silent"):
+    def __init__(self, candId, hoursUnused, wrapperOfCand, silentMode = "silent"):
         self.candId = candId
         self.hoursUnused = hoursUnused
         self.tasks = []
-        self.wrapperOfCand = False
+        self.wrapperOfCand = wrapperOfCand
         self.isComplete = False
         self.lastGroupId = False
         if silentMode is not "silent":
@@ -136,7 +136,7 @@ class Candidate:
         return (score)
 
     def printCandidate(self):
-        print("------------------------------\n------------------------------\n------------------------------\n" + self.hl("Candidate.printCandidate", "g") + "\nСостав-кандидат № %s - всего %s задач - ценность %s" % (self.candId, len(self.tasks), round(self.getScore(), 1)))
+        print("------------------------------\n------------------------------\n------------------------------\n" + self.hl("Candidate.printCandidate", "g") + "\nСостав-кандидат № %s - всего %s задач - последняя группа %s - ценность %s" % (self.candId, len(self.tasks), self.lastGroupId, round(self.getScore(), 1)))
         for task in self.tasks:
             print("Задача %s - тип %s - приоритет %s - оценки %s" % (task.taskId, task.taskType, task.taskPrior, task.taskEstimates))
         print("Осталось часов: %s" % (self.hoursUnused))
@@ -161,7 +161,6 @@ class Candidate:
             task.acceptToCand(self.candId, silentMode)
             self.checkSum += task.taskId
             self.checkSum += task.taskScore
-
 
 '''
 

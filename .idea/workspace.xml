@@ -25,8 +25,8 @@
       <file leaf-file-name="main.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="51">
-              <caret line="133" column="22" lean-forward="true" selection-start-line="133" selection-start-column="22" selection-end-line="133" selection-end-column="22" />
+            <state relative-caret-position="340">
+              <caret line="204" column="38" lean-forward="true" selection-start-line="204" selection-start-column="38" selection-end-line="204" selection-end-column="38" />
               <folding>
                 <element signature="e#42#151#0" expanded="true" />
                 <element signature="e#544#828#0" expanded="false" />
@@ -39,11 +39,11 @@
       <file leaf-file-name="utptr_classes.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/utptr_classes.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="205">
-              <caret line="74" column="8" lean-forward="false" selection-start-line="74" selection-start-column="8" selection-end-line="74" selection-end-column="8" />
+            <state relative-caret-position="377">
+              <caret line="249" column="77" lean-forward="true" selection-start-line="249" selection-start-column="77" selection-end-line="249" selection-end-column="77" />
               <folding>
                 <element signature="e#5368#5882#0" expanded="false" />
-                <element signature="e#14025#14515#0" expanded="false" />
+                <element signature="e#14087#14577#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -80,10 +80,15 @@
       <find>deep</find>
       <find>lamb</find>
       <find>sort</find>
+      <find>utptr_classes.Candidate(candId, listLabourHoursQuotas)</find>
+      <find>fill</find>
+      <find>cands[-1:]</find>
     </findStrings>
     <replaceStrings>
       <replace>group</replace>
       <replace>cands[0]</replace>
+      <replace>utptr_classes.Candidate(candId, listLabourHoursQuotas, False, &quot;silent&quot;)</replace>
+      <replace>cands[-1]</replace>
     </replaceStrings>
   </component>
   <component name="Git.Settings">
@@ -482,7 +487,7 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="27" />
+      <option name="time" value="28" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="PythonConfigurationType">
@@ -510,7 +515,7 @@
           <caret line="139" column="0" lean-forward="true" selection-start-line="139" selection-start-column="0" selection-end-line="139" selection-end-column="0" />
           <folding>
             <element signature="e#5368#5882#0" expanded="false" />
-            <element signature="e#14025#14515#0" expanded="false" />
+            <element signature="e#14087#14577#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -541,7 +546,7 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#5368#5882#0" expanded="false" />
-            <element signature="e#14025#14515#0" expanded="false" />
+            <element signature="e#14087#14577#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -580,7 +585,7 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#5368#5882#0" expanded="false" />
-            <element signature="e#14025#14515#0" expanded="false" />
+            <element signature="e#14087#14577#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -619,7 +624,7 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#5368#5882#0" expanded="false" />
-            <element signature="e#14025#14515#0" expanded="false" />
+            <element signature="e#14087#14577#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -678,7 +683,7 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#5368#5882#0" expanded="false" />
-            <element signature="e#14025#14515#0" expanded="false" />
+            <element signature="e#14087#14577#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -743,7 +748,7 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#5368#5882#0" expanded="false" />
-            <element signature="e#14025#14515#0" expanded="false" />
+            <element signature="e#14087#14577#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -800,19 +805,19 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/utptr_classes.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="205">
-          <caret line="74" column="8" lean-forward="false" selection-start-line="74" selection-start-column="8" selection-end-line="74" selection-end-column="8" />
+        <state relative-caret-position="377">
+          <caret line="249" column="77" lean-forward="true" selection-start-line="249" selection-start-column="77" selection-end-line="249" selection-end-column="77" />
           <folding>
             <element signature="e#5368#5882#0" expanded="false" />
-            <element signature="e#14025#14515#0" expanded="false" />
+            <element signature="e#14087#14577#0" expanded="false" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="51">
-          <caret line="133" column="22" lean-forward="true" selection-start-line="133" selection-start-column="22" selection-end-line="133" selection-end-column="22" />
+        <state relative-caret-position="340">
+          <caret line="204" column="38" lean-forward="true" selection-start-line="204" selection-start-column="38" selection-end-line="204" selection-end-column="38" />
           <folding>
             <element signature="e#42#151#0" expanded="true" />
             <element signature="e#544#828#0" expanded="false" />

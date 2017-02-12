@@ -70,7 +70,7 @@ for group in taskGroups:
 '''
 
 candId = 0  # Потом нужно будет где-то сделать приращение
-cands = [utptr_classes.Candidate(candId, listLabourHoursQuotas)]
+cands = [utptr_classes.Candidate(candId, listLabourHoursQuotas, False, "silent")]
 
 for group in taskGroups:
     if group.tasks:
@@ -118,6 +118,15 @@ if cands[0].tasks:
         print("Все задачи вошли")
 # Нужно что-то делать в ситуации, когда ВСЕ ЗАДАЧИ ВОШЛИ
 
+# Случай, если ВСЕ задачи НЕ вошли в кандидат 0
+    if (("completelyIn" not in cands[0].diagnosisForGroup.values())
+            and ("partiallyIn09" not in cands[0].diagnosisForGroup.values())
+            and ("partiallyIn06" not in cands[0].diagnosisForGroup.values())
+            and ("partiallyIn03" not in cands[0].diagnosisForGroup.values())
+            and ("partiallyIn00" not in cands[0].diagnosisForGroup.values())):
+            print("Все задачи НЕ вошли")
+# Нужно что-то делать в ситуации, когда ВСЕ ЗАДАЧИ НЕ ВОШЛИ
+
     else:
 
         def cleanCandsFromClones():
@@ -140,7 +149,7 @@ if cands[0].tasks:
                 pass
             elif cands[0].diagnosisForGroup[group] == "completelyIn":
                 candId += 1
-                cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas))
+                cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas, False, "silent"))
                 for task in group.tasks:
                     cands[candId].tryToPutSingleTask(task, group.groupId, "silent")
                 break
@@ -148,48 +157,93 @@ if cands[0].tasks:
                 if group.importance == "h":
                     for i in range(len(group.tasks) + 1):
                         candId += 1
-                        cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas))
+                        cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas, False, "silent"))
                         group.scroll("silent")
                         for task in group.tasks:
                             cands[candId].tryToPutSingleTask(task, group.groupId, "silent")
                     for i in range(len(group.tasks) * 2):
                         candId += 1
-                        cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas))
+                        cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas, False, "silent"))
                         random.shuffle(group.tasks)
                         for task in group.tasks:
                             cands[candId].tryToPutSingleTask(task, group.groupId, "silent")
                 elif group.importance == "n":
                     for i in range(len(group.tasks) + 1):
                         candId += 1
-                        cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas))
+                        cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas, False, "silent"))
                         group.scroll("silent")
                         for task in group.tasks:
                             cands[candId].tryToPutSingleTask(task, group.groupId, "silent")
                     for i in range(len(group.tasks) + 1):
                         candId += 1
-                        cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas))
+                        cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas, False, "silent"))
                         random.shuffle(group.tasks)
                         for task in group.tasks:
                             cands[candId].tryToPutSingleTask(task, group.groupId, "silent")
                 elif group.importance == "l":
                     for i in range(len(group.tasks) + 1):
                         candId += 1
-                        cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas))
+                        cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas, False, "silent"))
                         random.shuffle(group.tasks)
                         for task in group.tasks:
                             cands[candId].tryToPutSingleTask(task, group.groupId, "silent")
                 cleanCandsFromClones()
                 break
 
+        for basicCand in cands:
+            if basicCand.lastGroupId < len(taskGroups)-1:
+                group = next((x for x in taskGroups if x.groupId == basicCand.lastGroupId+1), None)
+                if group.tasks:
 
-
-
-
-
-
-
-
-
+                    if group.importance == "h":
+                        candId += 1
+                        cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, "silent"))
+                        group.tasks.sort(key=lambda x: x.taskEstimatesSum, reverse=True)
+                        for task in group.tasks:
+                            cands[-1].tryToPutSingleTask(task, group.groupId, "silent")
+                        for i in range(len(group.tasks) + 1):
+                            candId += 1
+                            cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, "silent"))
+                            group.scroll("silent")
+                            for task in group.tasks:
+                                cands[-1].tryToPutSingleTask(task, group.groupId, "silent")
+                        for i in range(len(group.tasks) * 2):
+                            candId += 1
+                            cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, "silent"))
+                            random.shuffle(group.tasks)
+                            for task in group.tasks:
+                                cands[-1].tryToPutSingleTask(task, group.groupId, "silent")
+                    elif group.importance == "n":
+                        candId += 1
+                        cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, "silent"))
+                        group.tasks.sort(key=lambda x: x.taskEstimatesSum, reverse=True)
+                        for task in group.tasks:
+                            cands[-1].tryToPutSingleTask(task, group.groupId, "silent")
+                        for i in range(len(group.tasks) + 1):
+                            candId += 1
+                            cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, "silent"))
+                            group.scroll("silent")
+                        for task in group.tasks:
+                            cands[-1].tryToPutSingleTask(task, group.groupId, "silent")
+                        for i in range(len(group.tasks) + 1):
+                            candId += 1
+                            cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, "silent"))
+                            random.shuffle(group.tasks)
+                            for task in group.tasks:
+                                cands[-1].tryToPutSingleTask(task, group.groupId, "silent")
+                    elif group.importance == "l":
+                        candId += 1
+                        cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, "silent"))
+                        group.tasks.sort(key=lambda x: x.taskEstimatesSum, reverse=True)
+                        for task in group.tasks:
+                            cands[-1].tryToPutSingleTask(task, group.groupId, "silent")
+                        for i in range(len(group.tasks) + 1):
+                            candId += 1
+                            cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, "silent"))
+                            random.shuffle(group.tasks)
+                            for task in group.tasks:
+                                cands[-1].tryToPutSingleTask(task, group.groupId, "silent")
+                    cleanCandsFromClones()
 
 
 # Далее нужно прописать порядок работы с НЕпервыми группами. Такие кандидаты должны наследовать задачи из кандидатов, содержащих задачи из предыдущих групп
@@ -210,7 +264,7 @@ if cands[0].tasks:
                 break
         if tempGroupList:
             candId += 1
-            nextCand = utptr_classes.Candidate(candId, listLabourHoursQuotas)
+            nextCand = utptr_classes.Candidate(candId, listLabourHoursQuotas, False, "silent")
             for group in tempGroupList:
                 for task in group.tasks:
                     nextCand.tryToPutSingleTask(task, "buuble")
@@ -229,7 +283,7 @@ if cands[0].tasks:
 '''
     def tryToFillCands(listOfPrevFixedTasks, scenType, n):
         candId += 1
-        nextCand = utptr_classes.Candidate(candId, listLabourHoursQuotas)
+        nextCand = utptr_classes.Candidate(candId, listLabourHoursQuotas, False, "silent")
 
 
         pass
