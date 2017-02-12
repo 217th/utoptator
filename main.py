@@ -2,6 +2,7 @@
 
 from filloriginaldata import (CreateDictDevs, CreateDictPriors, CreateDictTaskTypes, CreateArrayLabourQuotas)
 import copy
+import random
 import utptr_classes
 
 silentMode = "babble"  # Режим тишины. "silent" - сокращённые сообщения. "babble" - полные сообщения
@@ -50,6 +51,7 @@ for groupMeta in [  # ПРОМЫШЛЕННЫЙ НАБОР МЕТАДАННЫХ
 for group in taskGroups:
     group.fillAndSort(originalTasksArray, "babble")
 
+'''
 # Создание шаблонных сценариев
 scenarios = []
 for group in taskGroups:
@@ -65,6 +67,7 @@ for group in taskGroups:
     if group.importance == "l":
         scenarios.append(utptr_classes.Scenario(group, "direct", "babble"))
         scenarios.append(utptr_classes.Scenario(group, "shuffle", "babble"))
+'''
 
 candId = 0  # Потом нужно будет где-то сделать приращение
 cands = [utptr_classes.Candidate(candId, listLabourHoursQuotas)]
@@ -72,7 +75,7 @@ cands = [utptr_classes.Candidate(candId, listLabourHoursQuotas)]
 for group in taskGroups:
     if group.tasks:
         for task in group.tasks:
-            cands[0].tryToPutSingleTask(task, "bubble")
+            cands[0].tryToPutSingleTask(task, group.groupId, "bubble")
         cands[0].isComplete = True
 
 # Анализируем нулевой список кандидатов и определяем диагнозы для групп
@@ -106,16 +109,7 @@ if cands[0].tasks:
             cands[0].diagnosisForGroup[group] = "partiallyIn00"
         print("Группа № %s %s. +%s -%s %s" % (group.groupId, group.importance, amountIn, amountOut, cands[0].diagnosisForGroup[group]))
 
-    def cleanCandsFromClones():
-        for cand in reversed(cands):
-            if cands.index(cand) > 0:
-                for candPrev in cands[0: cands.index(cand)]:
-                    if cand.checkSum == candPrev.checkSum:
-                        print("Дубли: %s, %s = %s, %s" % (cand.candId, cand.checkSum, candPrev.candId, candPrev.checkSum))
-                        cands.pop(cands.index(cand))
-                        break
-
-# Случай, если ВСЕ задачи вошли
+# Случай, если ВСЕ задачи вошли в кандидат 0
     if (("completelyOut" not in cands[0].diagnosisForGroup.values())
         and ("partiallyIn09" not in cands[0].diagnosisForGroup.values())
         and ("partiallyIn06" not in cands[0].diagnosisForGroup.values())
@@ -125,34 +119,82 @@ if cands[0].tasks:
 # Нужно что-то делать в ситуации, когда ВСЕ ЗАДАЧИ ВОШЛИ
 
     else:
+
+        def cleanCandsFromClones():
+            print("---")
+            for cand in reversed(cands):
+                if cands.index(cand) > 0:
+                    for candPrev in cands[0: cands.index(cand)]:
+                        if cand.checkSum == candPrev.checkSum:
+                            print("Кандидаты-дубли: %s, %s = %s, %s" % (cand.candId, cand.checkSum, candPrev.candId, candPrev.checkSum))
+                            cands.pop(cands.index(cand))
+                            break
+
+# Находим первую группу, которая вошла полностью (чтобы на ней потом строить следующие группы),
+# либо частично (чтобы сделать сколько-то вариантов, а потом на них строить следуюющие группы).
+# Как только найдём и заведём доп. группы, рвём цикл.
         for group in taskGroups:
-            if taskGroups.index(group) == 0:
-                if cands[0].diagnosisForGroup[group] == "completelyIn":
-                    candId += 1
-                    cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas))
-                    for task in group.tasks:
-                        cands[candId].tryToPutSingleTask(task, "silent")
-                elif cands[0].diagnosisForGroup[group] == "noTasksInGroup":
-                    pass
-                elif cands[0].diagnosisForGroup[group] == "completelyOut":
-                    pass
-                else:   # Если группа вошла ЧАСТИЧНО, в ней обязательно более 1 задачи
-                    if group.importance == "h":
-                        for i in range(len(group.tasks)+1):
-                            candId += 1
-                            cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas))
-                            group.scroll("silent")
-                            for task in group.tasks:
-                                cands[candId].tryToPutSingleTask(task, "silent")
-                        cleanCandsFromClones()
+            if cands[0].diagnosisForGroup[group] == "noTasksInGroup":
+                pass
+            elif cands[0].diagnosisForGroup[group] == "completelyOut":
+                pass
+            elif cands[0].diagnosisForGroup[group] == "completelyIn":
+                candId += 1
+                cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas))
+                for task in group.tasks:
+                    cands[candId].tryToPutSingleTask(task, group.groupId, "silent")
+                break
+            else:  # Если группа вошла ЧАСТИЧНО, в ней обязательно более 1 задачи
+                if group.importance == "h":
+                    for i in range(len(group.tasks) + 1):
+                        candId += 1
+                        cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas))
+                        group.scroll("silent")
+                        for task in group.tasks:
+                            cands[candId].tryToPutSingleTask(task, group.groupId, "silent")
+                    for i in range(len(group.tasks) * 2):
+                        candId += 1
+                        cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas))
+                        random.shuffle(group.tasks)
+                        for task in group.tasks:
+                            cands[candId].tryToPutSingleTask(task, group.groupId, "silent")
+                elif group.importance == "n":
+                    for i in range(len(group.tasks) + 1):
+                        candId += 1
+                        cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas))
+                        group.scroll("silent")
+                        for task in group.tasks:
+                            cands[candId].tryToPutSingleTask(task, group.groupId, "silent")
+                    for i in range(len(group.tasks) + 1):
+                        candId += 1
+                        cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas))
+                        random.shuffle(group.tasks)
+                        for task in group.tasks:
+                            cands[candId].tryToPutSingleTask(task, group.groupId, "silent")
+                elif group.importance == "l":
+                    for i in range(len(group.tasks) + 1):
+                        candId += 1
+                        cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas))
+                        random.shuffle(group.tasks)
+                        for task in group.tasks:
+                            cands[candId].tryToPutSingleTask(task, group.groupId, "silent")
+                cleanCandsFromClones()
+                break
+
+
+
+
+
+
+
+
+
+
 
 
 # Далее нужно прописать порядок работы с НЕпервыми группами. Такие кандидаты должны наследовать задачи из кандидатов, содержащих задачи из предыдущих групп
 
-# Нужно прописать разные альтернативные сценарии в зависимости от важности группы
 
-            elif taskGroups.index(group) > 0:
-                pass
 
     for cand in cands:
         cand.printCandidate()

@@ -90,6 +90,7 @@ class Candidate:
 #       - "completelyOut"
 #       - "partiallyIn"
 #   isComplete - статус того, что кандидат полностью заполнен
+#   lastGroupId - идентификатор последней группы, из которой ПЫТАЛИСЬ включить задачи (могли и не включить)
 #
 # Методы класса Candidate.
 #   acceptTask - включить задачу в состав-кандидат
@@ -116,6 +117,7 @@ class Candidate:
         self.tasks = []
         self.wrapperOfCand = False
         self.isComplete = False
+        self.lastGroupId = False
         if silentMode is not "silent":
             print(self.hl("Candidate.__init__", "g") + "----- Создан состав-кандидат №", self.candId)
             print(self.hl("Candidate.__init__", "g") + "Начальное количество часов:", self.hoursUnused)
@@ -139,7 +141,8 @@ class Candidate:
             print("Задача %s - тип %s - приоритет %s - оценки %s" % (task.taskId, task.taskType, task.taskPrior, task.taskEstimates))
         print("Осталось часов: %s" % (self.hoursUnused))
 
-    def tryToPutSingleTask(self, task, silentMode = "silent"):
+    def tryToPutSingleTask(self, task, groupId, silentMode = "silent"):
+        self.lastGroupId = groupId
         taskIsFit = [x <= y for x, y in zip(task.taskEstimates, self.hoursUnused)]
         if False in taskIsFit:
             task.declineFromCand(self.candId, silentMode)

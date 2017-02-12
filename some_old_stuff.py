@@ -1,3 +1,20 @@
+"""
+Код для проверки, есть ли в списке объектов класса хотя бы один элемент с заданным значением атрибута
+
+class Mmm:
+    def __init__(self, nnn):
+        self.nnn = nnn
+
+n = []
+for i in range(10):
+    n.append(Mmm(i*2))
+    print("Элемент %s, значение %s" % (i, n[i].nnn))
+
+print(any(x.nnn <4 for x in n))
+
+"""
+
+
 '''
 def GetCandidate(tasksArray, hourQuotas, ruleSet = "simple", silentMode = True):
     if ruleSet == "simple":     # Простейший вариант последовательного включения
