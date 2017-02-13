@@ -27,13 +27,14 @@ originalTasksArray = CreateTasksArray(100, silentMode)
 
 taskGroups = []
 i = 0
-'''
+
 for groupMeta in [     # ТЕСТОВЫЙ НАБОР МЕТАДАННЫХ
     [[2], [0], "h"], [[2], [1], "h"], [[2], [2], "n"],
     [[3, 1], [5], "l"]
     ]:
         taskGroups.append(utptr_classes.Group(i, groupMeta[0], groupMeta[1], groupMeta[2]))
         i += 1
+del groupMeta
 
 '''
 for groupMeta in [  # ПРОМЫШЛЕННЫЙ НАБОР МЕТАДАННЫХ
@@ -47,7 +48,7 @@ for groupMeta in [  # ПРОМЫШЛЕННЫЙ НАБОР МЕТАДАННЫХ
 ]:
     taskGroups.append(utptr_classes.Group(i, groupMeta[0], groupMeta[1], groupMeta[2], "bubble"))
     i += 1
-
+'''
 for group in taskGroups:
     group.fillAndSort(originalTasksArray, "babble")
 
@@ -119,7 +120,7 @@ if cands[0].tasks:
 # Нужно что-то делать в ситуации, когда ВСЕ ЗАДАЧИ ВОШЛИ
 
 # Случай, если ВСЕ задачи НЕ вошли в кандидат 0
-    if (("completelyIn" not in cands[0].diagnosisForGroup.values())
+    elif (("completelyIn" not in cands[0].diagnosisForGroup.values())
             and ("partiallyIn09" not in cands[0].diagnosisForGroup.values())
             and ("partiallyIn06" not in cands[0].diagnosisForGroup.values())
             and ("partiallyIn03" not in cands[0].diagnosisForGroup.values())
@@ -133,11 +134,55 @@ if cands[0].tasks:
             print("---")
             for cand in reversed(cands):
                 if cands.index(cand) > 0:
-                    for candPrev in cands[0: cands.index(cand)]:
-                        if cand.checkSum == candPrev.checkSum:
-                            print("Кандидаты-дубли: %s, %s = %s, %s" % (cand.candId, cand.checkSum, candPrev.candId, candPrev.checkSum))
-                            cands.pop(cands.index(cand))
-                            break
+                    if not cand.tasks:
+                        print("Пустой кандидат: %s, %s" % (cand.candId, cand.checkSum))
+                        cands.pop(cands.index(cand))
+                    else:
+                        for candPrev in cands[0: cands.index(cand)]:
+                            if cand.checkSum == candPrev.checkSum:
+                                print("Кандидаты-дубли: %s, %s = %s, %s" % (cand.candId, cand.checkSum, candPrev.candId, candPrev.checkSum))
+                                cands.pop(cands.index(cand))
+                                break
+
+        def fillCandWithGroup(group, basicCand, method):
+
+            if group.tasks:
+                global cands
+                global candId
+                candId += 1
+
+                if method == "direct":
+                    if basicCand == False:
+                        cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas, False, "silent"))
+                    else:
+                        cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, "silent"))
+                    group.tasks.sort(key=lambda x: x.taskEstimatesSum, reverse=True)
+                    for task in group.tasks:
+                        cands[-1].tryToPutSingleTask(task, group.groupId, "silent")
+
+                elif method == "scroll":
+                    if basicCand == False:
+                        cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas, False, "silent"))
+                    else:
+                        cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, "silent"))
+                    group.scroll("silent")
+                    for task in group.tasks:
+                        cands[-1].tryToPutSingleTask(task, group.groupId, "silent")
+
+                elif method == "shuffle":
+                    if basicCand == False:
+                        cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas, False, "silent"))
+                    else:
+                        cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, "silent"))
+                    random.shuffle(group.tasks)
+                    for task in group.tasks:
+                        cands[-1].tryToPutSingleTask(task, group.groupId, "silent")
+
+            return ()
+
+# Нужно сделать, чтобы если ни одна задача не добавлена в состав-кандидат, он удалялся.
+# Может быть, вынести это в функцию очистки от дублей.
+
 
 # Находим первую группу, которая вошла полностью (чтобы на ней потом строить следующие группы),
 # либо частично (чтобы сделать сколько-то вариантов, а потом на них строить следуюющие группы).
@@ -148,45 +193,17 @@ if cands[0].tasks:
             elif cands[0].diagnosisForGroup[group] == "completelyOut":
                 pass
             elif cands[0].diagnosisForGroup[group] == "completelyIn":
-                candId += 1
-                cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas, False, "silent"))
-                for task in group.tasks:
-                    cands[candId].tryToPutSingleTask(task, group.groupId, "silent")
+                fillCandWithGroup(group, False, "direct")
                 break
             else:  # Если группа вошла ЧАСТИЧНО, в ней обязательно более 1 задачи
                 if group.importance == "h":
-                    for i in range(len(group.tasks) + 1):
-                        candId += 1
-                        cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas, False, "silent"))
-                        group.scroll("silent")
-                        for task in group.tasks:
-                            cands[candId].tryToPutSingleTask(task, group.groupId, "silent")
-                    for i in range(len(group.tasks) * 2):
-                        candId += 1
-                        cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas, False, "silent"))
-                        random.shuffle(group.tasks)
-                        for task in group.tasks:
-                            cands[candId].tryToPutSingleTask(task, group.groupId, "silent")
+                    for i in range(len(group.tasks) + 1): fillCandWithGroup(group, False, "scroll")
+                    for i in range(len(group.tasks) * 2): fillCandWithGroup(group, False, "shuffle")
                 elif group.importance == "n":
-                    for i in range(len(group.tasks) + 1):
-                        candId += 1
-                        cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas, False, "silent"))
-                        group.scroll("silent")
-                        for task in group.tasks:
-                            cands[candId].tryToPutSingleTask(task, group.groupId, "silent")
-                    for i in range(len(group.tasks) + 1):
-                        candId += 1
-                        cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas, False, "silent"))
-                        random.shuffle(group.tasks)
-                        for task in group.tasks:
-                            cands[candId].tryToPutSingleTask(task, group.groupId, "silent")
+                    for i in range(len(group.tasks) + 1): fillCandWithGroup(group, False, "scroll")
+                    for i in range(len(group.tasks) + 1): fillCandWithGroup(group, False, "shuffle")
                 elif group.importance == "l":
-                    for i in range(len(group.tasks) + 1):
-                        candId += 1
-                        cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas, False, "silent"))
-                        random.shuffle(group.tasks)
-                        for task in group.tasks:
-                            cands[candId].tryToPutSingleTask(task, group.groupId, "silent")
+                    for i in range(len(group.tasks) + 1): fillCandWithGroup(group, False, "shuffle")
                 cleanCandsFromClones()
                 break
 

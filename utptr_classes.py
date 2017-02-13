@@ -81,7 +81,7 @@ class Task:
 class Candidate:
 # Атрибуты класса Candidate.
 #   candId - уникальный id кандидата (int, генерируется инкрементально)
-#   wrapperOfCand - указываем кандидата, состав которого полностью включает данный кандидат
+#   additionalTo - указываем кандидата, состав которого полностью включает данный кандидат
 #   tasks - список задач, включённых в кандидат (list of Tasks)
 #   hoursUnused - количество нераспределённых часов (list)
 #   diagnosisForGroup - словарь: {groupId : diagnosis}, возможные диагнозы:
@@ -111,11 +111,11 @@ class Candidate:
                 return("\x1b[0;36;44m" + "(" + funcName + "):" + "\x1b[0m" + " ")
         else: return("")
 
-    def __init__(self, candId, hoursUnused, wrapperOfCand, silentMode = "silent"):
+    def __init__(self, candId, hoursUnused, additionalTo, silentMode = "silent"):
         self.candId = candId
         self.hoursUnused = hoursUnused
         self.tasks = []
-        self.wrapperOfCand = wrapperOfCand
+        self.additionalTo = additionalTo
         self.isComplete = False
         self.lastGroupId = False
         if silentMode is not "silent":
