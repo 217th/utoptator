@@ -27,7 +27,7 @@ originalTasksArray = CreateTasksArray(100, silentMode)
 
 taskGroups = []
 i = 0
-
+'''
 for groupMeta in [     # ТЕСТОВЫЙ НАБОР МЕТАДАННЫХ
     [[2], [0], "h"], [[2], [1], "h"], [[2], [2], "n"],
     [[3, 1], [5], "l"]
@@ -45,10 +45,11 @@ for groupMeta in [  # ПРОМЫШЛЕННЫЙ НАБОР МЕТАДАННЫХ
     [[3, 1], [3], "n"],  # Высокенький - ошибки и разработка в одной группе
     [[3, 1], [4], "n"],  # Нормальный - ошибки и разработка в одной группе
     [[3, 1], [5], "l"]  # Низкий - ошибки и разрбаботка в одной группе
-]:
-    taskGroups.append(utptr_classes.Group(i, groupMeta[0], groupMeta[1], groupMeta[2], "bubble"))
-    i += 1
-'''
+    ]:
+        taskGroups.append(utptr_classes.Group(i, groupMeta[0], groupMeta[1], groupMeta[2], "bubble"))
+        i += 1
+del groupMeta
+
 for group in taskGroups:
     group.fillAndSort(originalTasksArray, "babble")
 
@@ -134,55 +135,37 @@ if cands[0].tasks:
             print("---")
             for cand in reversed(cands):
                 if cands.index(cand) > 0:
-                    if not cand.tasks:
-                        print("Пустой кандидат: %s, %s" % (cand.candId, cand.checkSum))
-                        cands.pop(cands.index(cand))
-                    else:
-                        for candPrev in cands[0: cands.index(cand)]:
-                            if cand.checkSum == candPrev.checkSum:
-                                print("Кандидаты-дубли: %s, %s = %s, %s" % (cand.candId, cand.checkSum, candPrev.candId, candPrev.checkSum))
-                                cands.pop(cands.index(cand))
-                                break
+                    for candPrev in cands[0: cands.index(cand)]:
+                        if (cand.checkSum == candPrev.checkSum) and (cand.lastGroupId == candPrev.lastGroupId):
+                            print("Дубли | id %s, checkSum %s, lastGroup %s | id %s, checkSum %s, lastGroup %s" % (
+                            cand.candId, cand.checkSum, cand.lastGroupId, candPrev.candId, candPrev.checkSum,
+                            candPrev.lastGroupId))
+                            cands.pop(cands.index(cand))
+                            break
 
-        def fillCandWithGroup(group, basicCand, method):
 
+        def fillCandWithGroup(group, basicCand, method, silentmode = "silent"):
             if group.tasks:
                 global cands
                 global candId
                 candId += 1
-
+                if basicCand == False:
+                    cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas, False, silentmode))
+                else:
+                    cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, silentmode))
                 if method == "direct":
-                    if basicCand == False:
-                        cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas, False, "silent"))
-                    else:
-                        cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, "silent"))
                     group.tasks.sort(key=lambda x: x.taskEstimatesSum, reverse=True)
                     for task in group.tasks:
-                        cands[-1].tryToPutSingleTask(task, group.groupId, "silent")
-
+                        cands[-1].tryToPutSingleTask(task, group.groupId, silentmode)
                 elif method == "scroll":
-                    if basicCand == False:
-                        cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas, False, "silent"))
-                    else:
-                        cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, "silent"))
                     group.scroll("silent")
                     for task in group.tasks:
-                        cands[-1].tryToPutSingleTask(task, group.groupId, "silent")
-
+                        cands[-1].tryToPutSingleTask(task, group.groupId, silentmode)
                 elif method == "shuffle":
-                    if basicCand == False:
-                        cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas, False, "silent"))
-                    else:
-                        cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, "silent"))
                     random.shuffle(group.tasks)
                     for task in group.tasks:
-                        cands[-1].tryToPutSingleTask(task, group.groupId, "silent")
-
+                        cands[-1].tryToPutSingleTask(task, group.groupId, silentmode)
             return ()
-
-# Нужно сделать, чтобы если ни одна задача не добавлена в состав-кандидат, он удалялся.
-# Может быть, вынести это в функцию очистки от дублей.
-
 
 # Находим первую группу, которая вошла полностью (чтобы на ней потом строить следующие группы),
 # либо частично (чтобы сделать сколько-то вариантов, а потом на них строить следуюющие группы).
@@ -209,66 +192,71 @@ if cands[0].tasks:
 
         for basicCand in cands:
             if basicCand.lastGroupId < len(taskGroups)-1:
-                group = next((x for x in taskGroups if x.groupId == basicCand.lastGroupId+1), None)
-                if group.tasks:
-
-                    if group.importance == "h":
-                        candId += 1
-                        cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, "silent"))
-                        group.tasks.sort(key=lambda x: x.taskEstimatesSum, reverse=True)
-                        for task in group.tasks:
-                            cands[-1].tryToPutSingleTask(task, group.groupId, "silent")
-                        for i in range(len(group.tasks) + 1):
-                            candId += 1
-                            cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, "silent"))
-                            group.scroll("silent")
-                            for task in group.tasks:
-                                cands[-1].tryToPutSingleTask(task, group.groupId, "silent")
-                        for i in range(len(group.tasks) * 2):
-                            candId += 1
-                            cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, "silent"))
-                            random.shuffle(group.tasks)
-                            for task in group.tasks:
-                                cands[-1].tryToPutSingleTask(task, group.groupId, "silent")
-                    elif group.importance == "n":
-                        candId += 1
-                        cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, "silent"))
-                        group.tasks.sort(key=lambda x: x.taskEstimatesSum, reverse=True)
-                        for task in group.tasks:
-                            cands[-1].tryToPutSingleTask(task, group.groupId, "silent")
-                        for i in range(len(group.tasks) + 1):
-                            candId += 1
-                            cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, "silent"))
-                            group.scroll("silent")
-                        for task in group.tasks:
-                            cands[-1].tryToPutSingleTask(task, group.groupId, "silent")
-                        for i in range(len(group.tasks) + 1):
-                            candId += 1
-                            cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, "silent"))
-                            random.shuffle(group.tasks)
-                            for task in group.tasks:
-                                cands[-1].tryToPutSingleTask(task, group.groupId, "silent")
-                    elif group.importance == "l":
-                        candId += 1
-                        cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, "silent"))
-                        group.tasks.sort(key=lambda x: x.taskEstimatesSum, reverse=True)
-                        for task in group.tasks:
-                            cands[-1].tryToPutSingleTask(task, group.groupId, "silent")
-                        for i in range(len(group.tasks) + 1):
-                            candId += 1
-                            cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, "silent"))
-                            random.shuffle(group.tasks)
-                            for task in group.tasks:
-                                cands[-1].tryToPutSingleTask(task, group.groupId, "silent")
+                for group in taskGroups:
+                    if group.groupId == basicCand.lastGroupId+1:
+                        if group.tasks:
+                            if group.importance == "h":
+                                fillCandWithGroup(group, basicCand, "direct")
+                                for i in range(len(group.tasks) + 1): fillCandWithGroup(group, basicCand, "scroll")
+                                for i in range(len(group.tasks) * 2): fillCandWithGroup(group, basicCand, "shuffle")
+                            elif group.importance == "n":
+                                fillCandWithGroup(group, basicCand, "direct")
+                                for i in range(len(group.tasks) + 1): fillCandWithGroup(group, basicCand, "scroll")
+                                for i in range(len(group.tasks) + 1): fillCandWithGroup(group, basicCand, "shuffle")
+                            elif group.importance == "l":
+                                fillCandWithGroup(group, basicCand, "direct")
+                                for i in range(len(group.tasks) + 1): fillCandWithGroup(group, basicCand, "shuffle")
                     cleanCandsFromClones()
 
-
-# Далее нужно прописать порядок работы с НЕпервыми группами. Такие кандидаты должны наследовать задачи из кандидатов, содержащих задачи из предыдущих групп
-
-
-
+# Выводим список кандидатов ДО СКЛЕЙКИ
+    print("-----------------------До склейки-----------------------")
     for cand in cands:
         cand.printCandidate()
+
+# Склеиваем список кандидатов
+    for i in range(len(taskGroups)):
+        for cand in reversed(cands):
+            if cand.additionalTo:
+                # Приклеиваем к более позднему всё из более раннего
+                # hoursUnused остаётся от позднего
+                # lastGroupId остаётся от позднего
+                cand.tasks.extend(cand.additionalTo.tasks)
+                cand.additionalTo = cand.additionalTo.additionalTo
+
+    cleanCandsFromClones()
+
+# !!!
+# После склейки почему-то теряются вложенные кандидаты одной и той же группы, настроенные по-разному. Нужно исследовать.
+# !!!
+
+
+# Выводим список кандидатов ПОСЛЕ СКЛЕЙКИ
+    print("-----------------------После склейки-----------------------")
+    for cand in cands:
+        cand.printCandidate()
+
+
+
+
+'''
+                group = next((x for x in taskGroups if x.groupId == basicCand.lastGroupId+1), None)
+                if group.tasks:
+                    if group.importance == "h":
+                        fillCandWithGroup(group, basicCand, "direct")
+                        for i in range(len(group.tasks) + 1): fillCandWithGroup(group, basicCand, "scroll")
+                        for i in range(len(group.tasks) * 2): fillCandWithGroup(group, basicCand, "shuffle")
+                    elif group.importance == "n":
+                        fillCandWithGroup(group, basicCand, "direct")
+                        for i in range(len(group.tasks) + 1): fillCandWithGroup(group, basicCand, "scroll")
+                        for i in range(len(group.tasks) + 1): fillCandWithGroup(group, basicCand, "shuffle")
+                    elif group.importance == "l":
+                        fillCandWithGroup(group, basicCand, "direct")
+                        for i in range(len(group.tasks) + 1): fillCandWithGroup(group, basicCand, "shuffle")
+                    cleanCandsFromClones()
+'''
+
+
+
 
 '''
 # Случай, если первые сколько-то групп вошли
