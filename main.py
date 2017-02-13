@@ -4,6 +4,8 @@ from filloriginaldata import (CreateDictDevs, CreateDictPriors, CreateDictTaskTy
 import copy
 import random
 import utptr_classes
+import utptr_to_file
+import time
 
 silentMode = "babble"  # Режим тишины. "silent" - сокращённые сообщения. "babble" - полные сообщения
 dictTaskTypes = CreateDictTaskTypes()
@@ -21,7 +23,6 @@ def CreateTasksArray(n, silentMode="silent"):
     else:
         print('Попросили слишком мало задач. Массив задач не заполнен.')
     return (tasksArray)
-
 
 originalTasksArray = CreateTasksArray(100, silentMode)
 
@@ -53,23 +54,11 @@ del groupMeta
 for group in taskGroups:
     group.fillAndSort(originalTasksArray, "babble")
 
-'''
-# Создание шаблонных сценариев
-scenarios = []
+tasksList = []
 for group in taskGroups:
-    if group.importance == "h":
-        scenarios.append(utptr_classes.Scenario(group, "direct", "babble"))
-        scenarios.append(utptr_classes.Scenario(group, "minus1", "babble"))
-        scenarios.append(utptr_classes.Scenario(group, "minus1+shuffle", "babble"))
-        scenarios.append(utptr_classes.Scenario(group, "shuffle", "babble"))
-    if group.importance == "n":
-        scenarios.append(utptr_classes.Scenario(group, "direct", "babble"))
-        scenarios.append(utptr_classes.Scenario(group, "minus1+shuffle", "babble"))
-        scenarios.append(utptr_classes.Scenario(group, "shuffle", "babble"))
-    if group.importance == "l":
-        scenarios.append(utptr_classes.Scenario(group, "direct", "babble"))
-        scenarios.append(utptr_classes.Scenario(group, "shuffle", "babble"))
-'''
+    for task in group.tasks:
+        tasksList.append([group.groupId, group.importance, task.taskId, task.taskPrior, task.taskType, task.taskEstimates, task.taskScore])
+    utptr_to_file.writeTasks(tasksList)
 
 candId = 0  # Потом нужно будет где-то сделать приращение
 cands = [utptr_classes.Candidate(candId, listLabourHoursQuotas, False, "silent")]
@@ -77,7 +66,7 @@ cands = [utptr_classes.Candidate(candId, listLabourHoursQuotas, False, "silent")
 for group in taskGroups:
     if group.tasks:
         for task in group.tasks:
-            cands[0].tryToPutSingleTask(task, group.groupId, "bubble")
+            cands[0].tryToPutSingleTask(task, group.groupId, "silent")
         cands[0].isComplete = True
 
 # Анализируем нулевой список кандидатов и определяем диагнозы для групп
@@ -132,17 +121,15 @@ if cands[0].tasks:
     else:
 
         def cleanCandsFromClones():
-            print("---")
             for cand in reversed(cands):
                 if cands.index(cand) > 0:
                     for candPrev in cands[0: cands.index(cand)]:
                         if (cand.checkSum == candPrev.checkSum) and (cand.lastGroupId == candPrev.lastGroupId):
-                            print("Дубли | id %s, checkSum %s, lastGroup %s | id %s, checkSum %s, lastGroup %s" % (
-                            cand.candId, cand.checkSum, cand.lastGroupId, candPrev.candId, candPrev.checkSum,
-                            candPrev.lastGroupId))
+                            print("Дубли | id %s, checkSum %s, lastGroup %s | id %s, checkSum %s, lastGroup %s" % (cand.candId, cand.checkSum, cand.lastGroupId, candPrev.candId, candPrev.checkSum,candPrev.lastGroupId))
                             cands.pop(cands.index(cand))
                             break
 
+        candsForFile = []
 
         def fillCandWithGroup(group, basicCand, method, silentmode = "silent"):
             if group.tasks:
@@ -165,6 +152,16 @@ if cands[0].tasks:
                     random.shuffle(group.tasks)
                     for task in group.tasks:
                         cands[-1].tryToPutSingleTask(task, group.groupId, silentmode)
+
+                global candsForFile
+                candsForFile.append([time.time(),
+                                     cands[-1].candId,
+                                     cands[-1],
+                                     len(cands[-1].tasks),
+                                     cands[-1].additionalTo,
+                                     cands[-1].lastGroupId,
+                                     cands[-1].checkSum])
+
             return ()
 
 # Находим первую группу, которая вошла полностью (чтобы на ней потом строить следующие группы),
@@ -206,13 +203,26 @@ if cands[0].tasks:
                             elif group.importance == "l":
                                 fillCandWithGroup(group, basicCand, "direct")
                                 for i in range(len(group.tasks) + 1): fillCandWithGroup(group, basicCand, "shuffle")
-                    cleanCandsFromClones()
+                            cleanCandsFromClones()
 
 # Выводим список кандидатов ДО СКЛЕЙКИ
+    utptr_to_file.writeCands("cands.csv", candsForFile)
+
     print("-----------------------До склейки-----------------------")
     for cand in cands:
         cand.printCandidate()
 
+    print("-----------------------Цепочки-----------------------")
+    chains = []
+    for cand in cands:
+        if cand.additionalTo == False:
+            chains.append([False, cand.candId])
+        else:
+            chains.append([cand.additionalTo.candId, cand.candId])
+    chains.sort(key=lambda x: x[1], reverse=False)
+    print(chains)
+
+'''
 # Склеиваем список кандидатов
     for i in range(len(taskGroups)):
         for cand in reversed(cands):
@@ -234,79 +244,18 @@ if cands[0].tasks:
     print("-----------------------После склейки-----------------------")
     for cand in cands:
         cand.printCandidate()
-
-
-
-
-'''
-                group = next((x for x in taskGroups if x.groupId == basicCand.lastGroupId+1), None)
-                if group.tasks:
-                    if group.importance == "h":
-                        fillCandWithGroup(group, basicCand, "direct")
-                        for i in range(len(group.tasks) + 1): fillCandWithGroup(group, basicCand, "scroll")
-                        for i in range(len(group.tasks) * 2): fillCandWithGroup(group, basicCand, "shuffle")
-                    elif group.importance == "n":
-                        fillCandWithGroup(group, basicCand, "direct")
-                        for i in range(len(group.tasks) + 1): fillCandWithGroup(group, basicCand, "scroll")
-                        for i in range(len(group.tasks) + 1): fillCandWithGroup(group, basicCand, "shuffle")
-                    elif group.importance == "l":
-                        fillCandWithGroup(group, basicCand, "direct")
-                        for i in range(len(group.tasks) + 1): fillCandWithGroup(group, basicCand, "shuffle")
-                    cleanCandsFromClones()
 '''
 
 
 
 
-'''
-# Случай, если первые сколько-то групп вошли
-    elif ("completelyIn" in cands[0].diagnosisForGroup.values()):
-        tempGroupList = []
-        for group in taskGroups:
-            if cands[0].diagnosisForGroup[group] == "completelyIn":
-                tempGroupList.append(group)
-            else:
-                break
-        if tempGroupList:
-            candId += 1
-            nextCand = utptr_classes.Candidate(candId, listLabourHoursQuotas, False, "silent")
-            for group in tempGroupList:
-                for task in group.tasks:
-                    nextCand.tryToPutSingleTask(task, "buuble")
 
-# Случай, когда первые группы не вошли, нужно пробовать для них альтернативные заполнения
-    else:
-        for group in taskGroups:
-            if len(group.tasks) == 1:
-                pass
-            if len(group.tasks) > 1:
-                for i in len(group.tasks):
-                    pass
-
-'''
-
-'''
-    def tryToFillCands(listOfPrevFixedTasks, scenType, n):
-        candId += 1
-        nextCand = utptr_classes.Candidate(candId, listLabourHoursQuotas, False, "silent")
-
-
-        pass
-
-
-    for group in cands[0].diagnosisForGroup.keys():
-        if (group.importance is "h") and (cands[0].diagnosisForGroup[group] == "completelyIn"):
 
 
 
-        if (group.importance is "h") and (cands[0].diagnosisForGroup[group] != "completelyIn"):
-            print("Важная группа %s, не полностью вошла" % (group.groupId))
-#            tryToFillCands(listOfPrevFixedTasks, "minus1", len(group.tasks))
+'''
 
 else:
     print("Ни одной задачи не вошло в состав-кандидат.")
 
 '''
-
-
-    # Дальше необходимо прописать действия для разных диагнозов в зависимости от важности групп. Наверное, при этом нужно вынести какие-то предшествующие действия в функции или методы, чтобы потом было проще оборачивать их в циклы

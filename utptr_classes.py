@@ -136,7 +136,13 @@ class Candidate:
         return (score)
 
     def printCandidate(self):
-        print("------------------------------\n------------------------------\n------------------------------\n" + self.hl("Candidate.printCandidate", "g") + "\nСостав-кандидат № %s - всего %s задач - последняя группа %s - добавочный к %s - ценность %s" % (self.candId, len(self.tasks), self.lastGroupId, self.additionalTo, round(self.getScore(), 1)))
+
+        print("------------------------------\n------------------------------\n------------------------------")
+        if self.additionalTo:
+            print(self.hl("Candidate.printCandidate", "g") + "\nСостав-кандидат № %s - всего %s задач - последняя группа %s - добавочный к %s - ценность %s" % (self.candId, len(self.tasks), self.lastGroupId, self.additionalTo.candId, round(self.getScore(), 1)))
+        else:
+            print(self.hl("Candidate.printCandidate", "g") + "\nСостав-кандидат № %s - всего %s задач - последняя группа %s - ценность %s" % (self.candId, len(self.tasks), self.lastGroupId, round(self.getScore(), 1)))
+
         for task in self.tasks:
             print("Задача %s - тип %s - приоритет %s - оценки %s" % (task.taskId, task.taskType, task.taskPrior, task.taskEstimates))
         print("Осталось часов: %s" % (self.hoursUnused))
