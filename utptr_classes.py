@@ -7,12 +7,8 @@ class Task:
 #   taskEstimates - оценки (list, заполняются случайно только для разработчиков, которые есть в словаре)
 #   taskEstimatesSum - общая сумма трудозатрат по задаче (int)
 #   taskScore - ценность (float, рассчитывается из приоритета и оценок)
-#   candsTaskIncluded - список id состав-кандидатов, куда задача вошла (list)
-#   candsTaskExcluded - список id состав-кандидатов, куда задача НЕ вошла (list)
 #
 # Методы класса Task.
-#   acceptToCand - включить задачу в состав-кандидат
-#   declineFromCand - пометить задачу как не включённую в состав-кандидат
 
     def hl(self, funcName, color = "g"):
         silentMode = False
@@ -64,31 +60,12 @@ class Task:
             print("-----\n" + self.hl("Task.__init__", "g") + "Задача: %s Тип: %s Приоритет: %s Ценность: %s" % (self.taskId, self.taskType, self.taskPrior, self.taskScore))
             print(self.hl("Task.__init__", "g") + "Часы по задаче: %s " % self.taskEstimates)
 
-        self.candsTaskIncluded = []
-        self.candsTaskExcluded = []
-
-    def acceptToCand(self, candId, silentMode = "silent"):
-        self.candsTaskIncluded.append(candId)
-        if silentMode is not "silent":
-            print(self.hl("Task.acceptToCand", "g") + "Задача %s включена в состав-кандидат %s" % (self.taskId, candId))
-
-    def declineFromCand(self, candId, silentMode = "silent"):
-        self.candsTaskExcluded.append(candId)
-        if silentMode is not "silent":
-            print(self.hl("Task.declineFromCand", "g") + "Задача %s помечена как НЕ включённая в состав-кандидат %s" % (self.taskId, candId))
-
-
 class Candidate:
 # Атрибуты класса Candidate.
 #   candId - уникальный id кандидата (int, генерируется инкрементально)
 #   additionalTo - указываем кандидата, состав которого полностью включает данный кандидат
 #   tasks - список задач, включённых в кандидат (list of Tasks)
 #   hoursUnused - количество нераспределённых часов (list)
-#   diagnosisForGroup - словарь: {groupId : diagnosis}, возможные диагнозы:
-#       - "noTasksInGroup"
-#       - "completelyIn"
-#       - "completelyOut"
-#       - "partiallyIn"
 #   isUsed - статус того, что для данного кандидата созданы все дополнительные (дочерние) кандидаты
 #   lastGroupId - идентификатор последней группы, из которой ПЫТАЛИСЬ включить задачи (могли и не включить)
 #
@@ -121,7 +98,6 @@ class Candidate:
         if silentMode is not "silent":
             print(self.hl("Candidate.__init__", "g") + "----- Создан состав-кандидат №", self.candId)
             print(self.hl("Candidate.__init__", "g") + "Начальное количество часов:", self.hoursUnused)
-        self.diagnosisForGroup = {}
         self.checkSum = 0
 
     def acceptTask(self, task, silentMode = "silent"):
@@ -151,7 +127,6 @@ class Candidate:
         self.lastGroupId = groupId
         taskIsFit = [x <= y for x, y in zip(task.taskEstimates, self.hoursUnused)]
         if False in taskIsFit:
-            task.declineFromCand(self.candId, silentMode)
             if silentMode is not "silent":
                 print(self.hl("Candidate.tryToPutSingleTask", "y") + "--- Задача %s. Есть часов: %s, надо часов: %s" % (task.taskId, self.hoursUnused, task.taskEstimates))
                 print(self.hl("Candidate.tryToPutSingleTask", "y") + "Задача %s не влезает" % task.taskId)
@@ -162,49 +137,9 @@ class Candidate:
             self.hoursUnused = [y - x for x, y in zip(task.taskEstimates, self.hoursUnused)]
             if silentMode is not "silent":
                 print(self.hl("Candidate.tryToPutSingleTask", "y") + "Остаётся часов:", self.hoursUnused)
-        # Используем "двойную запись". Информация о включении заносится как в объект класса Task, так и в объект класса Candidate. Непонятно пока, зачем
             self.acceptTask(task, silentMode)
-            task.acceptToCand(self.candId, silentMode)
             self.checkSum += task.taskId
             self.checkSum += task.taskScore
-
-'''
-
-        bufferCand = Candidate(-99, hoursUnused, "silent")
-
-        def tryToPutTask(task):
-            taskIsFit = [x <= y for x, y in zip(task.taskEstimates, bufferCand.hoursUnused)]
-            if False in taskIsFit:
-                if silentMode is not "silent":
-                    print(self.hl("Scenario.execute", "g") + "--- Задача %s. Есть часов: %s, надо часов: %s" % (task.taskId, bufferCand.hoursUnused, task.taskEstimates))
-                    print(self.hl("Scenario.execute", "g") + "Задача %s не влезает" % task.taskId)
-            else:
-                if silentMode is not "silent":
-                    print(self.hl("Scenario.execute", "g") + "--- Задача %s. Есть часов: %s, надо часов: %s." % (task.taskId, bufferCand.hoursUnused, task.taskEstimates))
-                    print(self.hl("Scenario.execute", "g") + "Задача %s влезает" % task.taskId)
-                bufferCand.tasks.append(task)
-                bufferCand.hoursUnused = [y - x for x, y in zip(task.taskEstimates, bufferCand.hoursUnused)]
-                if silentMode is not "silent":
-                    print(self.hl("Scenario.execute", "g") + "Остаётся часов:", bufferCand.hoursUnused)
-
-        if self.scenType == "direct":
-            if self.group.tasks:
-                for task in self.group.tasks:
-                    tryToPutTask(task)
-
-        elif self.scenType == "minus1":
-            if silentMode is not "silent":
-                print(self.hl("Group.execScenario", "g") + "Minus1")
-
-        elif self.scenType == "minus1+shuffle":
-            if silentMode is not "silent":
-                print(self.hl("Group.execScenario", "g") + "Minus1+shuffle")
-
-        elif self.scenType == "shuffle":
-            if silentMode is not "silent":
-                print(self.hl("Group.execScenario", "g") + "Shuffle")
-
-        pass'''
 
 class Group:
 # Атрибуты класса Group:
@@ -268,80 +203,3 @@ class Group:
         restTasks = self.tasks[1:]
         self.tasks.clear()
         self.tasks = restTasks + firstTask
-
-
-class Scenario:
-# Атрибуты класса Scenario:
-#	targetGroupId - id группы задач (int), к которой применим сценарий
-#   type - тип сценария:
-#       "direct"
-#       "minusN"
-#       "shuffle"
-#   taskI - для типа "minusN" - индекс задачи, исключаемой из группы
-#
-#
-#
-# Методы класса Scenario:
-#   execute - выполнение сценария
-
-    def hl(self, funcName, color = "g"):
-        silentMode = False
-        if not silentMode:
-            if color == "g":
-                return("\x1b[0;36;42m" + "(" + funcName + "):" + "\x1b[0m" + " ")
-        if color == "r":
-            return("\x1b[0;36;41m" + "(" + funcName + "):" + "\x1b[0m" + " ")
-        if color == "y":
-            return("\x1b[0;36;43m" + "(" + funcName + "):" + "\x1b[0m" + " ")
-        if color == "b":
-            return("\x1b[0;36;44m" + "(" + funcName + "):" + "\x1b[0m" + " ")
-        else: return("")
-
-    def __init__(self, targetGroup, scenType, silentMode = "silent", *taskI):
-        self.targetGroup = targetGroup
-        self.scenType = scenType
-        if taskI:
-            self.taskI = taskI
-        if silentMode is not "silent":
-            print(self.hl("Scenario.__init__", "g") + "Для группы %s - новый сценарий %s" % (self.targetGroup.groupId, self.scenType))
-'''
-    def execute(self, hoursUnused, silentMode = "silent"):
-        if silentMode is not "silent":
-            print("------------------------------\n" + self.hl("Scenario.execute", "g") + "Запуск сценария на группе %s - тип %s" % (self.group.meta, self.scenType))
-
-        bufferCand = Candidate(-99, hoursUnused, "silent")
-
-        def tryToPutTask(task):
-            taskIsFit = [x <= y for x, y in zip(task.taskEstimates, bufferCand.hoursUnused)]
-            if False in taskIsFit:
-                if silentMode is not "silent":
-                    print(self.hl("Scenario.execute", "g") + "--- Задача %s. Есть часов: %s, надо часов: %s" % (task.taskId, bufferCand.hoursUnused, task.taskEstimates))
-                    print(self.hl("Scenario.execute", "g") + "Задача %s не влезает" % task.taskId)
-            else:
-                if silentMode is not "silent":
-                    print(self.hl("Scenario.execute", "g") + "--- Задача %s. Есть часов: %s, надо часов: %s." % (task.taskId, bufferCand.hoursUnused, task.taskEstimates))
-                    print(self.hl("Scenario.execute", "g") + "Задача %s влезает" % task.taskId)
-                bufferCand.tasks.append(task)
-                bufferCand.hoursUnused = [y - x for x, y in zip(task.taskEstimates, bufferCand.hoursUnused)]
-                if silentMode is not "silent":
-                    print(self.hl("Scenario.execute", "g") + "Остаётся часов:", bufferCand.hoursUnused)
-
-        if self.scenType == "direct":
-            if self.group.tasks:
-                for task in self.group.tasks:
-                    tryToPutTask(task)
-
-        elif self.scenType == "minus1":
-            if silentMode is not "silent":
-                print(self.hl("Group.execScenario", "g") + "Minus1")
-
-        elif self.scenType == "minus1+shuffle":
-            if silentMode is not "silent":
-                print(self.hl("Group.execScenario", "g") + "Minus1+shuffle")
-
-        elif self.scenType == "shuffle":
-            if silentMode is not "silent":
-                print(self.hl("Group.execScenario", "g") + "Shuffle")
-
-        return(bufferCand)
-'''

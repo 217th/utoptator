@@ -5,7 +5,6 @@ import copy
 import random
 import utptr_classes
 import utptr_to_file
-import time
 
 silentMode = "babble"  # Режим тишины. "silent" - сокращённые сообщения. "babble" - полные сообщения
 dictTaskTypes = CreateDictTaskTypes()
@@ -24,7 +23,7 @@ def сreateTasksArray(n, silentMode="silent"):
         print('Попросили слишком мало задач. Массив задач не заполнен.')
     return (tasksArray)
 
-originalTasksArray = сreateTasksArray(100, silentMode)
+originalTasksArray = сreateTasksArray(200, silentMode)
 
 taskGroups = []
 i = 0

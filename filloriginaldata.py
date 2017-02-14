@@ -29,7 +29,7 @@ def CreateArrayLabourQuotas(keyList, silentMode = "silent"):
     labourHourQuotas = []
     for i in range(max(keyList)+1):
         if i in keyList:
-            labourHourQuotas.append (random.choice([0, 20, 20, 20, 30, 30, 40, 40]))
+            labourHourQuotas.append (random.choice([0, 50, 50, 100, 100, 150, 150, 150, 200, 200]))
         else:
             labourHourQuotas.append (0)
     if silentMode is not "silent": print ("Часы разработчиков: %s\n------------------------------" % labourHourQuotas)
