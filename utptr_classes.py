@@ -89,7 +89,7 @@ class Candidate:
 #       - "completelyIn"
 #       - "completelyOut"
 #       - "partiallyIn"
-#   isComplete - статус того, что кандидат полностью заполнен
+#   isUsed - статус того, что для данного кандидата созданы все дополнительные (дочерние) кандидаты
 #   lastGroupId - идентификатор последней группы, из которой ПЫТАЛИСЬ включить задачи (могли и не включить)
 #
 # Методы класса Candidate.
@@ -116,7 +116,7 @@ class Candidate:
         self.hoursUnused = hoursUnused
         self.tasks = []
         self.additionalTo = additionalTo
-        self.isComplete = False
+        self.isUsed = False
         self.lastGroupId = False
         if silentMode is not "silent":
             print(self.hl("Candidate.__init__", "g") + "----- Создан состав-кандидат №", self.candId)
