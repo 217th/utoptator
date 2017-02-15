@@ -1,16 +1,16 @@
 # https://www.tutorialspoint.com/python/
 
-from filloriginaldata import (CreateDictDevs, CreateDictPriors, CreateDictTaskTypes, CreateArrayLabourQuotas)
+from filloriginaldata import (createDictDevs, createDictPriors, createDictTaskTypes, createArrayLabourQuotas)
 import copy
 import random
 import utptr_classes
 import utptr_to_file
 
 silentMode = "babble"  # Режим тишины. "silent" - сокращённые сообщения. "babble" - полные сообщения
-dictTaskTypes = CreateDictTaskTypes()
-dictPriors = CreateDictPriors()
-dictDevs = CreateDictDevs(silentMode)
-listLabourHoursQuotas = CreateArrayLabourQuotas(list(dictDevs.keys()), silentMode)
+dictTaskTypes = createDictTaskTypes()
+dictPriors = createDictPriors()
+dictDevs = createDictDevs(silentMode)
+listLabourHoursQuotas = createArrayLabourQuotas(list(dictDevs.keys()), silentMode)
 
 
 def сreateTasksArray(n, silentMode="silent"):
@@ -19,11 +19,14 @@ def сreateTasksArray(n, silentMode="silent"):
         for i in range(n):
             task = utptr_classes.Task(dictPriors, dictTaskTypes, dictDevs, "silent")
             tasksArray.append(task)
+        for task in tasksArray:
+            print("setRandomRelations %s %s" % (task.taskId, tasksArray.index(task)))
+            task.setRandomRelations(tasksArray)
     else:
         print('Попросили слишком мало задач. Массив задач не заполнен.')
     return (tasksArray)
 
-originalTasksArray = сreateTasksArray(200, silentMode)
+originalTasksArray = сreateTasksArray(100, silentMode)
 
 taskGroups = []
 i = 0
@@ -58,8 +61,7 @@ if any(len(x.tasks)>0 for x in taskGroups):
     candId = -1
     cands = []
 
-    def cleanCandsFromClones(silentMode="silent"):
-        global cands
+    def cleanCandsFromClones(cands, silentMode="silent"):
         for cand in reversed(cands):
             if cands.index(cand) > 0:
                 for candPrev in cands[0: cands.index(cand)]:
@@ -72,6 +74,7 @@ if any(len(x.tasks)>0 for x in taskGroups):
                             candPrev.lastGroupId))
                         cands.pop(cands.index(cand))
                         break
+        return(cands)
 
     def fillCandWithGroup(group, basicCand, method, silentmode="silent"):
         global candId
@@ -118,7 +121,7 @@ if any(len(x.tasks)>0 for x in taskGroups):
             fillCandWithGroup(group, False, "direct")
             if (len(group.tasks) > len(cands[-1].tasks)):
                 for i in range(len(group.tasks) + 1): fillCandWithGroup(group, False, "shuffle")
-        cleanCandsFromClones("silent")
+        cands = cleanCandsFromClones(cands, "silent")
 
     if len(taskGroups) > 1:
         for group in taskGroups:
@@ -139,11 +142,7 @@ if any(len(x.tasks)>0 for x in taskGroups):
                         if (len(group.tasks) > len(cands[-1].tasks)):
                             for i in range(len(group.tasks) + 1): fillCandWithGroup(group, basicCand, "shuffle")
                     basicCand.isUsed = True
-                    cleanCandsFromClones("silent")
-
-    print("-----------------------До склейки-----------------------")
-    for cand in cands:
-        cand.printCandidate()
+                    cands = cleanCandsFromClones(cands, "silent")
 
 # ▼▼▼▼▼▼▼▼▼ Склейка в один проход, удаление всех кандидатов, заканчивающихся непоследней группой ▼▼▼▼▼▼▼▼▼▼
 
@@ -171,11 +170,40 @@ if any(len(x.tasks)>0 for x in taskGroups):
 else:
     print("Все группы задач пусты.")
 
-'''
 # Экспорт списка задач в файл
 tasksList = []
 for group in taskGroups:
     for task in group.tasks:
-        tasksList.append([group.groupId, group.importance, task.taskId, task.taskPrior, task.taskType, task.taskEstimates, task.taskScore])
-    utptr_to_file.writeTasks(tasksList)
-'''
+        tasksList.append([
+            group.groupId,
+            group.importance,
+            task.taskId,
+            task.taskPrior,
+            task.taskType,
+            task.taskEstimates,
+            round(task.taskScore, 1),
+            [t.taskId for t in task.relConcurrent if t is not False],
+            [t.taskId for t in task.relAlternative if t is not False],
+            [t.taskId for t in task.relSequent if t is not False]
+        ])
+utptr_to_file.writeTasks(tasksList)
+
+candsList = []
+for cand in candsAssembled:
+    for task in cand.tasks:
+        candsList.append([
+            cand.candId,
+            len(cand.tasks),
+            round(cand.getScore(), 1),
+            cand.hoursUnused,
+            round(cand.checkSum, 1),
+            task.taskId,
+            task.taskPrior,
+            task.taskType,
+            task.taskEstimates,
+            task.taskScore,
+            [t.taskId for t in task.relConcurrent if t is not False],
+            [t.taskId for t in task.relAlternative if t is not False],
+            [t.taskId for t in task.relSequent if t is not False]
+        ])
+utptr_to_file.writeCands(candsList)

@@ -8,7 +8,15 @@ class Task:
 #   taskEstimatesSum - общая сумма трудозатрат по задаче (int)
 #   taskScore - ценность (float, рассчитывается из приоритета и оценок)
 #
+#   relConcurrent - список задач, с которыми эта должна выполняться только одновременно (одинаковый для всех одновременных задач)
+#   relSequent - список задач, текущая может войти только после всех задач, включённых в список. Если в список включена задача, имеющая другие одновременные, то предшественниками становятся все задачи группы одновременных
+#   relAlternative - список взаимоисключающих задач. Если пара задач указана одновременно как альтернативная и последовательная, то альтернатива имеет приоритет
+#       Если для двух задач одновременно указано и relConcurrent, и relAlternative, relConcurrent - игнорируется.
+#       Если для двух задач одновременно указано и relConcurrent, и relSequent, relConcurrent - игнорируется.
+#       Если для двух задач одновременно указано и relSequent, и relAlternative, relAlternative - игнорируется.
+#
 # Методы класса Task.
+#   setRandomRelations - метод (вероятно, временный) для заполнения relConcurrent, relSequent, relAlternative
 
     def hl(self, funcName, color = "g"):
         silentMode = False
@@ -29,6 +37,10 @@ class Task:
         self.taskId = int(str(random.randint(0, 9)) + str(random.randint(0, 9)) + str(random.randint(0, 9)) + str(random.randint(0, 9)) + str(random.randint(0, 9))) # Сгенерили правдоподобно выглядищий номер задачи
         self.taskPrior = random.choice(list(dictPriors.keys())) # Выбрали приоритет задачи
         self.taskType = random.choice(list(dictTaskTypes.keys())) # Выбрали тип задачи
+
+        self.relConcurrent = []
+        self.relAlternative = []
+        self.relSequent = []
 
         taskEstimates = [] # Генерируем оценки по задаче для каждого разработчика _только из справочника_. Так, чтобы id записи с оценкой соответствовал id разработчика из справочника
         for j in range(0, 1+max(list(dictDevs.keys()))):
@@ -59,6 +71,69 @@ class Task:
         if silentMode is not "silent":
             print("-----\n" + self.hl("Task.__init__", "g") + "Задача: %s Тип: %s Приоритет: %s Ценность: %s" % (self.taskId, self.taskType, self.taskPrior, self.taskScore))
             print(self.hl("Task.__init__", "g") + "Часы по задаче: %s " % self.taskEstimates)
+
+    def setRandomRelations(self, tasks):
+        import random
+
+        r = random.randint(0, 10)
+        if r in range(0, 7):
+            self.relConcurrent.append(random.choice(tasks + len(tasks)*5*[False]))
+        elif r in range(8, 9):
+            self.relConcurrent.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relConcurrent.append(random.choice(tasks + len(tasks)*5*[False]))
+        elif r == 10:
+            self.relConcurrent.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relConcurrent.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relConcurrent.append(random.choice(tasks + len(tasks)*5*[False]))
+
+        r = random.randint(0, 10)
+        if r in range(0, 7):
+            self.relAlternative.append(random.choice(tasks + len(tasks)*5*[False]))
+        elif r in range(8, 9):
+            self.relAlternative.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relAlternative.append(random.choice(tasks + len(tasks)*5*[False]))
+        elif r == 10:
+            self.relAlternative.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relAlternative.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relAlternative.append(random.choice(tasks + len(tasks)*5*[False]))
+
+        r = random.randint(0, 10)
+        if r in range(0, 7):
+            self.relSequent.append(random.choice(tasks + len(tasks)*5*[False]))
+        elif r in range(8, 9):
+            self.relSequent.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relSequent.append(random.choice(tasks + len(tasks)*5*[False]))
+        elif r == 10:
+            self.relSequent.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relSequent.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relSequent.append(random.choice(tasks + len(tasks)*5*[False]))
+
+        self.relConcurrent = [x for x in self.relConcurrent if x is not False]
+        self.relAlternative = [x for x in self.relAlternative if x is not False]
+        self.relSequent = [x for x in self.relSequent if x is not False]
+
+        for altTask in self.relAlternative:
+            altTask.relAlternative.append(self)
+
+        for concTask in self.relConcurrent:
+            concTask.relConcurrent.append(self)
+
+        for seqTask in self.relSequent:
+            for seqSeqTask in seqTask.relSequent:
+                if seqSeqTask.taskId == seqTask.taskId:
+                    print("setRandomRelations relSequent self %s seqTask %s" % (self.taskId, seqTask.taskId))
+                    seqTask.relSequent = []
+                    self.relSequent = []
+                    break
+
+        return()
+
+'''
+                        tId = self.taskId
+                        seqTask.relSequent = filter(lambda x: x.taskId == tId, seqTask.relSequent)
+                        self.relSequent = filter(lambda x: x.taskId == tId, self.relSequent)
+'''
+
 
 class Candidate:
 # Атрибуты класса Candidate.

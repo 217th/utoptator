@@ -3,16 +3,37 @@ import csv
 def writeTasks(taskList):
     with open('tasks.csv', 'w', newline='') as f:
         writer = csv.writer(f, delimiter = ";")
-        writer.writerow(["groupId", "groupImportance", "taskId", "taskPrior", "taskType", "taskEstimates", "taskScore"])
+        writer.writerow(["groupId",
+                         "groupImportance",
+                         "taskId",
+                         "taskPrior",
+                         "taskType",
+                         "taskEstimates",
+                         "taskScore",
+                         "relConcurrent",
+                         "relAlternative",
+                         "relSequent"])
         writer.writerows(taskList)
     return()
 
-def writeCands(filename, cands):
-    with open(filename, 'w', newline='') as f:
+def writeCands(candsList):
+    with open('cands.csv', 'w', newline='') as f:
         writer = csv.writer(f, delimiter = ";")
-        writer.writerow(["timeStamp", "candId", "candAddress", "numberOfTasks", "additionalTo", "lastGroupId", "checkSum"])
-        for cand in cands:
-            writer.writerow([cand[0], cand[1], cand[2], cand[3], cand[4], cand[5], cand[6]])
+        writer.writerow(["candId",
+                         "numberOfTasks",
+                         "score",
+                         "hoursUnused",
+                         "checkSum",
+                         "taskId",
+                         "taskPrior",
+                         "taskType",
+                         "taskEstimates",
+                         "taskScore",
+                         "relConcurrent",
+                         "relAlternative",
+                         "relSequent"])
+        writer.writerows(candsList)
+    return()
 
 
 

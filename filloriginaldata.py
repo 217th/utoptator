@@ -1,4 +1,4 @@
-def CreateDictDevs(silentMode = "silent"):
+def createDictDevs(silentMode = "silent"):
     """ Создаём словарь разработчиков"""
     keys = [0, 1, 2, 3, 5]
     values = ["Petya", "Sasha", "Pasha", "Masha", "Serezha"]
@@ -6,7 +6,7 @@ def CreateDictDevs(silentMode = "silent"):
     if silentMode is not "silent": print ("ID разработчиков: %s" % list(dictDevs.keys()))
     return (dictDevs)
 
-def CreateDictPriors():
+def createDictPriors():
     """ Создаём словарь приоритетов """
     return ({
         0 : "Немедленный",
@@ -16,14 +16,14 @@ def CreateDictPriors():
         4 : "Нормальный",
         5 : "Низкий"})
 
-def CreateDictTaskTypes():
+def createDictTaskTypes():
     """ Словарь типов задач """
     return ({
         1 : "Разработка",
         2 : "Поддержка",
         3 : "Ошибка"})
     
-def CreateArrayLabourQuotas(keyList, silentMode = "silent"):
+def createArrayLabourQuotas(keyList, silentMode = "silent"):
     """ Пока одномерный массив квот рабочих часов разработчиков - пока заполняем рандомайзером. Впоследствии будет три строки: часы основного состава, часы резерва, допустимое превышение (%). Превышение может расходоваться на задачи только очень высокого и высокого приоритетов."""
     import random
     labourHourQuotas = []
