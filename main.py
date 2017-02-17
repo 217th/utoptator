@@ -60,6 +60,7 @@ for group in taskGroups:
 if any(len(x.tasks)>0 for x in taskGroups):
     candId = -1
     cands = []
+    forFileRawCandMetaArray = []
 
     def cleanCandsFromClones(cands, silentMode="silent"):
         for cand in reversed(cands):
@@ -72,6 +73,11 @@ if any(len(x.tasks)>0 for x in taskGroups):
                             print("Дубли | id %s, checkSum %s, lastGroup %s | id %s, checkSum %s, lastGroup %s" % (
                             cand.candId, cand.checkSum, cand.lastGroupId, candPrev.candId, candPrev.checkSum,
                             candPrev.lastGroupId))
+
+                        for i, j in enumerate(forFileRawCandMetaArray):
+                            if j[1] == cand.candId:
+                                forFileRawCandMetaArray[i].append("del")
+
                         cands.pop(cands.index(cand))
                         break
         return(cands)
@@ -79,6 +85,7 @@ if any(len(x.tasks)>0 for x in taskGroups):
     def fillCandWithGroup(group, basicCand, method, silentmode="silent"):
         global candId
         global cands
+        global forFileRawCandMetaArray
         candId += 1
         if group.tasks:
             if basicCand == False:
@@ -103,6 +110,23 @@ if any(len(x.tasks)>0 for x in taskGroups):
             else:
                 cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, silentmode))
             cands[-1].lastGroupId = group.groupId
+
+        # Формат записи: additionalTo, candId, lastGroupId, checkSum, len(tasks), hoursUnused, candScore, method, toBeDeleted
+        forFileCandMeta = []
+        if cands[-1].additionalTo:
+            forFileAddTo = 'addTo '+str(cands[-1].additionalTo.candId)
+        else:
+            forFileAddTo = False
+        forFileCandMeta.extend([
+            forFileAddTo,
+            cands[-1].candId,
+            cands[-1].lastGroupId,
+            round(cands[-1].checkSum, 1),
+            'amnt '+str(len(cands[-1].tasks)),
+            cands[-1].hoursUnused,
+            method])
+        forFileRawCandMetaArray.append(forFileCandMeta)
+
         return ()
 
     if len(taskGroups) > 0:
@@ -154,6 +178,7 @@ if any(len(x.tasks)>0 for x in taskGroups):
                 # hoursUnused остаётся от позднего
                 # lastGroupId остаётся от позднего
                 cand.tasks.extend(cand.additionalTo.tasks)
+                cand.checkSum += cand.additionalTo.checkSum
                 cand.additionalTo = cand.additionalTo.additionalTo
 
     candsAssembled.sort(key=lambda x: x.lastGroupId, reverse=True)
@@ -167,43 +192,63 @@ if any(len(x.tasks)>0 for x in taskGroups):
     for cand in candsAssembled:
         cand.printCandidate()
 
-else:
-    print("Все группы задач пусты.")
+    # Заполнение исходного списка задач для экспорта в файл
+    forFileTasksList = []
+    for group in taskGroups:
+        for task in group.tasks:
+            forFileTasksList.append([
+                group.groupId,
+                group.importance,
+                task.taskId,
+                task.taskPrior,
+                task.taskType,
+                task.taskEstimates,
+                round(task.taskScore, 1),
+                [t.taskId for t in task.relConcurrent if t is not False],
+                [t.taskId for t in task.relAlternative if t is not False],
+                [t.taskId for t in task.relSequent if t is not False]
+            ])
 
-# Экспорт списка задач в файл
-tasksList = []
-for group in taskGroups:
-    for task in group.tasks:
-        tasksList.append([
-            group.groupId,
-            group.importance,
-            task.taskId,
-            task.taskPrior,
-            task.taskType,
-            task.taskEstimates,
-            round(task.taskScore, 1),
-            [t.taskId for t in task.relConcurrent if t is not False],
-            [t.taskId for t in task.relAlternative if t is not False],
-            [t.taskId for t in task.relSequent if t is not False]
-        ])
-utptr_to_file.writeTasks(tasksList)
+    # Заполнение списка настроек попытки для экспорта в файл
+    forFileTrySettings = []
+    forFileTrySettings.append(listLabourHoursQuotas)
 
-candsList = []
-for cand in candsAssembled:
-    for task in cand.tasks:
-        candsList.append([
+    # Заполнение массива с мета-информацией по итоговым кандидатам для экспорта в файл
+    forFileFinalCandMetaArray = []
+    for cand in candsAssembled:
+        forFileFinalCandMetaArray.append([
             cand.candId,
             len(cand.tasks),
             round(cand.getScore(), 1),
             cand.hoursUnused,
-            round(cand.checkSum, 1),
-            task.taskId,
-            task.taskPrior,
-            task.taskType,
-            task.taskEstimates,
-            task.taskScore,
-            [t.taskId for t in task.relConcurrent if t is not False],
-            [t.taskId for t in task.relAlternative if t is not False],
-            [t.taskId for t in task.relSequent if t is not False]
-        ])
-utptr_to_file.writeCands(candsList)
+            round(cand.checkSum, 1)])
+
+    # Заполнение массива с подробной информацией о задачах, вошедших в финальные кандидаты, для экспорта в файл
+    forFileFinalCandsTasksList = []
+    for cand in candsAssembled:
+        forFileSingleFinalCandTasksList = []
+        for task in cand.tasks:
+            forFileSingleFinalCandTasksList.append([
+                cand.candId,
+                len(cand.tasks),
+                round(cand.getScore(), 1),
+                cand.hoursUnused,
+                round(cand.checkSum, 1),
+                task.taskId,
+                task.taskPrior,
+                task.taskType,
+                task.taskEstimates,
+                task.taskScore,
+                [t.taskId for t in task.relConcurrent if t is not False],
+                [t.taskId for t in task.relAlternative if t is not False],
+                [t.taskId for t in task.relSequent if t is not False]
+                ])
+        forFileFinalCandsTasksList.append(forFileSingleFinalCandTasksList)
+
+    utptr_to_file.writeReportToXLS(forFileTrySettings, forFileTasksList, forFileRawCandMetaArray, forFileFinalCandMetaArray, forFileFinalCandsTasksList)
+    print(forFileFinalCandsTasksList)
+
+else:
+    print("Все группы задач пусты.")
+
+# Необходимо разбираться, почему итоговые кандидаты часто получают одинаковые, часто нулевые, контрольные суммы

@@ -118,6 +118,9 @@ class Task:
         for concTask in self.relConcurrent:
             concTask.relConcurrent.append(self)
 
+        return()
+
+'''
         for seqTask in self.relSequent:
             for seqSeqTask in seqTask.relSequent:
                 if seqSeqTask.taskId == seqTask.taskId:
@@ -125,8 +128,7 @@ class Task:
                     seqTask.relSequent = []
                     self.relSequent = []
                     break
-
-        return()
+'''
 
 '''
                         tId = self.taskId
@@ -143,6 +145,7 @@ class Candidate:
 #   hoursUnused - количество нераспределённых часов (list)
 #   isUsed - статус того, что для данного кандидата созданы все дополнительные (дочерние) кандидаты
 #   lastGroupId - идентификатор последней группы, из которой ПЫТАЛИСЬ включить задачи (могли и не включить)
+#   checkSum - контрольная сумма кандидата
 #
 # Методы класса Candidate.
 #   acceptTask - включить задачу в состав-кандидат
