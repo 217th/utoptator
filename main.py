@@ -21,7 +21,7 @@ def сreateTasksArray(n, silentMode="silent"):
             tasksArray.append(task)
         for task in tasksArray:
             print("setRandomRelations %s %s" % (task.taskId, tasksArray.index(task)))
-            task.setRandomRelations(tasksArray)
+            task.setRandomRelations(tasksArray, silentMode)
     else:
         print('Попросили слишком мало задач. Массив задач не заполнен.')
     return (tasksArray)
@@ -56,7 +56,7 @@ del groupMeta
 
 for group in taskGroups:
     group.fillAndSort(originalTasksArray, "babble")
-'''
+
 if any(len(x.tasks)>0 for x in taskGroups):
     candId = -1
     cands = []
@@ -139,9 +139,6 @@ if any(len(x.tasks)>0 for x in taskGroups):
                 task.taskType,
                 task.taskEstimates,
                 round(task.taskScore, 1),
-#                [t.taskId for t in task.relConcurrent if t is not False],
-#                [t.taskId for t in task.relAlternative if t is not False],
-#                [t.taskId for t in task.relSequent if t is not False]
                 task.relConcurrent,
                 task.relAlternative,
                 task.relSequent
@@ -226,9 +223,6 @@ if any(len(x.tasks)>0 for x in taskGroups):
                 task.taskType,
                 task.taskEstimates,
                 round(task.taskScore, 1),
-#                [t.taskId for t in task.relConcurrent if t is not False],
-#                [t.taskId for t in task.relAlternative if t is not False],
-#                [t.taskId for t in task.relSequent if t is not False]
                 task.relConcurrent,
                 task.relAlternative,
                 task.relSequent
@@ -273,9 +267,6 @@ if any(len(x.tasks)>0 for x in taskGroups):
                 task.taskType,
                 task.taskEstimates,
                 task.taskScore,
-#                [t.taskId for t in task.relConcurrent if t is not False],
-#                [t.taskId for t in task.relAlternative if t is not False],
-#                [t.taskId for t in task.relSequent if t is not False]
                 task.relConcurrent,
                 task.relAlternative,
                 task.relSequent
@@ -286,4 +277,3 @@ if any(len(x.tasks)>0 for x in taskGroups):
 
 else:
     print("Все группы задач пусты.")
-'''
