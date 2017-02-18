@@ -56,7 +56,6 @@ del groupMeta
 
 for group in taskGroups:
     group.fillAndSort(originalTasksArray, "babble")
-
 '''
 if any(len(x.tasks)>0 for x in taskGroups):
     candId = -1
@@ -140,9 +139,13 @@ if any(len(x.tasks)>0 for x in taskGroups):
                 task.taskType,
                 task.taskEstimates,
                 round(task.taskScore, 1),
-                [t.taskId for t in task.relConcurrent if t is not False],
-                [t.taskId for t in task.relAlternative if t is not False],
-                [t.taskId for t in task.relSequent if t is not False]])
+#                [t.taskId for t in task.relConcurrent if t is not False],
+#                [t.taskId for t in task.relAlternative if t is not False],
+#                [t.taskId for t in task.relSequent if t is not False]
+                task.relConcurrent,
+                task.relAlternative,
+                task.relSequent
+            ])
 
         return ()
 
@@ -223,9 +226,12 @@ if any(len(x.tasks)>0 for x in taskGroups):
                 task.taskType,
                 task.taskEstimates,
                 round(task.taskScore, 1),
-                [t.taskId for t in task.relConcurrent if t is not False],
-                [t.taskId for t in task.relAlternative if t is not False],
-                [t.taskId for t in task.relSequent if t is not False]
+#                [t.taskId for t in task.relConcurrent if t is not False],
+#                [t.taskId for t in task.relAlternative if t is not False],
+#                [t.taskId for t in task.relSequent if t is not False]
+                task.relConcurrent,
+                task.relAlternative,
+                task.relSequent
             ])
 
     # Заполнение списка настроек попытки для экспорта в файл
@@ -267,9 +273,12 @@ if any(len(x.tasks)>0 for x in taskGroups):
                 task.taskType,
                 task.taskEstimates,
                 task.taskScore,
-                [t.taskId for t in task.relConcurrent if t is not False],
-                [t.taskId for t in task.relAlternative if t is not False],
-                [t.taskId for t in task.relSequent if t is not False]
+#                [t.taskId for t in task.relConcurrent if t is not False],
+#                [t.taskId for t in task.relAlternative if t is not False],
+#                [t.taskId for t in task.relSequent if t is not False]
+                task.relConcurrent,
+                task.relAlternative,
+                task.relSequent
                 ])
         forFileFinalCandsTasksList.append(forFileSingleFinalCandTasksList)
 

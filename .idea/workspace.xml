@@ -22,11 +22,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="main.py" pinned="true" current-in-tab="true">
+      <file leaf-file-name="main.py" pinned="true" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="153">
-              <caret line="9" column="0" lean-forward="false" selection-start-line="9" selection-start-column="0" selection-end-line="9" selection-end-column="0" />
+            <state relative-caret-position="0">
+              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
               <folding>
                 <element signature="e#42#151#0" expanded="true" />
               </folding>
@@ -54,11 +54,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="utptr_classes.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="utptr_classes.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/utptr_classes.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="188">
-              <caret line="73" column="0" lean-forward="true" selection-start-line="73" selection-start-column="0" selection-end-line="73" selection-end-column="0" />
+            <state relative-caret-position="1963">
+              <caret line="116" column="31" lean-forward="true" selection-start-line="116" selection-start-column="31" selection-end-line="116" selection-end-column="31" />
               <folding />
             </state>
           </provider>
@@ -67,8 +67,8 @@
       <file leaf-file-name="utptr_to_file.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/utptr_to_file.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="378">
-              <caret line="106" column="36" lean-forward="false" selection-start-line="106" selection-start-column="36" selection-end-line="106" selection-end-column="36" />
+            <state relative-caret-position="224">
+              <caret line="82" column="33" lean-forward="false" selection-start-line="82" selection-start-column="22" selection-end-line="82" selection-end-column="33" />
               <folding>
                 <element signature="e#0#895#1" expanded="false" />
                 <element signature="e#898#909#0" expanded="true" />
@@ -98,8 +98,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>revers</find>
-      <find>Дубли</find>
       <find>next</find>
       <find>добавочный</find>
       <find>candsfor</find>
@@ -128,6 +126,8 @@
       <find>task</find>
       <find>cand</find>
       <find>sort</find>
+      <find>relConcurre</find>
+      <find>tasks +</find>
     </findStrings>
     <replaceStrings>
       <replace>group</replace>
@@ -139,6 +139,7 @@
       <replace>task</replace>
       <replace>cand[i]</replace>
       <replace>cand[0]</replace>
+      <replace>[x.taskId for x in tasks] +</replace>
     </replaceStrings>
   </component>
   <component name="Git.Settings">
@@ -150,8 +151,8 @@
         <option value="$PROJECT_DIR$/some_old_stuff.py" />
         <option value="$PROJECT_DIR$/filloriginaldata.py" />
         <option value="$PROJECT_DIR$/todo.txt" />
-        <option value="$PROJECT_DIR$/utptr_classes.py" />
         <option value="$PROJECT_DIR$/utptr_to_file.py" />
+        <option value="$PROJECT_DIR$/utptr_classes.py" />
         <option value="$PROJECT_DIR$/main.py" />
       </list>
     </option>
@@ -235,24 +236,6 @@
             <PATH_ELEMENT>
               <option name="myItemId" value="utptr_classes.py" />
               <option name="myItemType" value="com.jetbrains.python.projectView.PyFileNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="utoptator" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="utoptator" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="utptr_classes.py" />
-              <option name="myItemType" value="com.jetbrains.python.projectView.PyFileNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Candidate" />
-              <option name="myItemType" value="com.jetbrains.python.projectView.PyElementNode" />
             </PATH_ELEMENT>
           </PATH>
           <PATH>
@@ -462,7 +445,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1382" height="754" extended-state="6" />
+    <frame x="-8" y="-8" width="1382" height="754" extended-state="7" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.14055637" sideWeight="0.48913044" order="0" side_tool="false" content_ui="combo" />
@@ -934,18 +917,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/utptr_classes.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="188">
-          <caret line="73" column="0" lean-forward="true" selection-start-line="73" selection-start-column="0" selection-end-line="73" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/utptr_to_file.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="378">
-          <caret line="106" column="36" lean-forward="false" selection-start-line="106" selection-start-column="36" selection-end-line="106" selection-end-column="36" />
+        <state relative-caret-position="224">
+          <caret line="82" column="33" lean-forward="false" selection-start-line="82" selection-start-column="22" selection-end-line="82" selection-end-column="33" />
           <folding>
             <element signature="e#0#895#1" expanded="false" />
             <element signature="e#898#909#0" expanded="true" />
@@ -955,11 +930,19 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="153">
-          <caret line="9" column="0" lean-forward="false" selection-start-line="9" selection-start-column="0" selection-end-line="9" selection-end-column="0" />
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#42#151#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utptr_classes.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1963">
+          <caret line="116" column="31" lean-forward="true" selection-start-line="116" selection-start-column="31" selection-end-line="116" selection-end-column="31" />
+          <folding />
         </state>
       </provider>
     </entry>

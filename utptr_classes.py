@@ -77,59 +77,92 @@ class Task:
 
         r = random.randint(0, 10)
         if r in range(0, 7):
-            self.relConcurrent.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relConcurrent.append(random.choice([x.taskId for x in tasks] + len(tasks)*5*[False]))
         elif r in range(8, 9):
-            self.relConcurrent.append(random.choice(tasks + len(tasks)*5*[False]))
-            self.relConcurrent.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relConcurrent.append(random.choice([x.taskId for x in tasks] + len(tasks)*5*[False]))
+            self.relConcurrent.append(random.choice([x.taskId for x in tasks] + len(tasks)*5*[False]))
         elif r == 10:
-            self.relConcurrent.append(random.choice(tasks + len(tasks)*5*[False]))
-            self.relConcurrent.append(random.choice(tasks + len(tasks)*5*[False]))
-            self.relConcurrent.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relConcurrent.append(random.choice([x.taskId for x in tasks] + len(tasks)*5*[False]))
+            self.relConcurrent.append(random.choice([x.taskId for x in tasks] + len(tasks)*5*[False]))
+            self.relConcurrent.append(random.choice([x.taskId for x in tasks] + len(tasks)*5*[False]))
 
         r = random.randint(0, 10)
         if r in range(0, 7):
-            self.relAlternative.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relAlternative.append(random.choice([x.taskId for x in tasks] + len(tasks)*5*[False]))
         elif r in range(8, 9):
-            self.relAlternative.append(random.choice(tasks + len(tasks)*5*[False]))
-            self.relAlternative.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relAlternative.append(random.choice([x.taskId for x in tasks] + len(tasks)*5*[False]))
+            self.relAlternative.append(random.choice([x.taskId for x in tasks] + len(tasks)*5*[False]))
         elif r == 10:
-            self.relAlternative.append(random.choice(tasks + len(tasks)*5*[False]))
-            self.relAlternative.append(random.choice(tasks + len(tasks)*5*[False]))
-            self.relAlternative.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relAlternative.append(random.choice([x.taskId for x in tasks] + len(tasks)*5*[False]))
+            self.relAlternative.append(random.choice([x.taskId for x in tasks] + len(tasks)*5*[False]))
+            self.relAlternative.append(random.choice([x.taskId for x in tasks] + len(tasks)*5*[False]))
 
         r = random.randint(0, 10)
         if r in range(0, 7):
-            self.relSequent.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relSequent.append(random.choice([x.taskId for x in tasks] + len(tasks)*5*[False]))
         elif r in range(8, 9):
-            self.relSequent.append(random.choice(tasks + len(tasks)*5*[False]))
-            self.relSequent.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relSequent.append(random.choice([x.taskId for x in tasks] + len(tasks)*5*[False]))
+            self.relSequent.append(random.choice([x.taskId for x in tasks] + len(tasks)*5*[False]))
         elif r == 10:
-            self.relSequent.append(random.choice(tasks + len(tasks)*5*[False]))
-            self.relSequent.append(random.choice(tasks + len(tasks)*5*[False]))
-            self.relSequent.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relSequent.append(random.choice([x.taskId for x in tasks] + len(tasks)*5*[False]))
+            self.relSequent.append(random.choice([x.taskId for x in tasks] + len(tasks)*5*[False]))
+            self.relSequent.append(random.choice([x.taskId for x in tasks] + len(tasks)*5*[False]))
 
         self.relConcurrent = [x for x in self.relConcurrent if x is not False]
         self.relAlternative = [x for x in self.relAlternative if x is not False]
         self.relSequent = [x for x in self.relSequent if x is not False]
 
-        for altTask in self.relAlternative:
-            altTask.relAlternative.append(self)
+        for altTaskId in self.relAlternative:
+            altTasks = [x for x in tasks if x.taskId == altTaskId]
+            for altTask in altTasks:
+                altTask.relAlternative.append(self.taskId)
 
-        for concTask in self.relConcurrent:
-            concTask.relConcurrent.append(self)
+        for concTaskId in self.relConcurrent:
+            concTasks = [x for x in tasks if x.taskId == concTaskId]
+            for concTask in concTasks:
+                concTask.relConcurrent.append(self.taskId)
 
-        return()
+        for seqTaskId in self.relSequent:
+            seqTasks = [x for x in tasks if x.taskId == seqTaskId]
+            for seqTask in seqTasks:
+                for seqSeqTaskId in seqTask.relSequent:
+                    if seqSeqTaskId == seqTaskId:
+                        print("setRandomRelations relSequent self %s seqTask %s" % (self.taskId, seqTask.taskId))
+                        seqTask.relSequent = []
+                        self.relSequent = []
+                        break
 
 '''
-        for seqTask in self.relSequent:
-            for seqSeqTask in seqTask.relSequent:
-                if seqSeqTask.taskId == seqTask.taskId:
-                    print("setRandomRelations relSequent self %s seqTask %s" % (self.taskId, seqTask.taskId))
-                    seqTask.relSequent = []
-                    self.relSequent = []
-                    break
-'''
+        if r in range(0, 7):
+            self.relConcurrent.append(random.choice(tasks + len(tasks)*5*[False]))
+        elif r in range(8, 9):
+            self.relConcurrent.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relConcurrent.append(random.choice(tasks + len(tasks)*5*[False]))
+        elif r == 10:
+            self.relConcurrent.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relConcurrent.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relConcurrent.append(random.choice(tasks + len(tasks)*5*[False]))
 
+        if r in range(0, 7):
+            self.relAlternative.append(random.choice(tasks + len(tasks)*5*[False]))
+        elif r in range(8, 9):
+            self.relAlternative.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relAlternative.append(random.choice(tasks + len(tasks)*5*[False]))
+        elif r == 10:
+            self.relAlternative.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relAlternative.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relAlternative.append(random.choice(tasks + len(tasks)*5*[False]))
+
+        if r in range(0, 7):
+            self.relSequent.append(random.choice(tasks + len(tasks)*5*[False]))
+        elif r in range(8, 9):
+            self.relSequent.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relSequent.append(random.choice(tasks + len(tasks)*5*[False]))
+        elif r == 10:
+            self.relSequent.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relSequent.append(random.choice(tasks + len(tasks)*5*[False]))
+            self.relSequent.append(random.choice(tasks + len(tasks)*5*[False]))
+'''
 '''
                         tId = self.taskId
                         seqTask.relSequent = filter(lambda x: x.taskId == tId, seqTask.relSequent)
