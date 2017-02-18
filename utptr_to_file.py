@@ -61,7 +61,7 @@
 import xlwt
 import time
 
-def writeReportToXLS(settings, allTasks, rawCandsList, rawCandsTasksList, finalCandsList, finalCandsTasksList):
+def writeReportToXLS(settings, allTasks, rawCandsList, rawCandsOnlyActiveList, rawCandsTasksList, finalCandsList, finalCandsTasksList):
     wb = xlwt.Workbook()
     styleYellow = xlwt.easyxf('pattern: pattern solid, fore_colour yellow;')
     styleRed = xlwt.easyxf('pattern: pattern solid, fore_colour red;')
@@ -103,6 +103,21 @@ def writeReportToXLS(settings, allTasks, rawCandsList, rawCandsTasksList, finalC
         ws.write(cand[1], cand[2]*8+6, cand[6])
         if len(cand) > 7:
             ws.write(cand[1], cand[2] * 8 + 7, cand[7])
+
+    ws = wb.add_sheet('rawCandsActive', cell_overwrite_ok = True)
+    rawCandsOnlyActiveList.sort(key=lambda x: x[0], reverse=False)
+    header = ["additionalTo",
+              "candId",
+              "lastGroupId",
+              "checkSum",
+              "numberOfTasks",
+              "hoursUnused",
+              "method"]
+    for i in range(len(header)):
+        ws.write(0, i, header[i], styleOrange)
+    for i in range(len(rawCandsOnlyActiveList)):
+        for j in range(len(rawCandsOnlyActiveList[i])):
+            ws.write(i+1, j, str(rawCandsOnlyActiveList[i][j]))
 
     ws = wb.add_sheet('rawCandsTasks', cell_overwrite_ok = True)
     header = ["candId",

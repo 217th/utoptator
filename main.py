@@ -57,6 +57,7 @@ del groupMeta
 for group in taskGroups:
     group.fillAndSort(originalTasksArray, "babble")
 
+'''
 if any(len(x.tasks)>0 for x in taskGroups):
     candId = -1
     cands = []
@@ -67,7 +68,7 @@ if any(len(x.tasks)>0 for x in taskGroups):
         for cand in reversed(cands):
             if cands.index(cand) > 0:
                 for candPrev in cands[0: cands.index(cand)]:
-                    if (cand.checkSum == candPrev.checkSum) and\
+                    if (round(cand.checkSum, 1) == round(candPrev.checkSum, 1)) and\
                             (cand.lastGroupId == candPrev.lastGroupId) and\
                             (cand.additionalTo == candPrev.additionalTo):
                         if silentMode is not "silent":
@@ -231,7 +232,16 @@ if any(len(x.tasks)>0 for x in taskGroups):
     forFileTrySettings = []
     forFileTrySettings.append(listLabourHoursQuotas)
 
-    # Заполнение массива с мета-информацией по итоговым кандидатам для экспорта в файл
+    forFileRawCandOnlyActiveArray = []
+    for record in forFileRawCandMetaArray:
+        if 'del' in record:
+            pass
+        else:
+            if record[0] == False:
+                record[0] = ""
+            forFileRawCandOnlyActiveArray.append(record)
+
+    # Заполнение массива с мета-информацией по финальным склеенным кандидатам для экспорта в файл
     forFileFinalCandMetaArray = []
     for cand in candsAssembled:
         forFileFinalCandMetaArray.append([
@@ -263,9 +273,8 @@ if any(len(x.tasks)>0 for x in taskGroups):
                 ])
         forFileFinalCandsTasksList.append(forFileSingleFinalCandTasksList)
 
-    utptr_to_file.writeReportToXLS(forFileTrySettings, forFileTasksList, forFileRawCandMetaArray, forFileRawCandTasksArray, forFileFinalCandMetaArray, forFileFinalCandsTasksList)
+    utptr_to_file.writeReportToXLS(forFileTrySettings, forFileTasksList, forFileRawCandMetaArray, forFileRawCandOnlyActiveArray, forFileRawCandTasksArray, forFileFinalCandMetaArray, forFileFinalCandsTasksList)
 
 else:
     print("Все группы задач пусты.")
-
-# Необходимо разбираться, почему итоговые кандидаты часто получают одинаковые, часто нулевые, контрольные суммы
+'''
