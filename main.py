@@ -61,6 +61,7 @@ if any(len(x.tasks)>0 for x in taskGroups):
     candId = -1
     cands = []
     forFileRawCandMetaArray = []
+    forFileRawCandTasksArray = []
 
     def cleanCandsFromClones(cands, silentMode="silent"):
         for cand in reversed(cands):
@@ -86,6 +87,7 @@ if any(len(x.tasks)>0 for x in taskGroups):
         global candId
         global cands
         global forFileRawCandMetaArray
+        global forFileRawCandTasksArray
         candId += 1
         if group.tasks:
             if basicCand == False:
@@ -111,7 +113,7 @@ if any(len(x.tasks)>0 for x in taskGroups):
                 cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, silentmode))
             cands[-1].lastGroupId = group.groupId
 
-        # Формат записи: additionalTo, candId, lastGroupId, checkSum, len(tasks), hoursUnused, candScore, method, toBeDeleted
+        # Заполняем мета-информацию о сырых кандидатах для вывода в файл
         forFileCandMeta = []
         if cands[-1].additionalTo:
             forFileAddTo = 'addTo '+str(cands[-1].additionalTo.candId)
@@ -126,6 +128,20 @@ if any(len(x.tasks)>0 for x in taskGroups):
             cands[-1].hoursUnused,
             method])
         forFileRawCandMetaArray.append(forFileCandMeta)
+
+        # Заполняем мета-информацию о задачах сырых кандидатов для вывода в файл
+        for task in cands[-1].tasks:
+            forFileRawCandTasksArray.append([
+                cands[-1].candId,
+                cands[-1].lastGroupId,
+                task.taskId,
+                task.taskPrior,
+                task.taskType,
+                task.taskEstimates,
+                round(task.taskScore, 1),
+                [t.taskId for t in task.relConcurrent if t is not False],
+                [t.taskId for t in task.relAlternative if t is not False],
+                [t.taskId for t in task.relSequent if t is not False]])
 
         return ()
 
@@ -168,7 +184,7 @@ if any(len(x.tasks)>0 for x in taskGroups):
                     basicCand.isUsed = True
                     cands = cleanCandsFromClones(cands, "silent")
 
-# ▼▼▼▼▼▼▼▼▼ Склейка в один проход, удаление всех кандидатов, заканчивающихся непоследней группой ▼▼▼▼▼▼▼▼▼▼
+# ▼▼▼▼▼▼▼▼▼ Склейка в один проход, удаление всех кандидатов, заканчивающихся непоследней группой,  ▼▼▼▼▼▼▼▼▼▼
 
     candsAssembled = copy.deepcopy(cands)
     for i in range(len(taskGroups)):
@@ -185,6 +201,8 @@ if any(len(x.tasks)>0 for x in taskGroups):
     for cand in reversed(candsAssembled):
         if cand.lastGroupId < taskGroups[-1].groupId:
             candsAssembled.pop(candsAssembled.index(cand))
+
+    candsAssembled = cleanCandsFromClones(candsAssembled, "silent")
 
 # ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
@@ -245,8 +263,7 @@ if any(len(x.tasks)>0 for x in taskGroups):
                 ])
         forFileFinalCandsTasksList.append(forFileSingleFinalCandTasksList)
 
-    utptr_to_file.writeReportToXLS(forFileTrySettings, forFileTasksList, forFileRawCandMetaArray, forFileFinalCandMetaArray, forFileFinalCandsTasksList)
-    print(forFileFinalCandsTasksList)
+    utptr_to_file.writeReportToXLS(forFileTrySettings, forFileTasksList, forFileRawCandMetaArray, forFileRawCandTasksArray, forFileFinalCandMetaArray, forFileFinalCandsTasksList)
 
 else:
     print("Все группы задач пусты.")
