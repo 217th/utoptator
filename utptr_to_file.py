@@ -61,7 +61,7 @@
 import xlwt
 import time
 
-def writeReportToXLS(settings, allTasks, rawCandsList, rawCandsOnlyActiveList, rawCandsTasksList, finalCandsList, finalCandsTasksList):
+def writeReportToXLS(settings, allTasks, rels, rawCandsList, rawCandsOnlyActiveList, rawCandsTasksList, finalCandsList, finalCandsTasksList):
     wb = xlwt.Workbook()
     styleYellow = xlwt.easyxf('pattern: pattern solid, fore_colour yellow;')
     styleRed = xlwt.easyxf('pattern: pattern solid, fore_colour red;')
@@ -88,6 +88,17 @@ def writeReportToXLS(settings, allTasks, rawCandsList, rawCandsOnlyActiveList, r
     for i in range(len(allTasks)):
         for j in range(len(allTasks[i])):
             ws.write(i+1, j, str(allTasks[i][j]))
+
+    ws = wb.add_sheet('rels', cell_overwrite_ok = True)
+    header = ["type",
+                     "subjectTaskId",
+                     "subjectTaskGroupId",
+                     "assocTaskId"]
+    for i in range(len(header)):
+        ws.write(0, i, header[i], styleOrange)
+    for i in range(len(rels)):
+        for j in range(len(rels[i])):
+            ws.write(i+1, j, str(rels[i][j]))
 
     ws = wb.add_sheet('rawCands', cell_overwrite_ok = True)
     for cand in rawCandsList:
@@ -190,3 +201,52 @@ def writeReportToXLS(settings, allTasks, rawCandsList, rawCandsOnlyActiveList, r
             ws.write(i+7, 7, str(cand[i][12]))
 
     wb.save("results/try." + time.strftime("%Y.%m.%d.%H.%M.%S", time.localtime()) + ".xls")
+
+
+def writeDebugData1ToXLS(rels, neatConcurrentTaskGroups, clearConcurrentTaskGroups, relsOverall):
+    #   Функция для вывода отладочных данных
+    #   1 - выводим промежуточный результат создания межзадачных связей relConcurrent
+
+    wb = xlwt.Workbook()
+    styleYellow = xlwt.easyxf('pattern: pattern solid, fore_colour yellow;')
+    styleRed = xlwt.easyxf('pattern: pattern solid, fore_colour red;')
+    styleOrange = xlwt.easyxf('pattern: pattern solid, fore_colour orange;')
+    styleAqua = xlwt.easyxf('pattern: pattern solid, fore_colour aqua;')
+
+    ws = wb.add_sheet('rels', cell_overwrite_ok = True)
+    header = ["type",
+                     "subjectTaskId",
+                     "subjectTaskGroupId",
+                     "assocTaskId"]
+    for i in range(len(header)):
+        ws.write(0, i, header[i], styleOrange)
+    for i in range(len(rels)):
+        ws.write(i + 1, 0, str(rels[i].type))
+        ws.write(i + 1, 1, str(rels[i].subjTaskId))
+        ws.write(i + 1, 2, str(rels[i].subjTaskGroupId))
+        ws.write(i + 1, 3, str(rels[i].assocTaskId))
+
+    ws = wb.add_sheet('neatGroups', cell_overwrite_ok = True)
+    for i in range(len(neatConcurrentTaskGroups)):
+        for j in range(len(neatConcurrentTaskGroups[i])):
+            ws.write(i, j, str(neatConcurrentTaskGroups[i][j]))
+
+    ws = wb.add_sheet('clearGroups', cell_overwrite_ok = True)
+    for i in range(len(clearConcurrentTaskGroups)):
+        for j in range(len(clearConcurrentTaskGroups[i])):
+            ws.write(i, j, str(clearConcurrentTaskGroups[i][j]))
+
+    ws = wb.add_sheet('relsOverall', cell_overwrite_ok = True)
+    header = ["type",
+                     "subjectTaskId",
+                     "subjectTaskGroupId",
+                     "assocTaskId"]
+    for i in range(len(header)):
+        ws.write(0, i, header[i], styleOrange)
+    for i in range(len(relsOverall)):
+        ws.write(i + 1, 0, str(relsOverall[i].type))
+        ws.write(i + 1, 1, str(relsOverall[i].subjTaskId))
+        ws.write(i + 1, 2, str(relsOverall[i].subjTaskGroupId))
+        ws.write(i + 1, 3, str(relsOverall[i].assocTaskId))
+
+    wb.save("results/dbg1." + time.strftime("%Y.%m.%d.%H.%M.%S", time.localtime()) + ".xls")

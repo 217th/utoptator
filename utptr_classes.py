@@ -109,7 +109,7 @@ class Task:
             self.relSequent.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*5*[False]))
 
         if silentMode is not "silent":
-            print("taskId %s ... start deleting falses" % self.taskId)
+            print(self.hl("Task.setRandomRelations", "g") + "taskId %s ... start deleting falses" % self.taskId)
         self.relConcurrent = [x for x in self.relConcurrent if x is not False]
         self.relAlternative = [x for x in self.relAlternative if x is not False]
         self.relSequent = [x for x in self.relSequent if x is not False]
@@ -117,28 +117,28 @@ class Task:
 # !!! Где-то в синхронизации альтернатив и одновременных задач - косяк, из-за которого всё вылетает !!!
 
         if silentMode is not "silent":
-            print("taskId %s ... start searching unsyncronized alternatives" % self.taskId)
+            print(self.hl("Task.setRandomRelations", "g") + "taskId %s ... start searching unsyncronized alternatives" % self.taskId)
         for altTaskId in self.relAlternative:
             altTasks = [x for x in tasks if x.taskId == altTaskId]
             for altTask in altTasks:
                 altTask.relAlternative.append(self.taskId)
 
         if silentMode is not "silent":
-            print("taskId %s ... start searching unsyncronized concurrences" % self.taskId)
+            print(self.hl("Task.setRandomRelations", "g") + "taskId %s ... start searching unsyncronized concurrences" % self.taskId)
         for concTaskId in self.relConcurrent:
             concTasks = [x for x in tasks if x.taskId == concTaskId]
             for concTask in concTasks:
                 concTask.relConcurrent.append(self.taskId)
 
         if silentMode is not "silent":
-            print("taskId %s ... start searching unsyncronized sequences" % self.taskId)
+            print(self.hl("Task.setRandomRelations", "g") + "taskId %s ... start searching unsyncronized sequences" % self.taskId)
         for seqTaskId in self.relSequent:
             seqTasks = [x for x in tasks if x.taskId == seqTaskId]
             for seqTask in seqTasks:
                 for seqSeqTaskId in seqTask.relSequent:
                     if seqSeqTaskId == seqTaskId:
                         if silentMode is not "silent":
-                            print("setRandomRelations relSequent self %s seqTask %s" % (self.taskId, seqTask.taskId))
+                            print(self.hl("Task.setRandomRelations", "g") + "setRandomRelations relSequent self %s seqTask %s" % (self.taskId, seqTask.taskId))
                         seqTask.relSequent = []
                         self.relSequent = []
                         break
@@ -295,10 +295,36 @@ class Group:
 class Relation:
 # Атрибуты класса Relations:
 #   type - тип: relSequent, relConcurrent, relAlternative
-#   для relSequent:
-#       pre - list of taskId
-#
+#   subjTaskGroupId - id группы основной задачи
+#   subjTaskId - задача, к которой применима связь
+#   assocTaskId - задача, с которой связана subjectTask
+#   isUsed - по умолчанию False
 
-# Суть: заводить массив relations до попыток заполнения кандидатов. В relations сохранять все связи. Для каждой связи указывается список "базовых" задач (для которых должно применяться правило связи) и условий, которые должны выполняться.
+# Суть: заводить массив relations до попыток заполнения кандидатов.
+# В relations сохранять все связи.
+# Для каждой связи указывается список "базовых" задач (для которых должно применяться правило связи) и условий, которые должны выполняться.
+# Уникальный объект характеризуется type, subjectTaskId
+# При исполнении логика такая: для дошли до задачи, ищем её среди relations. Если нашли и "использовали" relation, удаляем её из массива (или помечаем как неактивную).
 
-    pass
+    def hl(self, funcName, color="g"):
+        silentMode = False
+        if not silentMode:
+            if color == "g":
+                return ("\x1b[0;36;42m" + "(" + funcName + "):" + "\x1b[0m" + " ")
+        if color == "r":
+            return ("\x1b[0;36;41m" + "(" + funcName + "):" + "\x1b[0m" + " ")
+        if color == "y":
+            return ("\x1b[0;36;43m" + "(" + funcName + "):" + "\x1b[0m" + " ")
+        if color == "b":
+            return ("\x1b[0;36;44m" + "(" + funcName + "):" + "\x1b[0m" + " ")
+        else:
+            return ("")
+
+    def __init__(self, type, subjectTaskId, subjectTaskGroupId, associatedTaskId, silentMode = "silent"):
+        self.type = type
+        self.subjTaskGroupId = subjectTaskGroupId
+        self.subjTaskId = subjectTaskId
+        self.assocTaskId = associatedTaskId
+        self.isUsed = False
+        if silentMode is not "silent":
+            print(self.hl("Relation.__init__", "g") + "Создана связь типа %s - %s (группа %s) - %s" % (self.type, self.subjTaskId, self.subjTaskGroupId, self.assocTaskId))
