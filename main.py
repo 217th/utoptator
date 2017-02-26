@@ -1,11 +1,11 @@
 # https://www.tutorialspoint.com/python/
 
 from filloriginaldata import (createDictDevs, createDictPriors, createDictTaskTypes, createArrayLabourQuotas)
-import operator
 import copy
 import random
 import utptr_classes
 import utptr_to_file
+import utptr_rels
 
 silentMode = "babble"  # Режим тишины. "silent" - сокращённые сообщения. "babble" - полные сообщения
 dictTaskTypes = createDictTaskTypes()
@@ -18,15 +18,15 @@ def сreateTasksArray(n, silentMode="silent"):
     tasksArray = []
     if n > 0:
         for i in range(n):
-            task = utptr_classes.Task(dictPriors, dictTaskTypes, dictDevs, "silent")
+            task = utptr_classes.Task(dictPriors, dictTaskTypes, dictDevs, silentMode)
             tasksArray.append(task)
         for task in tasksArray:
-            task.setRandomRelations(tasksArray, "silent")
+            task.setRandomRelations(tasksArray, silentMode)
     else:
         print('Попросили слишком мало задач. Массив задач не заполнен.')
     return (tasksArray)
 
-originalTasksArray = сreateTasksArray(100, silentMode)
+originalTasksArray = сreateTasksArray(100, "silent")
 
 taskGroups = []
 i = 0
@@ -62,93 +62,24 @@ def createOverallRelationsArray(silentMode = "silent"):
     for group in taskGroups:
         for task in group.tasks:
             if task.relAlternative:
-                for relId in task.relAlternative:
-                    relsNeatArray.append(utptr_classes.Relation("relAlternative", task.taskId, group.groupId, relId, silentMode))
+                for assocTaskId in task.relAlternative:
+                    relsNeatArray.append(utptr_rels.Relation("relAlternative", task.taskId, group.groupId, assocTaskId, silentMode))
             if task.relConcurrent:
-                for relId in task.relConcurrent:
-                    relsNeatArray.append(utptr_classes.Relation("relConcurrent", task.taskId, group.groupId, relId, silentMode))
+                for assocTaskId in task.relConcurrent:
+                    relsNeatArray.append(utptr_rels.Relation("relConcurrent", task.taskId, group.groupId, assocTaskId, silentMode))
             if task.relSequent:
-                for relId in task.relSequent:
-                    relsNeatArray.append(utptr_classes.Relation("relSequent", task.taskId, group.groupId, relId, silentMode))
+                for assocTaskId in task.relSequent:
+                    relsNeatArray.append(utptr_rels.Relation("relSequent", task.taskId, group.groupId, assocTaskId, silentMode))
 
     # Удаляем полные дубликаты (по совпадению типа, исходной задачи, связанной задачи)
-    for rel in reversed(relsNeatArray):
-        if relsNeatArray.index(rel) > 0:
-            for relPrev in relsNeatArray[0: relsNeatArray.index(rel)]:
-                if (rel.type == relPrev.type) and (rel.subjTaskId == relPrev.subjTaskId) and (rel.assocTaskId == relPrev.assocTaskId):
-                    if silentMode is not "silent":
-                        print("Удаляем дубль: %s %s - %s" % (rel.type, rel.subjTaskId, rel.assocTaskId))
-                    relsNeatArray.pop(relsNeatArray.index(rel))
-                    break
+    relsNeatArray = utptr_rels.cleanRelsFromClones(relsNeatArray)
 
-    def createOverallConcurrentRelationsArray(rels, silentMode="silent"):
-        # Дозаполняем relConcurrent в случаях, подобных: (A conc B, B conc C, A not conc C)
-        # Для каждой записи relConcurrent делаем следующее:
-        #   - создаём лист, в который включаем subjTaskId и assocTaskId
-        #   - прогоняем в цикле все остальные записи
-        #   - если среди остальных записей находится такая relConcurrent, что у неё только один элемент соответствует имеющимся в листе (а второй не соответствует), добавляем несоответствующий элемент в лист
-        #   - гоняем циклы до тех пор, пока не будет одного полного прохода, в котором не добавили ни один элемент
-        #   - удаляем дубликаты в получившемся списке
-        #   - чистим relsNeatArray от всех записей, совпадающих с листом
-        #   - вместо старых записей для каждого элемента листа заводим записи в relsNeatArray
-        #   - (???) дежурно удаляем дубликаты
-
-        relsConc = [x for x in rels if x.type == "relConcurrent"]
-    
-        neatListOfAssociations = []
-        # Массив, каждый элемент которого - список задач, имеющих прямую или косвенную связь relConcurrent
-        forFileNeatConcurrentTaskGroups = []
-    
-        for rel in relsConc:
-            assocTaskIds = [rel.subjTaskId, rel.assocTaskId]    # Формируем элемент, который потом будет добавлен в массив
-    
-            areAllTasksInList = False
-            while not areAllTasksInList:
-                areAllTasksInList = True
-                for rel1 in relsConc:
-                    if operator.xor((rel1.subjTaskId in assocTaskIds), (rel1.assocTaskId in assocTaskIds)):
-                        if rel1.subjTaskId in assocTaskIds:
-                            assocTaskIds.extend([rel1.assocTaskId])
-                        else:
-                            assocTaskIds.extend([rel1.subjTaskId])
-                        areAllTasksInList = False
-            neatListOfAssociations.append(sorted(assocTaskIds))
-            forFileNeatConcurrentTaskGroups.append(sorted(assocTaskIds))
-    
-        clearListOfAssociations = []
-        # neatListOfAssociations, очищенный от дублирующихся элементов
-        for assocTaskIds in neatListOfAssociations:
-            if assocTaskIds not in clearListOfAssociations:
-                clearListOfAssociations.append(assocTaskIds)
-        del neatListOfAssociations
-    
-        # Удаляем все элементы из исходного массива Relations, которые совпадают с элементами overall массива
-        for rel in reversed(rels):
-            for assocTaskIds in clearListOfAssociations:
-                if (rel.type == "relConcurrent") and (rel.subjTaskId in assocTaskIds) and (rel.assocTaskId in assocTaskIds):
-                    rels.pop(rels.index(rel))
-                    break
-
-        # Наполняем исходный массив (который будет отдан наружу из функции) элементами, формируемыми из overall массива
-        for assocTaskIds in clearListOfAssociations:
-            for i in range(len(assocTaskIds)-1):
-                for j in range(i+1, len(assocTaskIds)):
-                    rels.append(
-                        utptr_classes.Relation("relConcurrent", assocTaskIds[i], -1, assocTaskIds[j], silentMode))
-                    rels.append(
-                        utptr_classes.Relation("relConcurrent", assocTaskIds[j], -1, assocTaskIds[i], silentMode))
-    
-        # Выводим отладочные данные в excel
-        relsConcOverall = [x for x in rels if x.type == "relConcurrent"]
-        forFileClearConcurrentTaskGroups = copy.deepcopy(clearListOfAssociations)
-        utptr_to_file.writeDebugData1ToXLS(relsConc, forFileNeatConcurrentTaskGroups,
-                                                       forFileClearConcurrentTaskGroups, relsConcOverall)
-        return(rels)
-
-    relsNeatArray = createOverallConcurrentRelationsArray(relsNeatArray)
+    # Заполняем с учётом всех цепочек связи типа relConcurrent
+    relsNeatArray = utptr_rels.completeConcurrentRelations(relsNeatArray)
     return(relsNeatArray)
 
 originalRelsArray = createOverallRelationsArray("bubble")
+
 '''
 if any(len(x.tasks)>0 for x in taskGroups):
     candId = -1
@@ -327,7 +258,7 @@ if any(len(x.tasks)>0 for x in taskGroups):
     forFileRelsList = []
     for rel in originalRelsArray:
         forFileRelsList.append([
-            rel.type,
+            rel.relType,
             rel.subjTaskId,
             rel.subjTaskGroupId,
             rel.assocTaskId
