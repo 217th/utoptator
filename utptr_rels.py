@@ -114,7 +114,7 @@ def completeConcurrentRelations(rels, silentMode="silent"):
                     Relation("relConcurrent", assocTaskIds[j], -1, assocTaskIds[i], silentMode))
 
     # Выводим отладочные данные в excel
-    if False:
+    if True:
         forFileRelsConcOverall = [x for x in rels if x.relType == "relConcurrent"]
         forFileClearConcurrentTaskGroups = copy.deepcopy(clearListOfAssociations)
         utptr_to_file.writeDebugData1ToXLS(relsConc, forFileNeatConcurrentTaskGroups,
@@ -136,13 +136,56 @@ def completeSequentRelations(rels, silentMode="silent"):
 
     relsSeq = [x for x in rels if x.relType == "relSequent"]
 
+    neatListOfAssociations = []
+    forFileNeatSequentTaskGroups = []
 
+    for rel in relsSeq:
+        assocTaskIds = [rel.subjTaskId, rel.assocTaskId]
+
+        areAllTasksInList = False
+        while not areAllTasksInList:
+            areAllTasksInList = True
+            for rel1 in relsSeq:
+                if (rel1.subjTaskId == assocTaskIds[0]) and (not rel1.assocTaskId in assocTaskIds[1:]):
+                    # Случай, когда найден второй и последующий предшественник rel.subjTaskId
+                    # Добавляем предшественника в группу
+                    assocTaskIds.extend([rel1.assocTaskId])
+                    areAllTasksInList = False
+                if (rel1.subjTaskId in assocTaskIds[1:]) and (not rel1.assocTaskId in assocTaskIds):
+                    # Случай, когда нашли связь, в которой предшественник первой связи является последователем второй
+                    # Добавляем предшественника второй связи в группу предшественников первой
+                    # Проверяем при этом, что предшественник второй не равен главному последователю
+                    assocTaskIds.extend([rel1.assocTaskId])
+                    areAllTasksInList = False
+
+        neatListOfAssociations.append([assocTaskIds[0]]+sorted(assocTaskIds[1:]))
+        forFileNeatSequentTaskGroups.append([assocTaskIds[0]]+sorted(assocTaskIds[1:]))
+
+    clearListOfAssociations = []
+    # clearListOfAssociations - это neatListOfAssociations, очищенный от дублирующихся элементов
+    for assocTaskIds in neatListOfAssociations:
+        if assocTaskIds not in clearListOfAssociations:
+            clearListOfAssociations.append(assocTaskIds)
+    del neatListOfAssociations
+
+    # Удаляем все элементы из исходного массива rels, которые совпадают с элементами overall массива
+    for rel in reversed(rels):
+        for assocTaskIds in clearListOfAssociations:
+            if (rel.relType == "relSequent") and (rel.subjTaskId == assocTaskIds[0]) and (rel.assocTaskId in assocTaskIds[1:]):
+                rels.pop(rels.index(rel))
+                break
+
+    # Наполняем исходный массив (который будет отдан наружу из функции) элементами, формируемыми из overall массива
+    for assocTaskIds in clearListOfAssociations:
+        for i in range(1, len(assocTaskIds)):
+            rels.append(Relation("relSequent", assocTaskIds[0], -2, assocTaskIds[i], silentMode))
 
     # Выводим отладочные данные в excel
-    if False:
-        forFileRelsSeqOverall = [x for x in rels if x.relType == "relSequent"]
+    if True:
         forFileClearSequentTaskGroups = copy.deepcopy(clearListOfAssociations)
-        utptr_to_file.writeDebugData2ToXLS(relsSeq, forFileNeatSequentTaskGroups,
-                                           forFileClearSequentTaskGroups, forFileRelsSeqOverall)
+        forFileRelsSeqOverall = [x for x in rels if x.relType == "relSequent"]
+        utptr_to_file.writeDebugData2ToXLS(relsSeq, forFileNeatSequentTaskGroups, forFileClearSequentTaskGroups, forFileRelsSeqOverall)
 
     return rels
+
+

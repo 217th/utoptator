@@ -76,7 +76,12 @@ def createOverallRelationsArray(silentMode = "silent"):
 
     # Заполняем с учётом всех цепочек связи типа relConcurrent
     relsNeatArray = utptr_rels.completeConcurrentRelations(relsNeatArray)
-    return(relsNeatArray)
+    relsNeatArray = utptr_rels.completeSequentRelations(relsNeatArray)
+
+    # А теперь нужна валидация всего этого...
+    # Проверка, что среди групп задач (одновременных, альтернативных, последовательных) отсутствуют конфликты
+
+    return relsNeatArray
 
 originalRelsArray = createOverallRelationsArray("bubble")
 
