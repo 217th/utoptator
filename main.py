@@ -6,6 +6,7 @@ import random
 import utptr_classes
 import utptr_to_file
 import utptr_rels
+import datetime
 
 silentMode = "babble"  # Режим тишины. "silent" - сокращённые сообщения. "babble" - полные сообщения
 dictTaskTypes = createDictTaskTypes()
@@ -57,6 +58,7 @@ del groupMeta
 for group in taskGroups:
     group.fillAndSort(originalTasksArray, "babble")
 
+
 def createOverallRelationsArray(silentMode = "silent"):
     relsNeatArray = []
     for group in taskGroups:
@@ -82,7 +84,7 @@ originalRelsConflictArray = utptr_rels.validateRels([x.taskId for x in originalT
 
 if originalRelsConflictArray:
     for relConflict in originalRelsConflictArray:
-        print("Конфликт у задач %s и %s. Связи: %s. Описание: %s" % (relConflict.taskId1, relConflict.taskId2, relConflict.rels, relConflict.description))
+        relConflict.print()
 else:
     print("Связи между задачами - бесконлфиктные.")
 
@@ -177,6 +179,7 @@ else:
 
         if len(taskGroups) > 0:
             group = taskGroups[0]
+            print("----- (%s) Формируем кандидатов для группы %s -----" % (datetime.datetime.now().strftime("%H:%M:%S.%f"), group.groupId))
             if group.importance == "h":
                 fillCandWithGroup(group, False, "direct")
                 if (len(group.tasks) > len(cands[-1].tasks)):
@@ -195,6 +198,7 @@ else:
 
         if len(taskGroups) > 1:
             for group in taskGroups:
+                print("----- (%s) Формируем кандидатов для группы %s -----" % (datetime.datetime.now().strftime("%H:%M:%S.%f"), group.groupId))
                 for basicCand in cands:
                     if (basicCand.lastGroupId + 1 == group.groupId) and (not basicCand.isUsed):
                         if group.importance == "h":
@@ -217,6 +221,7 @@ else:
     # ▼▼▼▼▼▼▼▼▼ Склейка в один проход, удаление всех кандидатов, заканчивающихся непоследней группой,▼▼▼▼▼▼▼▼▼▼
 
         candsAssembled = copy.deepcopy(cands)
+        print("----- (%s) Склеиваем кандидатов -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
         for i in range(len(taskGroups)):
             for cand in reversed(candsAssembled):
                 if cand.additionalTo:
@@ -236,12 +241,13 @@ else:
 
     # ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
-        print("-----------------------После склейки-----------------------")
+        print("----- (%s) После склейки: -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
         for cand in candsAssembled:
             cand.printCandidate()
 
     # ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ Заполнение всего необходимого для экспорта в excel ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
 
+        print("----- (%s) Выводим в файл -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
         # Заполнение исходного списка задач для экспорта в файл
         forFileTasksList = []
         for group in taskGroups:

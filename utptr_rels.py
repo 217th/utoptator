@@ -21,14 +21,14 @@ class Relation:
         if not silentMode:
             if color == "g":
                 return ("\x1b[0;36;42m" + "(" + funcName + "):" + "\x1b[0m" + " ")
-        if color == "r":
-            return ("\x1b[0;36;41m" + "(" + funcName + "):" + "\x1b[0m" + " ")
-        if color == "y":
-            return ("\x1b[0;36;43m" + "(" + funcName + "):" + "\x1b[0m" + " ")
-        if color == "b":
-            return ("\x1b[0;36;44m" + "(" + funcName + "):" + "\x1b[0m" + " ")
-        else:
-            return ("")
+            if color == "r":
+                return ("\x1b[0;36;41m" + "(" + funcName + "):" + "\x1b[0m" + " ")
+            if color == "y":
+                return ("\x1b[0;36;43m" + "(" + funcName + "):" + "\x1b[0m" + " ")
+            if color == "b":
+                return ("\x1b[0;36;44m" + "(" + funcName + "):" + "\x1b[0m" + " ")
+            else:
+                return ("")
 
     def __init__(self, relType, subjectTaskId, subjectTaskGroupId, associatedTaskId, silentMode = "silent"):
         self.relType = relType
@@ -46,11 +46,29 @@ class RelConflict:
 #   rels - массив типов связей между двумя задачами
 #   description - текстовое описание
 
+    def hl(self, funcName, color="g"):
+        silentMode = False
+        if not silentMode:
+            if color == "g":
+                return ("\x1b[0;36;42m" + "(" + funcName + "):" + "\x1b[0m" + " ")
+            if color == "r":
+                return ("\x1b[0;36;41m" + "(" + funcName + "):" + "\x1b[0m" + " ")
+            if color == "y":
+                return ("\x1b[0;36;43m" + "(" + funcName + "):" + "\x1b[0m" + " ")
+            if color == "b":
+                return ("\x1b[0;36;44m" + "(" + funcName + "):" + "\x1b[0m" + " ")
+            else:
+                return ("")
+
     def __init__(self, taskId1, taskId2, rels, description):
         self.taskId1 = taskId1
         self.taskId2 = taskId2
         self.rels = rels
         self.description = description
+
+    def print(self):
+        print(self.hl("RelConflict.print", "r") + "Конфликт у задач %s и %s. Связи: %s, %s" %
+              (self.taskId1, self.taskId2, self.rels, self.description))
 
 
 def cleanRelsFromClones(rels, silentMode = "silent"):
