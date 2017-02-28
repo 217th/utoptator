@@ -40,6 +40,19 @@ class Relation:
             print(self.hl("Relation.__init__", "g") + "Создана связь типа %s - %s (группа %s) - %s" % (self.relType, self.subjTaskId, self.subjTaskGroupId, self.assocTaskId))
 
 
+class RelConflict:
+# Атрибуты класса RelConflict:
+#   taskId1, taskId2 - id задач
+#   rels - массив типов связей между двумя задачами
+#   description - текстовое описание
+
+    def __init__(self, taskId1, taskId2, rels, description):
+        self.taskId1 = taskId1
+        self.taskId2 = taskId2
+        self.rels = rels
+        self.description = description
+
+
 def cleanRelsFromClones(rels, silentMode = "silent"):
     for rel in reversed(rels):
         if rels.index(rel) > 0:
@@ -189,3 +202,37 @@ def completeSequentRelations(rels, silentMode="silent"):
     return rels
 
 
+def validateRels(taskIds, rels):
+    # Бесконфликтные сценарии:
+    #   - (A alt B) and (B alt A) == True
+    #   - (A conc B) and (B conc A) == True
+    #   - (A seq B) xor (B seq A) == True
+    #   - ((A alt B) or (B alt A)) xor ((A conc B) or (B conc A)) == True
+    #   - ((A conc B) or (B conc A)) xor ((A seq B) or (B seq A)) == True
+    relConflictsArray = []
+    
+    for taskId1 in taskIds[:(len(taskIds)-1)]:
+        for taskId2 in taskIds[(taskIds.index(taskId1)+1):]:
+            relsForCouple = [x for x in rels if (
+                ((taskId1 == x.subjTaskId) and (taskId2 == x.assocTaskId)) or
+                ((taskId2 == x.subjTaskId) and (taskId1 == x.assocTaskId))
+            )]
+            if len([x.relType for x in relsForCouple if x == "relAlternative"]) not in [0, 2]:
+                relConflictsArray.append(RelConflict(taskId1, taskId2, [x.relType for x in relsForCouple],
+                                                     "кол-во relAlternative не 0 и не 2"))
+            if len([x.relType for x in relsForCouple if x == "relConcurrent"]) not in [0, 2]:
+                relConflictsArray.append(RelConflict(taskId1, taskId2, [x.relType for x in relsForCouple],
+                                                     "кол-во relConcurrent не 0 и не 2"))
+            if len([x.relType for x in relsForCouple if x == "relSequent"]) not in [0, 1]:
+                relConflictsArray.append(RelConflict(taskId1, taskId2, [x.relType for x in relsForCouple],
+                                                     "кол-во relSequent не 0 и не 1"))
+            if ("relAlternative" in [x.relType for x in relsForCouple]) and\
+                    ("relConcurrent" in [x.relType for x in relsForCouple]):
+                relConflictsArray.append(RelConflict(taskId1, taskId2, [x.relType for x in relsForCouple],
+                                                     "одновременно relConcurrent и relAlternative"))
+            if ("relConcurrent" in [x.relType for x in relsForCouple]) and\
+                    ("relSequent" in [x.relType for x in relsForCouple]):
+                relConflictsArray.append(RelConflict(taskId1, taskId2, [x.relType for x in relsForCouple],
+                                                     "одновременно relConcurrent и relSequent"))
+
+    return relConflictsArray

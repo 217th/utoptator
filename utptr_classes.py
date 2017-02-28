@@ -31,6 +31,7 @@ class Task:
                 return("\x1b[0;36;44m" + "(" + funcName + "):" + "\x1b[0m" + " ")
         else: return("")
 
+
     def __init__(self, dictPriors, dictTaskTypes, dictDevs, silentMode = "silent"):
         import random, copy
 
@@ -72,6 +73,7 @@ class Task:
             print("-----\n" + self.hl("Task.__init__", "g") + "Задача: %s Тип: %s Приоритет: %s Ценность: %s" % (self.taskId, self.taskType, self.taskPrior, self.taskScore))
             print(self.hl("Task.__init__", "g") + "Часы по задаче: %s " % self.taskEstimates)
 
+
     def setRandomRelations(self, tasks, silentMode = "silent"):
         import random
 
@@ -99,22 +101,20 @@ class Task:
 
         r = random.randint(0, 10)
         if r in range(0, 7):
-            self.relSequent.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*1*[False]))
+            self.relSequent.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*5*[False]))
         elif r in range(8, 9):
-            self.relSequent.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*1*[False]))
-            self.relSequent.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*1*[False]))
+            self.relSequent.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*5*[False]))
+            self.relSequent.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*5*[False]))
         elif r == 10:
-            self.relSequent.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*1*[False]))
-            self.relSequent.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*1*[False]))
-            self.relSequent.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*1*[False]))
+            self.relSequent.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*5*[False]))
+            self.relSequent.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*5*[False]))
+            self.relSequent.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*5*[False]))
 
         if silentMode is not "silent":
             print(self.hl("Task.setRandomRelations", "g") + "taskId %s ... start deleting falses" % self.taskId)
         self.relConcurrent = [x for x in self.relConcurrent if x is not False]
         self.relAlternative = [x for x in self.relAlternative if x is not False]
         self.relSequent = [x for x in self.relSequent if x is not False]
-
-# !!! Где-то в синхронизации альтернатив и одновременных задач - косяк, из-за которого всё вылетает !!!
 
         if silentMode is not "silent":
             print(self.hl("Task.setRandomRelations", "g") + "taskId %s ... start searching unsyncronized alternatives" % self.taskId)
