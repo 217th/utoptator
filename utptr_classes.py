@@ -158,7 +158,7 @@ class Candidate:
 # Методы класса Candidate.
 #   acceptTask - включить задачу в состав-кандидат
 #   getScore - получить суммарную ценность состав-кандидата
-#   printCandidate - напечатать список вошедших задач
+#   print - напечатать список вошедших задач
 #   tryToPutSingleTask - попытаться включить одну задачу
 
     def hl(self, funcName, color = "g"):
@@ -174,13 +174,14 @@ class Candidate:
                 return("\x1b[0;36;44m" + "(" + funcName + "):" + "\x1b[0m" + " ")
         else: return("")
 
-    def __init__(self, candId, hoursUnused, additionalTo, silentMode = "silent"):
+    def __init__(self, candId, hoursUnused, additionalTo, rels = [], silentMode = "silent"):
         self.candId = candId
         self.hoursUnused = hoursUnused
         self.tasks = []
         self.additionalTo = additionalTo
         self.isUsed = False
         self.lastGroupId = False
+        self.rels = rels
         if silentMode is not "silent":
             print(self.hl("Candidate.__init__", "g") + "----- Создан состав-кандидат №", self.candId)
             print(self.hl("Candidate.__init__", "g") + "Начальное количество часов:", self.hoursUnused)
@@ -197,13 +198,12 @@ class Candidate:
             score += task.taskScore
         return (score)
 
-    def printCandidate(self):
-
+    def print(self):
         print("------------------------------\n------------------------------\n------------------------------")
         if self.additionalTo:
-            print(self.hl("Candidate.printCandidate", "g") + "\nСостав-кандидат № %s - всего %s задач - последняя группа %s - добавочный к %s - ценность %s" % (self.candId, len(self.tasks), self.lastGroupId, self.additionalTo.candId, round(self.getScore(), 1)))
+            print(self.hl("Candidate.print", "g") + "\nСостав-кандидат № %s - всего %s задач - последняя группа %s - добавочный к %s - ценность %s" % (self.candId, len(self.tasks), self.lastGroupId, self.additionalTo.candId, round(self.getScore(), 1)))
         else:
-            print(self.hl("Candidate.printCandidate", "g") + "\nСостав-кандидат № %s - всего %s задач - последняя группа %s - ценность %s" % (self.candId, len(self.tasks), self.lastGroupId, round(self.getScore(), 1)))
+            print(self.hl("Candidate.print", "g") + "\nСостав-кандидат № %s - всего %s задач - последняя группа %s - ценность %s" % (self.candId, len(self.tasks), self.lastGroupId, round(self.getScore(), 1)))
 
         for task in self.tasks:
             print("Задача %s - тип %s - приоритет %s - оценки %s" % (task.taskId, task.taskType, task.taskPrior, task.taskEstimates))
@@ -212,20 +212,34 @@ class Candidate:
     def tryToPutSingleTask(self, task, groupId, silentMode = "silent"):
         self.lastGroupId = groupId
         taskIsFit = [x <= y for x, y in zip(task.taskEstimates, self.hoursUnused)]
-        if False in taskIsFit:
+        taskIsFreeOfBlock = True
+
+# !!!!!!!!!!!!!!!! Зачатки обработки связей при постановке задачи !!!!!!!!!!!!!!!!
+
+        if any((x.subjTaskId == task.taskId) and (x.isUsed == False) for x in rels):
+            pass
+
+
+
+
+        if not taskIsFreeOfBlock:
             if silentMode is not "silent":
-                print(self.hl("Candidate.tryToPutSingleTask", "y") + "--- Задача %s. Есть часов: %s, надо часов: %s" % (task.taskId, self.hoursUnused, task.taskEstimates))
-                print(self.hl("Candidate.tryToPutSingleTask", "y") + "Задача %s не влезает" % task.taskId)
+                print(self.hl("Candidate.tryToPutSingleTask", "y") + "Задача %s не рассматривается из-за блокировки" % task.taskId)
         else:
-            if silentMode is not "silent":
-                print(self.hl("Candidate.tryToPutSingleTask", "y") + "--- Задача %s. Есть часов: %s, надо часов: %s." % (task.taskId, self.hoursUnused, task.taskEstimates))
-                print(self.hl("Candidate.tryToPutSingleTask", "y") + "Задача %s влезает" % task.taskId)
-            self.hoursUnused = [y - x for x, y in zip(task.taskEstimates, self.hoursUnused)]
-            if silentMode is not "silent":
-                print(self.hl("Candidate.tryToPutSingleTask", "y") + "Остаётся часов:", self.hoursUnused)
-            self.acceptTask(task, silentMode)
-            self.checkSum += task.taskId
-            self.checkSum += task.taskScore
+            if False in taskIsFit:
+                if silentMode is not "silent":
+                    print(self.hl("Candidate.tryToPutSingleTask", "y") + "--- Задача %s. Есть часов: %s, надо часов: %s" % (task.taskId, self.hoursUnused, task.taskEstimates))
+                    print(self.hl("Candidate.tryToPutSingleTask", "y") + "Задача %s не влезает" % task.taskId)
+            else:
+                if silentMode is not "silent":
+                    print(self.hl("Candidate.tryToPutSingleTask", "y") + "--- Задача %s. Есть часов: %s, надо часов: %s." % (task.taskId, self.hoursUnused, task.taskEstimates))
+                    print(self.hl("Candidate.tryToPutSingleTask", "y") + "Задача %s влезает" % task.taskId)
+                self.hoursUnused = [y - x for x, y in zip(task.taskEstimates, self.hoursUnused)]
+                if silentMode is not "silent":
+                    print(self.hl("Candidate.tryToPutSingleTask", "y") + "Остаётся часов:", self.hoursUnused)
+                self.acceptTask(task, silentMode)
+                self.checkSum += task.taskId
+                self.checkSum += task.taskScore
 
 class Group:
 # Атрибуты класса Group:

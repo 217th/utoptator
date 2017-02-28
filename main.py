@@ -8,6 +8,8 @@ import utptr_to_file
 import utptr_rels
 import datetime
 
+print("----- (%s) Старт программы -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
+
 silentMode = "babble"  # Режим тишины. "silent" - сокращённые сообщения. "babble" - полные сообщения
 dictTaskTypes = createDictTaskTypes()
 dictPriors = createDictPriors()
@@ -27,6 +29,8 @@ def сreateTasksArray(n, silentMode="silent"):
         print('Попросили слишком мало задач. Массив задач не заполнен.')
     return (tasksArray)
 
+
+print("----- (%s) Формируем список задач -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
 originalTasksArray = сreateTasksArray(100, "silent")
 
 taskGroups = []
@@ -55,6 +59,7 @@ for groupMeta in [  # ПРОМЫШЛЕННЫЙ НАБОР МЕТАДАННЫХ
         i += 1
 del groupMeta
 
+print("----- (%s) Распределяем задачи по группам -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
 for group in taskGroups:
     group.fillAndSort(originalTasksArray, "babble")
 
@@ -79,7 +84,10 @@ def createOverallRelationsArray(silentMode = "silent"):
 
     return relsNeatArray
 
+
+print("----- (%s) Заполняем связи между задачами -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
 originalRelsArray = createOverallRelationsArray("silent")
+print("----- (%s) Валидируем связи между задачами -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
 originalRelsConflictArray = utptr_rels.validateRels([x.taskId for x in originalTasksArray], originalRelsArray)
 
 if originalRelsConflictArray:
@@ -87,8 +95,9 @@ if originalRelsConflictArray:
         relConflict.print()
 else:
     print("Связи между задачами - бесконлфиктные.")
+    del originalRelsConflictArray
 
-    if any(len(x.tasks)>0 for x in taskGroups):
+    if any(len(x.tasks) > 0 for x in taskGroups):
         candId = -1
         cands = []
         forFileRawCandMetaArray = []
@@ -122,9 +131,9 @@ else:
             candId += 1
             if group.tasks:
                 if basicCand == False:
-                    cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas, False, silentmode))
+                    cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas, False, originalRelsArray, silentmode))
                 else:
-                    cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, silentmode))
+                    cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, basicCand.rels, silentmode))
                 if method == "direct":
                     group.tasks.sort(key=lambda x: x.taskEstimatesSum, reverse=True)
                     for task in group.tasks:
@@ -139,9 +148,9 @@ else:
                         cands[-1].tryToPutSingleTask(task, group.groupId, silentmode)
             else:
                 if basicCand == False:
-                    cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas, False, silentmode))
+                    cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas, False, originalRelsArray, silentmode))
                 else:
-                    cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, silentmode))
+                    cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, basicCand.rels, silentmode))
                 cands[-1].lastGroupId = group.groupId
 
             # Заполняем мета-информацию о сырых кандидатах для вывода в файл
@@ -243,7 +252,7 @@ else:
 
         print("----- (%s) После склейки: -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
         for cand in candsAssembled:
-            cand.printCandidate()
+            cand.print()
 
     # ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ Заполнение всего необходимого для экспорта в excel ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
 
@@ -324,6 +333,7 @@ else:
 
         # Экспорт в excel
         utptr_to_file.writeReportToXLS(forFileTrySettings, forFileTasksList, forFileRelsList, forFileRawCandMetaArray, forFileRawCandOnlyActiveArray, forFileRawCandTasksArray, forFileFinalCandMetaArray, forFileFinalCandsTasksList)
+        print("----- (%s) Экспорт завершён -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
 
     else:
         print("Все группы задач пусты.")
