@@ -1,24 +1,26 @@
+import utptr_rels
+
 class Task:
+    # Атрибуты класса Task. Заполняются в конструкторе.
+    #   taskId - номер задачи (int, генерируется случайно)
+    #   taskPrior - приоритет (int, выбирается случайно из словаря)
+    #   taskType - тип (int, выбирается случайно из словаря)
+    #   taskEstimates - оценки (list, заполняются случайно только для разработчиков, которые есть в словаре)
+    #   taskEstimatesSum - общая сумма трудозатрат по задаче (int)
+    #   taskScore - ценность (float, рассчитывается из приоритета и оценок)
+    #
+    #   relConcurrent - список задач, с которыми эта должна выполняться только одновременно
+    #       (одинаковый для всех одновременных задач)
+    #   relSequent - список задач, текущая может войти только после всех задач, включённых в список.
+    #       Если в список включена задача, имеющая другие одновременные,
+    #       то предшественниками становятся все задачи группы одновременных
+    #   relAlternative - список взаимоисключающих задач.
+    #       Если пара задач указана одновременно как альтернативная и последовательная, то альтернатива имеет приоритет
+    #
+    # Методы класса Task.
+    #   setRandomRelations - метод (вероятно, временный) для заполнения relConcurrent, relSequent, relAlternative
 
-# Атрибуты класса Task. Заполняются в конструкторе.
-#   taskId - номер задачи (int, генерируется случайно)
-#   taskPrior - приоритет (int, выбирается случайно из словаря)
-#   taskType - тип (int, выбирается случайно из словаря)
-#   taskEstimates - оценки (list, заполняются случайно только для разработчиков, которые есть в словаре)
-#   taskEstimatesSum - общая сумма трудозатрат по задаче (int)
-#   taskScore - ценность (float, рассчитывается из приоритета и оценок)
-#
-#   relConcurrent - список задач, с которыми эта должна выполняться только одновременно (одинаковый для всех одновременных задач)
-#   relSequent - список задач, текущая может войти только после всех задач, включённых в список. Если в список включена задача, имеющая другие одновременные, то предшественниками становятся все задачи группы одновременных
-#   relAlternative - список взаимоисключающих задач. Если пара задач указана одновременно как альтернативная и последовательная, то альтернатива имеет приоритет
-#       Если для двух задач одновременно указано и relConcurrent, и relAlternative, relConcurrent - игнорируется.
-#       Если для двух задач одновременно указано и relConcurrent, и relSequent, relConcurrent - игнорируется.
-#       Если для двух задач одновременно указано и relSequent, и relAlternative, relAlternative - игнорируется.
-#
-# Методы класса Task.
-#   setRandomRelations - метод (вероятно, временный) для заполнения relConcurrent, relSequent, relAlternative
-
-    def hl(self, funcName, color = "g"):
+    def hl(self, funcName, color="g"):
         silentMode = False
         if not silentMode:
             if color == "g":
@@ -31,8 +33,7 @@ class Task:
                 return("\x1b[0;36;44m" + "(" + funcName + "):" + "\x1b[0m" + " ")
         else: return("")
 
-
-    def __init__(self, dictPriors, dictTaskTypes, dictDevs, silentMode = "silent"):
+    def __init__(self, dictPriors, dictTaskTypes, dictDevs, silentMode="silent"):
         import random, copy
 
         self.taskId = int(str(random.randint(0, 9)) + str(random.randint(0, 9)) + str(random.randint(0, 9)) + str(random.randint(0, 9)) + str(random.randint(0, 9))) # Сгенерили правдоподобно выглядищий номер задачи
@@ -73,8 +74,7 @@ class Task:
             print("-----\n" + self.hl("Task.__init__", "g") + "Задача: %s Тип: %s Приоритет: %s Ценность: %s" % (self.taskId, self.taskType, self.taskPrior, self.taskScore))
             print(self.hl("Task.__init__", "g") + "Часы по задаче: %s " % self.taskEstimates)
 
-
-    def setRandomRelations(self, tasks, silentMode = "silent"):
+    def setRandomRelations(self, tasks, silentMode="silent"):
         import random
 
         r = random.randint(0, 10)
@@ -145,23 +145,25 @@ class Task:
 
 
 class Candidate:
-# Атрибуты класса Candidate.
-#   candId - уникальный id кандидата (int, генерируется инкрементально)
-#   additionalTo - указываем кандидата, состав которого полностью включает данный кандидат
-#   tasks - список задач, включённых в кандидат (list of Tasks)
-#   hoursUnused - количество нераспределённых часов (list)
-#   isUsed - статус того, что для данного кандидата созданы все дополнительные (дочерние) кандидаты
-#   lastGroupId - идентификатор последней группы, из которой ПЫТАЛИСЬ включить задачи (могли и не включить)
-#   checkSum - контрольная сумма кандидата
-#   rels - list - массив объектов класса Relation. Должен копироваться при создании последующего кандидата из предыдущего кандидата, включая все сделанные ранее пометки.
-#
-# Методы класса Candidate.
-#   acceptTask - включить задачу в состав-кандидат
-#   getScore - получить суммарную ценность состав-кандидата
-#   print - напечатать список вошедших задач
-#   tryToPutSingleTask - попытаться включить одну задачу
+    # Атрибуты класса Candidate.
+    #   candId - уникальный id кандидата (int, генерируется инкрементально)
+    #   additionalTo - указываем кандидата, состав которого полностью включает данный кандидат
+    #   tasks - список задач, включённых в кандидат (list of Tasks)
+    #   hoursUnused - количество нераспределённых часов (list)
+    #   isUsed - статус того, что для данного кандидата созданы все дополнительные (дочерние) кандидаты
+    #   lastGroupId - идентификатор последней группы, из которой ПЫТАЛИСЬ включить задачи (могли и не включить)
+    #   checkSum - контрольная сумма кандидата
+    #   rels - list - массив объектов класса Relation.
+    #       Должен копироваться при создании последующего кандидата из предыдущего кандидата,
+    #       включая все сделанные ранее пометки.
+    #
+    # Методы класса Candidate.
+    #   acceptTask - включить задачу в состав-кандидат
+    #   getScore - получить суммарную ценность состав-кандидата
+    #   print - напечатать список вошедших задач
+    #   tryToPutSingleTask - попытаться включить одну задачу
 
-    def hl(self, funcName, color = "g"):
+    def hl(self, funcName, color="g"):
         silentMode = False
         if not silentMode:
             if color == "g":
@@ -209,54 +211,96 @@ class Candidate:
             print("Задача %s - тип %s - приоритет %s - оценки %s" % (task.taskId, task.taskType, task.taskPrior, task.taskEstimates))
         print("Осталось часов: %s" % (self.hoursUnused))
 
-    def tryToPutSingleTask(self, task, groupId, silentMode = "silent"):
+    def tryToPutSingleTask(self, task, allTasks, groupId, silentMode = "silent"):
         self.lastGroupId = groupId
-        taskIsFit = [x <= y for x, y in zip(task.taskEstimates, self.hoursUnused)]
-        taskIsFreeOfBlock = True
 
-# !!!!!!!!!!!!!!!! Зачатки обработки связей при постановке задачи !!!!!!!!!!!!!!!!
+        tasksToPut = []
+        tasksToPut.append(task)
 
-        if any((x.subjTaskId == task.taskId) and (x.isUsed == False) for x in rels):
-            pass
-
-
-
-
-        if not taskIsFreeOfBlock:
-            if silentMode is not "silent":
-                print(self.hl("Candidate.tryToPutSingleTask", "y") + "Задача %s не рассматривается из-за блокировки" % task.taskId)
+        taskActiveRelsArray = [x for x in self.rels if x.isActive and task.taskId == x.subjTaskId]
+        if not taskActiveRelsArray:
+            trialIsFreeOfBlocks = True
         else:
-            if False in taskIsFit:
+            if "relAlternative" in [x.relType for x in taskActiveRelsArray] or\
+                    "relSequent" in [x.relType for x in taskActiveRelsArray] or \
+                    "relAlreadyTaken" in [x.relType for x in taskActiveRelsArray]:
+                trialIsFreeOfBlocks = False
+            elif "relConcurrent" in [x.relType for x in taskActiveRelsArray]:
+                # Формируем список задач, которые будут пытаться установиться совместно
+                tasksToPut.extend([x for x in allTasks if x.taskId in [y.assocTaskId for y in taskActiveRelsArray]])
+                trialIsFreeOfBlocks = True
+
+        # Проверяем, влезает ли список задач
+        tasksToPutEstimates = [0] * len(self.hoursUnused)
+        for task1 in tasksToPut:
+            tasksToPutEstimates = [x+y for x, y in zip(task1.taskEstimates, tasksToPutEstimates)]
+        tasksAreFit = [x <= y for x, y in zip(tasksToPutEstimates, self.hoursUnused)]
+
+        if not trialIsFreeOfBlocks:
+            if silentMode is not "silent":
+                print(self.hl("Candidate.tryToPutSingleTask", "r") +
+                      "Задача %s не рассматривается из-за блокировок %s %s" %
+                      (task.taskId,
+                       [x.relType for x in taskActiveRelsArray],
+                       [x.assocTaskId for x in taskActiveRelsArray]))
+        else:
+            if False in tasksAreFit:
                 if silentMode is not "silent":
-                    print(self.hl("Candidate.tryToPutSingleTask", "y") + "--- Задача %s. Есть часов: %s, надо часов: %s" % (task.taskId, self.hoursUnused, task.taskEstimates))
-                    print(self.hl("Candidate.tryToPutSingleTask", "y") + "Задача %s не влезает" % task.taskId)
+                    print(self.hl("Candidate.tryToPutSingleTask", "y") +
+                          "--- Задача %s. Есть часов: %s, надо часов: %s" %
+                          ([x.taskId for x in tasksToPut],
+                           self.hoursUnused,
+                           tasksToPutEstimates))
+                    print(self.hl("Candidate.tryToPutSingleTask", "y") +
+                          "Задача %s не влезает" %
+                          [x.taskId for x in tasksToPut])
             else:
                 if silentMode is not "silent":
-                    print(self.hl("Candidate.tryToPutSingleTask", "y") + "--- Задача %s. Есть часов: %s, надо часов: %s." % (task.taskId, self.hoursUnused, task.taskEstimates))
-                    print(self.hl("Candidate.tryToPutSingleTask", "y") + "Задача %s влезает" % task.taskId)
-                self.hoursUnused = [y - x for x, y in zip(task.taskEstimates, self.hoursUnused)]
+                    print(self.hl("Candidate.tryToPutSingleTask", "y") +
+                          "--- Задача %s. Есть часов: %s, надо часов: %s." %
+                          ([x.taskId for x in tasksToPut],
+                           self.hoursUnused,
+                           tasksToPutEstimates))
+                    print(self.hl("Candidate.tryToPutSingleTask", "y") +
+                          "Задача %s влезает" %
+                          [x.taskId for x in tasksToPut])
+                self.hoursUnused = [y - x for x, y in zip(tasksToPutEstimates, self.hoursUnused)]
                 if silentMode is not "silent":
-                    print(self.hl("Candidate.tryToPutSingleTask", "y") + "Остаётся часов:", self.hoursUnused)
-                self.acceptTask(task, silentMode)
-                self.checkSum += task.taskId
-                self.checkSum += task.taskScore
+                    print(self.hl("Candidate.tryToPutSingleTask", "y") +
+                          "Остаётся часов:",
+                          self.hoursUnused)
+                for task1 in tasksToPut:
+                    self.acceptTask(task1, silentMode)
+                    self.checkSum += task1.taskId
+                    self.checkSum += task1.taskScore
+
+                    for rel in self.rels:
+                        if rel.assocTaskId == task1.taskId:
+                            if rel.relType == "relSequent":
+                                rel.isActive = False
+                            elif rel.relType == "relAlternative":
+                                rel.isActive = True
+                            elif rel.relType == "relConcurrent":
+                                rel.isActive = False
+                                self.rels.append(utptr_rels.Relation("relAlreadyTaken", task1.taskId, "", False, silentMode))
+
 
 class Group:
-# Атрибуты класса Group:
-#   id - идентификатор группы (int)
-#   meta - метаданные группы (тип, приоритет) (list)
-#   importance - важность группы, влияет на то, насколько активно пытаемся утоптать группу. Возможные значения:
-#       - "h" - высокая важность
-#       - "n" - средняя важность
-#       - "l" - низкая важность
-#   tasks - список задач, отнесённых к группе (list of Tasks)
-#
-# Методы класса Group:
-#   __init__ - в качестве каждого атрибута нужно передавать list
-#   fillAndSort - из переданного массива выбираем задачи с совпадающими метаданными
-#   scroll - делаем 0-ю задачу последней
+    # Атрибуты класса Group:
+    #   id - идентификатор группы (int)
+    #   meta - метаданные группы (тип, приоритет) (list)
+    #   importance - важность группы, влияет на то, насколько активно пытаемся утоптать группу. Возможные значения:
+    #       - "h" - высокая важность
+    #       - "n" - средняя важность
+    #       - "l" - низкая важность
+    #   tasks - список задач, отнесённых к группе (list of Tasks)
+    #
+    # Методы класса Group:
+    #   __init__ - в качестве каждого атрибута нужно передавать list
+    #   fillAndSort - из переданного массива выбираем задачи с совпадающими метаданными
+    #   scroll - делаем 0-ю задачу последней
 
-    def hl(self, funcName, color = "g"):
+    def hl(self, funcName, color="g"):
         silentMode = False
         if not silentMode:
             if color == "g":
@@ -267,9 +311,10 @@ class Group:
             return("\x1b[0;36;43m" + "(" + funcName + "):" + "\x1b[0m" + " ")
         if color == "b":
             return("\x1b[0;36;44m" + "(" + funcName + "):" + "\x1b[0m" + " ")
-        else: return("")
+        else:
+            return ""
 
-    def __init__ (self, groupId, tType, tPrior, tImportance = "n", silentMode = "silent"):
+    def __init__(self, groupId, tType, tPrior, tImportance="n", silentMode="silent"):
         self.groupId = groupId
         self.meta = []
         self.meta.append(tType)
@@ -279,7 +324,7 @@ class Group:
         self.importance = tImportance
         self.tasks = []
 
-    def fillAndSort(self, tasksArray, silentMode = "silent"):
+    def fillAndSort(self, tasksArray, silentMode="silent"):
         if silentMode is not "silent":
             print(self.hl("Group.fillAndSort", "g") + "Метаданные группы (тип задачи, приоритет): %s" % (self.meta))
         for task in tasksArray:
@@ -296,7 +341,7 @@ class Group:
             if silentMode is not "silent":
                 print(self.hl("Group.fillAndSort", "g") + "Группа пуста")
 
-    def scroll(self, silentMode = "silent"):
+    def scroll(self, silentMode="silent"):
         if silentMode is not "silent":
             print(self.hl("Group.scroll", "g") + "Группа %s. Задачу %s переносим в конец." % (self.groupId, self.tasks[0].taskId))
         firstTask = [self.tasks[0]]

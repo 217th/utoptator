@@ -1,3 +1,45 @@
+'''
+Подход к использованию связей.
+
+Четыре типа связей:
+    relAlternative - по умолчанию isActive = False
+    relConcurrent - по умолчанию isActive = True
+    relSequent - по умолчанию isActive = True
+    relAlreadyTaken - по умолчанию isActive = True
+
+Параметр isActive = True, если связь должна учитываться при постановке subjTask;
+isActive = False, если связь НЕ должна учитываться при постановке subjTask.
+
+relConcurrent:
+    При попытке постановки задачи:
+        - если активных связей нет, где текущая = subjTask, то ставим
+        - если активная связь есть, где текущая = subjTask, то ставим одновременно со всеми assocTask
+    После успешной постановки задачи:
+        - делаем НЕактивными все связи, где текущая = assocTask
+        - создаём relAlreadyTaken с subjTask = все assocTask, поставленные вместе с subjTask, isActive = True
+
+relAlternative:
+    При попытке постановки задачи:
+        - если активных связей нет, где текущая = subjTask, то ставим
+        - если активная связь есть, где текущая = subjTask, то НЕ ставим
+    После успешной постановки задачи:
+        - делаем активными все связи, где текущая задача - assocTask
+
+relSequent:
+    При попытке постановки задачи:
+        - если активных связей нет, где текущая = subjTask, то ставим
+        - если активная связь есть, где текущая = subjTask, то НЕ ставим
+    После успешной постановки задачи:
+        - делаем НЕактивными все связи, где текущая задача = assocTask
+
+relAlreadyTaken:
+    При попытке постановки задачи:
+        - если активных связей нет, где текущая = subjTask, то ставим
+        - если активная связь есть, где текущая = subjTask, то НЕ ставим
+    После успешной постановки задачи:
+        - не делаем ничего
+'''
+
 import utptr_to_file
 import operator
 import copy
@@ -35,7 +77,15 @@ class Relation:
         self.subjTaskGroupId = subjectTaskGroupId
         self.subjTaskId = subjectTaskId
         self.assocTaskId = associatedTaskId
-        self.isUsed = False
+
+        relTypesAndValues = {
+            "relAlternative": False,
+            "relConcurrent": True,
+            "relSequent": True,
+            "relAlreadyTaken": True
+        }
+        self.isActive = relTypesAndValues[relType]
+
         if silentMode is not "silent":
             print(self.hl("Relation.__init__", "g") + "Создана связь типа %s - %s (группа %s) - %s" % (self.relType, self.subjTaskId, self.subjTaskGroupId, self.assocTaskId))
 
@@ -254,3 +304,4 @@ def validateRels(taskIds, rels):
                                                      "одновременно relConcurrent и relSequent"))
 
     return relConflictsArray
+

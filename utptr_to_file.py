@@ -61,7 +61,18 @@
 import xlwt
 import time
 
-def writeReportToXLS(settings, allTasks, rels, rawCandsList, rawCandsOnlyActiveList, rawCandsTasksList, finalCandsList, finalCandsTasksList):
+
+def writeReportToXLS(
+        settings,
+        allTasks,
+        rels,
+        rawCandsList,
+        rawCandsOnlyActiveList,
+        rawCandsTasksList,
+        finalCandsList,
+        finalCandsTasksList,
+        finalRelsList):
+
     wb = xlwt.Workbook()
     styleYellow = xlwt.easyxf('pattern: pattern solid, fore_colour yellow;')
     styleRed = xlwt.easyxf('pattern: pattern solid, fore_colour red;')
@@ -198,6 +209,21 @@ def writeReportToXLS(settings, allTasks, rels, rawCandsList, rawCandsOnlyActiveL
             ws.write(i+7, 5, str(cand[i][10]))
             ws.write(i+7, 6, str(cand[i][11]))
             ws.write(i+7, 7, str(cand[i][12]))
+
+        header = ["relType",
+                "subjTaskId",
+                "assocTaskId",
+                "isActive"
+              ]
+        for i in range(len(header)):
+            ws.write(6, 9+i, header[i], styleOrange)
+
+        finalRelsForCand = [x for x in finalRelsList if x[0] == cand[0][0]]
+        for i in range(len(finalRelsForCand)):
+            ws.write(i+7, 9, str(finalRelsForCand[i][1]))
+            ws.write(i+7, 10, str(finalRelsForCand[i][2]))
+            ws.write(i+7, 11, str(finalRelsForCand[i][3]))
+            ws.write(i+7, 12, str(finalRelsForCand[i][4]))
 
     wb.save("results/try." + time.strftime("%Y.%m.%d.%H.%M.%S", time.localtime()) + ".xls")
 

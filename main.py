@@ -137,15 +137,15 @@ else:
                 if method == "direct":
                     group.tasks.sort(key=lambda x: x.taskEstimatesSum, reverse=True)
                     for task in group.tasks:
-                        cands[-1].tryToPutSingleTask(task, group.groupId, silentmode)
+                        cands[-1].tryToPutSingleTask(task, originalTasksArray, group.groupId, silentmode)
                 elif method == "scroll":
                     group.scroll("silent")
                     for task in group.tasks:
-                        cands[-1].tryToPutSingleTask(task, group.groupId, silentmode)
+                        cands[-1].tryToPutSingleTask(task, originalTasksArray, group.groupId, silentmode)
                 elif method == "shuffle":
                     random.shuffle(group.tasks)
                     for task in group.tasks:
-                        cands[-1].tryToPutSingleTask(task, group.groupId, silentmode)
+                        cands[-1].tryToPutSingleTask(task, originalTasksArray, group.groupId, silentmode)
             else:
                 if basicCand == False:
                     cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas, False, originalRelsArray, silentmode))
@@ -190,19 +190,19 @@ else:
             group = taskGroups[0]
             print("----- (%s) Формируем кандидатов для группы %s -----" % (datetime.datetime.now().strftime("%H:%M:%S.%f"), group.groupId))
             if group.importance == "h":
-                fillCandWithGroup(group, False, "direct")
+                fillCandWithGroup(group, False, "direct", silentMode)
                 if (len(group.tasks) > len(cands[-1].tasks)):
-                    for i in range(len(group.tasks) + 1): fillCandWithGroup(group, False, "scroll")
-                    for i in range(len(group.tasks) * 2): fillCandWithGroup(group, False, "shuffle")
+                    for i in range(len(group.tasks) + 1): fillCandWithGroup(group, False, "scroll", silentMode)
+                    for i in range(len(group.tasks) * 2): fillCandWithGroup(group, False, "shuffle", silentMode)
             elif group.importance == "n":
-                fillCandWithGroup(group, False, "direct")
+                fillCandWithGroup(group, False, "direct", silentMode)
                 if (len(group.tasks) > len(cands[-1].tasks)):
-                    for i in range(len(group.tasks) + 1): fillCandWithGroup(group, False, "scroll")
-                    for i in range(len(group.tasks) + 1): fillCandWithGroup(group, False, "shuffle")
+                    for i in range(len(group.tasks) + 1): fillCandWithGroup(group, False, "scroll", silentMode)
+                    for i in range(len(group.tasks) + 1): fillCandWithGroup(group, False, "shuffle", silentMode)
             elif group.importance == "l":
-                fillCandWithGroup(group, False, "direct")
+                fillCandWithGroup(group, False, "direct", silentMode)
                 if (len(group.tasks) > len(cands[-1].tasks)):
-                    for i in range(len(group.tasks) + 1): fillCandWithGroup(group, False, "shuffle")
+                    for i in range(len(group.tasks) + 1): fillCandWithGroup(group, False, "shuffle", silentMode)
             cands = cleanCandsFromClones(cands, "silent")
 
         if len(taskGroups) > 1:
@@ -211,19 +211,19 @@ else:
                 for basicCand in cands:
                     if (basicCand.lastGroupId + 1 == group.groupId) and (not basicCand.isUsed):
                         if group.importance == "h":
-                            fillCandWithGroup(group, basicCand, "direct")
+                            fillCandWithGroup(group, basicCand, "direct", silentMode)
                             if (len(group.tasks) > len(cands[-1].tasks)):
-                                for i in range(len(group.tasks) + 1): fillCandWithGroup(group, basicCand, "scroll")
-                                for i in range(len(group.tasks) * 2): fillCandWithGroup(group, basicCand, "shuffle")
+                                for i in range(len(group.tasks) + 1): fillCandWithGroup(group, basicCand, "scroll", silentMode)
+                                for i in range(len(group.tasks) * 2): fillCandWithGroup(group, basicCand, "shuffle", silentMode)
                         elif group.importance == "n":
-                            fillCandWithGroup(group, basicCand, "direct")
+                            fillCandWithGroup(group, basicCand, "direct", silentMode)
                             if (len(group.tasks) > len(cands[-1].tasks)):
-                                for i in range(len(group.tasks) + 1): fillCandWithGroup(group, basicCand, "scroll")
-                                for i in range(len(group.tasks) + 1): fillCandWithGroup(group, basicCand, "shuffle")
+                                for i in range(len(group.tasks) + 1): fillCandWithGroup(group, basicCand, "scroll", silentMode)
+                                for i in range(len(group.tasks) + 1): fillCandWithGroup(group, basicCand, "shuffle", silentMode)
                         elif group.importance == "l":
-                            fillCandWithGroup(group, basicCand, "direct")
+                            fillCandWithGroup(group, basicCand, "direct", silentMode)
                             if (len(group.tasks) > len(cands[-1].tasks)):
-                                for i in range(len(group.tasks) + 1): fillCandWithGroup(group, basicCand, "shuffle")
+                                for i in range(len(group.tasks) + 1): fillCandWithGroup(group, basicCand, "shuffle", silentMode)
                         basicCand.isUsed = True
                         cands = cleanCandsFromClones(cands, "silent")
 
@@ -329,10 +329,31 @@ else:
                     ])
             forFileFinalCandsTasksList.append(forFileSingleFinalCandTasksList)
 
+        forFileFinalCandsRelsList = []
+        for cand in candsAssembled:
+            for rel in cand.rels:
+                forFileFinalCandsRelsList.append([
+                    cand.candId,
+                    rel.relType,
+                    rel.subjTaskId,
+                    rel.assocTaskId,
+                    rel.isActive
+                ])
+
     # ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
         # Экспорт в excel
-        utptr_to_file.writeReportToXLS(forFileTrySettings, forFileTasksList, forFileRelsList, forFileRawCandMetaArray, forFileRawCandOnlyActiveArray, forFileRawCandTasksArray, forFileFinalCandMetaArray, forFileFinalCandsTasksList)
+        utptr_to_file.writeReportToXLS(
+            forFileTrySettings,
+            forFileTasksList,
+            forFileRelsList,
+            forFileRawCandMetaArray,
+            forFileRawCandOnlyActiveArray,
+            forFileRawCandTasksArray,
+            forFileFinalCandMetaArray,
+            forFileFinalCandsTasksList,
+            forFileFinalCandsRelsList
+        )
         print("----- (%s) Экспорт завершён -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
 
     else:
