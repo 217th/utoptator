@@ -348,3 +348,14 @@ class Group:
         restTasks = self.tasks[1:]
         self.tasks.clear()
         self.tasks = restTasks + firstTask
+
+
+class Dev:
+
+    def __init__(self, devId, devType, devName, devHoursPrimary, devHoursSecondary, devHoursExcess):
+        self.devId = devId
+        self.devType = devType
+        self.devName = devName
+        self.devHoursPrimary = devHoursPrimary
+        self.devHoursSecondary = devHoursSecondary
+        self.devHoursExcess = devHoursExcess

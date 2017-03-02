@@ -4,6 +4,7 @@ from filloriginaldata import (createDictDevs, createDictPriors, createDictTaskTy
 import copy
 import random
 import utptr_classes
+import utptr_from_file
 import utptr_to_file
 import utptr_rels
 import datetime
@@ -16,6 +17,12 @@ dictPriors = createDictPriors()
 dictDevs = createDictDevs(silentMode)
 listLabourHoursQuotas = createArrayLabourQuotas(list(dictDevs.keys()), silentMode)
 
+
+devsArray = utptr_from_file.readDevs()
+for dev in devsArray:
+    print(dev.devId, dev.devName, dev.devType)
+
+'''
 
 def сreateTasksArray(n, silentMode="silent"):
     tasksArray = []
@@ -36,7 +43,6 @@ originalTasksArray = сreateTasksArray(100, "silent")
 taskGroups = []
 i = 0
 
-'''
 for groupMeta in [     # ТЕСТОВЫЙ НАБОР МЕТАДАННЫХ
     [[2], [0], "h"], [[2], [1], "h"], [[2], [2], "n"],
     [[3, 1], [5], "l"]
@@ -46,6 +52,7 @@ for groupMeta in [     # ТЕСТОВЫЙ НАБОР МЕТАДАННЫХ
 del groupMeta
 '''
 
+'''
 for groupMeta in [  # ПРОМЫШЛЕННЫЙ НАБОР МЕТАДАННЫХ
     [[2], [0], "h"], [[2], [1], "h"], [[2], [2], "h"], [[2], [3], "n"], [[2], [4], "n"], [[2], [5], "l"],
     # Вся поддержка
@@ -83,7 +90,6 @@ def createOverallRelationsArray(silentMode = "silent"):
     relsNeatArray = utptr_rels.completeSequentRelations(relsNeatArray)
 
     return relsNeatArray
-
 
 print("----- (%s) Заполняем связи между задачами -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
 originalRelsArray = createOverallRelationsArray("silent")
@@ -358,3 +364,4 @@ else:
 
     else:
         print("Все группы задач пусты.")
+'''
