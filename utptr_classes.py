@@ -20,7 +20,8 @@ class Task:
     # Методы класса Task.
     #   setRandomRelations - метод (вероятно, временный) для заполнения relConcurrent, relSequent, relAlternative
 
-    def hl(self, funcName, color="g"):
+    @staticmethod
+    def hl(funcName, color="g"):
         silentMode = False
         if not silentMode:
             if color == "g":
@@ -163,7 +164,8 @@ class Candidate:
     #   print - напечатать список вошедших задач
     #   tryToPutSingleTask - попытаться включить одну задачу
 
-    def hl(self, funcName, color="g"):
+    @staticmethod
+    def hl(funcName, color="g"):
         silentMode = False
         if not silentMode:
             if color == "g":
@@ -300,7 +302,8 @@ class Group:
     #   fillAndSort - из переданного массива выбираем задачи с совпадающими метаданными
     #   scroll - делаем 0-ю задачу последней
 
-    def hl(self, funcName, color="g"):
+    @staticmethod
+    def hl(funcName, color="g"):
         silentMode = False
         if not silentMode:
             if color == "g":

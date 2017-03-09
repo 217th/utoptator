@@ -3,7 +3,7 @@ import openpyxl
 
 fileName = 'input/input.xlsx'
 
-def readDevs():
+def readDevs(firstRow = 4, lastRow = 28):
     devsArray = []
     wb = openpyxl.load_workbook(fileName)
     if "Разработчики" in wb.get_sheet_names():
@@ -14,8 +14,6 @@ def readDevs():
         colDevHoursPrimary = ws['D']
         colDevHoursSecondary = ws['E']
         colDevHoursExcess = ws['F']
-        firstRow = 4
-        lastRow = 28
 
         devsArray = []
 

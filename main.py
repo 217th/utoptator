@@ -17,12 +17,10 @@ dictPriors = createDictPriors()
 dictDevs = createDictDevs(silentMode)
 listLabourHoursQuotas = createArrayLabourQuotas(list(dictDevs.keys()), silentMode)
 
-
-devsArray = utptr_from_file.readDevs()
+devsArray = utptr_from_file.readDevs(4, 28)
 for dev in devsArray:
     print(dev.devId, dev.devName, dev.devType)
 
-'''
 
 def сreateTasksArray(n, silentMode="silent"):
     tasksArray = []
@@ -43,6 +41,7 @@ originalTasksArray = сreateTasksArray(100, "silent")
 taskGroups = []
 i = 0
 
+'''
 for groupMeta in [     # ТЕСТОВЫЙ НАБОР МЕТАДАННЫХ
     [[2], [0], "h"], [[2], [1], "h"], [[2], [2], "n"],
     [[3, 1], [5], "l"]
@@ -52,7 +51,6 @@ for groupMeta in [     # ТЕСТОВЫЙ НАБОР МЕТАДАННЫХ
 del groupMeta
 '''
 
-'''
 for groupMeta in [  # ПРОМЫШЛЕННЫЙ НАБОР МЕТАДАННЫХ
     [[2], [0], "h"], [[2], [1], "h"], [[2], [2], "h"], [[2], [3], "n"], [[2], [4], "n"], [[2], [5], "l"],
     # Вся поддержка
@@ -129,7 +127,7 @@ else:
                             break
             return(cands)
 
-        def fillCandWithGroup(group, basicCand, method, silentmode="silent"):
+        def fillSingleCand(group, basicCand, method, silentmode="silent"):
             global candId
             global cands
             global forFileRawCandMetaArray
@@ -196,19 +194,19 @@ else:
             group = taskGroups[0]
             print("----- (%s) Формируем кандидатов для группы %s -----" % (datetime.datetime.now().strftime("%H:%M:%S.%f"), group.groupId))
             if group.importance == "h":
-                fillCandWithGroup(group, False, "direct", silentMode)
+                fillSingleCand(group, False, "direct", silentMode)
                 if (len(group.tasks) > len(cands[-1].tasks)):
-                    for i in range(len(group.tasks) + 1): fillCandWithGroup(group, False, "scroll", silentMode)
-                    for i in range(len(group.tasks) * 2): fillCandWithGroup(group, False, "shuffle", silentMode)
+                    for i in range(len(group.tasks) + 1): fillSingleCand(group, False, "scroll", silentMode)
+                    for i in range(len(group.tasks) * 2): fillSingleCand(group, False, "shuffle", silentMode)
             elif group.importance == "n":
-                fillCandWithGroup(group, False, "direct", silentMode)
+                fillSingleCand(group, False, "direct", silentMode)
                 if (len(group.tasks) > len(cands[-1].tasks)):
-                    for i in range(len(group.tasks) + 1): fillCandWithGroup(group, False, "scroll", silentMode)
-                    for i in range(len(group.tasks) + 1): fillCandWithGroup(group, False, "shuffle", silentMode)
+                    for i in range(len(group.tasks) + 1): fillSingleCand(group, False, "scroll", silentMode)
+                    for i in range(len(group.tasks) + 1): fillSingleCand(group, False, "shuffle", silentMode)
             elif group.importance == "l":
-                fillCandWithGroup(group, False, "direct", silentMode)
+                fillSingleCand(group, False, "direct", silentMode)
                 if (len(group.tasks) > len(cands[-1].tasks)):
-                    for i in range(len(group.tasks) + 1): fillCandWithGroup(group, False, "shuffle", silentMode)
+                    for i in range(len(group.tasks) + 1): fillSingleCand(group, False, "shuffle", silentMode)
             cands = cleanCandsFromClones(cands, "silent")
 
         if len(taskGroups) > 1:
@@ -217,19 +215,19 @@ else:
                 for basicCand in cands:
                     if (basicCand.lastGroupId + 1 == group.groupId) and (not basicCand.isUsed):
                         if group.importance == "h":
-                            fillCandWithGroup(group, basicCand, "direct", silentMode)
+                            fillSingleCand(group, basicCand, "direct", silentMode)
                             if (len(group.tasks) > len(cands[-1].tasks)):
-                                for i in range(len(group.tasks) + 1): fillCandWithGroup(group, basicCand, "scroll", silentMode)
-                                for i in range(len(group.tasks) * 2): fillCandWithGroup(group, basicCand, "shuffle", silentMode)
+                                for i in range(len(group.tasks) + 1): fillSingleCand(group, basicCand, "scroll", silentMode)
+                                for i in range(len(group.tasks) * 2): fillSingleCand(group, basicCand, "shuffle", silentMode)
                         elif group.importance == "n":
-                            fillCandWithGroup(group, basicCand, "direct", silentMode)
+                            fillSingleCand(group, basicCand, "direct", silentMode)
                             if (len(group.tasks) > len(cands[-1].tasks)):
-                                for i in range(len(group.tasks) + 1): fillCandWithGroup(group, basicCand, "scroll", silentMode)
-                                for i in range(len(group.tasks) + 1): fillCandWithGroup(group, basicCand, "shuffle", silentMode)
+                                for i in range(len(group.tasks) + 1): fillSingleCand(group, basicCand, "scroll", silentMode)
+                                for i in range(len(group.tasks) + 1): fillSingleCand(group, basicCand, "shuffle", silentMode)
                         elif group.importance == "l":
-                            fillCandWithGroup(group, basicCand, "direct", silentMode)
+                            fillSingleCand(group, basicCand, "direct", silentMode)
                             if (len(group.tasks) > len(cands[-1].tasks)):
-                                for i in range(len(group.tasks) + 1): fillCandWithGroup(group, basicCand, "shuffle", silentMode)
+                                for i in range(len(group.tasks) + 1): fillSingleCand(group, basicCand, "shuffle", silentMode)
                         basicCand.isUsed = True
                         cands = cleanCandsFromClones(cands, "silent")
 
@@ -364,4 +362,4 @@ else:
 
     else:
         print("Все группы задач пусты.")
-'''
+''''''
