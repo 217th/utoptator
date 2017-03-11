@@ -216,21 +216,20 @@ else:
                 if cands[-1].isGroupCompletelyIn(group):
                     for i in range(len(group.tasks) + 1): fillSingleCand(group, basicCand, "shuffle", silentMode)
 
-        if len(taskGroups) > 0:
-            for group in taskGroups:
-                print("----- (%s) Формируем кандидатов для группы %s -----" % (
-                    datetime.datetime.now().strftime("%H:%M:%S.%f"),
-                    group.groupId)
-                      )
-                if group is taskGroups[0]:
-                    fillCandsWithTasksFromSpecificGroupAndOnSpecificBasicCand(group, False, silentMode)
-                    cands = cleanCandsFromClones(cands, "silent")
-                else:
-                    for basicCand in cands:
-                        if (basicCand.lastGroupId + 1 == group.groupId) and (not basicCand.isUsed):
-                            fillCandsWithTasksFromSpecificGroupAndOnSpecificBasicCand(group, basicCand, silentMode)
-                            basicCand.isUsed = True
-                            cands = cleanCandsFromClones(cands, "silent")
+        for group in taskGroups:
+            print("----- (%s) Формируем кандидатов для группы %s -----" % (
+                datetime.datetime.now().strftime("%H:%M:%S.%f"),
+                group.groupId)
+                  )
+            if group is taskGroups[0]:
+                fillCandsWithTasksFromSpecificGroupAndOnSpecificBasicCand(group, False, silentMode)
+                cands = cleanCandsFromClones(cands, "silent")
+            else:
+                for basicCand in cands:
+                    if (basicCand.lastGroupId + 1 == group.groupId) and (not basicCand.isUsed):
+                        fillCandsWithTasksFromSpecificGroupAndOnSpecificBasicCand(group, basicCand, silentMode)
+                        basicCand.isUsed = True
+                        cands = cleanCandsFromClones(cands, "silent")
 
     # ▼▼▼▼▼▼▼▼▼ Склейка в один проход, удаление всех кандидатов, заканчивающихся непоследней группой,▼▼▼▼▼▼▼▼▼▼
 
