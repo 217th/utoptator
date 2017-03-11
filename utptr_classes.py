@@ -1,4 +1,5 @@
 import utptr_rels
+import random
 
 class Task:
     # Атрибуты класса Task. Заполняются в конструкторе.
@@ -151,9 +152,9 @@ class Candidate:
     #   additionalTo - указываем кандидата, состав которого полностью включает данный кандидат
     #   tasks - список задач, включённых в кандидат (list of Tasks)
     #   hoursUnused - количество нераспределённых часов (list)
-    #   isUsed - статус того, что для данного кандидата созданы все дополнительные (дочерние) кандидаты
     #   lastGroupId - идентификатор последней группы, из которой ПЫТАЛИСЬ включить задачи (могли и не включить)
     #   checkSum - контрольная сумма кандидата
+    #   isUsed - статус того, что для данного кандидата созданы все дополнительные (дочерние) кандидаты
     #   rels - list - массив объектов класса Relation.
     #       Должен копироваться при создании последующего кандидата из предыдущего кандидата,
     #       включая все сделанные ранее пометки.
@@ -181,23 +182,55 @@ class Candidate:
     def __init__(
             self,
             candId,
-            hoursUnused,
-            additionalTo,
-            rels = [],
+            group,
+            basicCand,
+            method,
+            ifNoBasicCandHoursUnused,
+            ifNoBasicCandOverallRels,
+            overallTasksList,
             silentMode = "silent"
     ):
 
-        self.candId = candId
-        self.hoursUnused = hoursUnused
-        self.tasks = []
-        self.additionalTo = additionalTo
         self.isUsed = False
-        self.lastGroupId = False
-        self.rels = rels
+        self.candId = candId
+        self.additionalTo = basicCand
+        self.lastGroupId = group.groupId
+        self.checkSum = 0
+        self.tasks = list()
+
+        if basicCand == False:
+            self.hoursUnused = ifNoBasicCandHoursUnused
+            self.rels = ifNoBasicCandOverallRels
+        else:
+            self.hoursUnused = basicCand.hoursUnused
+            self.rels = basicCand.rels
+
         if silentMode is not "silent":
             print(self.hl("Candidate.__init__", "g") + "----- Создан состав-кандидат №", self.candId)
             print(self.hl("Candidate.__init__", "g") + "Начальное количество часов:", self.hoursUnused)
-        self.checkSum = 0
+
+        if group.tasks:
+            # Независимо от наличия basicCand, предпринимаем попытки заполнения созданного кандидата newCand
+            if method == "direct":
+                group.tasks.sort(key=lambda x: x.taskEstimatesSum, reverse=True)
+                for task in group.tasks:
+                    self.tryToPutSingleTask(task, overallTasksList, group.groupId, silentMode)
+            elif method == "scroll":
+                group.scroll("silent")
+                for task in group.tasks:
+                    self.tryToPutSingleTask(task, overallTasksList, group.groupId, silentMode)
+            elif method == "shuffle":
+                random.shuffle(group.tasks)
+                for task in group.tasks:
+                    self.tryToPutSingleTask(task, overallTasksList, group.groupId, silentMode)
+
+
+
+
+
+
+
+
 
     def acceptTask(self, task, silentMode = "silent"):
         self.tasks.append(task)
@@ -222,6 +255,9 @@ class Candidate:
         print("Осталось часов: %s" % (self.hoursUnused))
 
     def tryToPutSingleTask(self, task, allTasks, groupId, silentMode = "silent"):
+        # allTasks нужен только чтобы отработать связь relConcurrent
+        # !!! Что-то придумать, чтобы не тащить !!!
+
         self.lastGroupId = groupId
 
         tasksToPut = []
@@ -229,16 +265,16 @@ class Candidate:
 
         taskActiveRelsArray = [x for x in self.rels if x.isActive and task.taskId == x.subjTaskId]
         if not taskActiveRelsArray:
-            trialIsFreeOfBlocks = True
+            trialIsFreeOfLocks = True
         else:
             if "relAlternative" in [x.relType for x in taskActiveRelsArray] or\
                     "relSequent" in [x.relType for x in taskActiveRelsArray] or \
                     "relAlreadyTaken" in [x.relType for x in taskActiveRelsArray]:
-                trialIsFreeOfBlocks = False
+                trialIsFreeOfLocks = False
             elif "relConcurrent" in [x.relType for x in taskActiveRelsArray]:
                 # Формируем список задач, которые будут пытаться установиться совместно
                 tasksToPut.extend([x for x in allTasks if x.taskId in [y.assocTaskId for y in taskActiveRelsArray]])
-                trialIsFreeOfBlocks = True
+                trialIsFreeOfLocks = True
 
         # Проверяем, влезает ли список задач
         tasksToPutEstimates = [0] * len(self.hoursUnused)
@@ -246,7 +282,7 @@ class Candidate:
             tasksToPutEstimates = [x+y for x, y in zip(task1.taskEstimates, tasksToPutEstimates)]
         tasksAreFit = [x <= y for x, y in zip(tasksToPutEstimates, self.hoursUnused)]
 
-        if not trialIsFreeOfBlocks:
+        if not trialIsFreeOfLocks:
             if silentMode is not "silent":
                 print(self.hl("Candidate.tryToPutSingleTask", "r") +
                       "Задача %s не рассматривается из-за блокировок %s %s" %

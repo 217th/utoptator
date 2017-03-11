@@ -129,34 +129,35 @@ else:
                             break
             return(cands)
 
-        def fillSingleCand(group, basicCand, method, silentmode="silent"):
+        def fillSingleCand(group, basicCand, method, silentMode="silent"):
+            # Создание кандидата - входы:
+            #   - целочисленный идентификатор для нового кандидата
+            #   - объект класса Group (включая и задачи, отнесённые к группе)
+            #   - объект класса Candidate, являющийся "базовым" для нового
+            #   - метод заполнения кандидата
+            #   - квоты часов разработки (если отсутствует базовый кандидат)
+            #   - массив с данными о связях задач (если отсутствует базовый кандидат)
+            #   - массив со всеми задачами (применяется при обработке связей)
+            # Создание кандидата - выходы:
+            #   - новый объект класса Candidate
+            #   - forFileRawCandTasks - список задач в кандидате для экспорта в файл
+            #   - forFileCandMeta - метаданные кандидата для экспорта в файл
+
             global candId
             candId += 1
 
             # Создаём объект newCand, который потом добавим в массив cands
-            # Если есть basicCand, необходимо наследование от него различных данных
-            if basicCand == False:
-                newCand = utptr_classes.Candidate(candId, listLabourHoursQuotas, False, originalRelsArray, silentmode)
-            else:
-                newCand = utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, basicCand.rels, silentmode)
-
-            if group.tasks:
-                # Независимо от наличия basicCand, предпринимаем попытки заполнения созданного кандидата newCand
-                if method == "direct":
-                    group.tasks.sort(key=lambda x: x.taskEstimatesSum, reverse=True)
-                    for task in group.tasks:
-                        newCand.tryToPutSingleTask(task, originalTasksArray, group.groupId, silentmode)
-                elif method == "scroll":
-                    group.scroll("silent")
-                    for task in group.tasks:
-                        newCand.tryToPutSingleTask(task, originalTasksArray, group.groupId, silentmode)
-                elif method == "shuffle":
-                    random.shuffle(group.tasks)
-                    for task in group.tasks:
-                        newCand.tryToPutSingleTask(task, originalTasksArray, group.groupId, silentmode)
-            else:
-                # Задач в группе нет, поэтому просто заполняем атрибут с id последней группы
-                newCand.lastGroupId = group.groupId
+            # Вся логика по наполнению кандидата задачами - в Candidate.__init__
+            newCand = utptr_classes.Candidate(
+                candId,
+                group,
+                basicCand,
+                method,
+                listLabourHoursQuotas,
+                originalRelsArray,
+                originalTasksArray,
+                silentMode
+            )
 
             # Заполняем мета-информацию о сырых кандидатах для вывода в файл
             if newCand.additionalTo:
@@ -172,7 +173,7 @@ else:
                 newCand.hoursUnused,
                 method])
 
-            # Заполняем мета-информацию о задачах сырых кандидатов для вывода в файл
+            # Заполняем мета-информацию о задачах, вошедших в сырой кандидат, для вывода в файл
             forFileRawCandTasks = list()
             for task in newCand.tasks:
                 forFileRawCandTasks.append([
@@ -197,9 +198,6 @@ else:
             forFileRawCandMetaArray.append(forFileCandMeta)
 
             return ()
-
-        def makeSubsidiariesForSingleCand():
-            pass
 
         if len(taskGroups) > 0:
             group = taskGroups[0]
