@@ -100,14 +100,14 @@ if originalRelsConflictArray:
     for relConflict in originalRelsConflictArray:
         relConflict.print()
 else:
-    print("Связи между задачами - бесконлфиктные.")
+    print("Валидация пройдена. Связи между задачами - бесконлфиктные.")
     del originalRelsConflictArray
 
     if any(len(x.tasks) > 0 for x in taskGroups):
         candId = -1
         cands = []
-        forFileRawCandMetaArray = []
-        forFileRawCandTasksArray = []
+        forFileRawCandMetaArray = list()
+        forFileRawCandTasksArray = list()
 
         def cleanCandsFromClones(cands, silentMode="silent"):
             for cand in reversed(cands):
