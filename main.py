@@ -204,17 +204,17 @@ else:
             print("----- (%s) Формируем кандидатов для группы %s -----" % (datetime.datetime.now().strftime("%H:%M:%S.%f"), group.groupId))
             if group.importance == "h":
                 fillSingleCand(group, False, "direct", silentMode)
-                if (len(group.tasks) > len(cands[-1].tasks)):
+                if cands[-1].isGroupCompletelyIn(group):
                     for i in range(len(group.tasks) + 1): fillSingleCand(group, False, "scroll", silentMode)
                     for i in range(len(group.tasks) * 2): fillSingleCand(group, False, "shuffle", silentMode)
             elif group.importance == "n":
                 fillSingleCand(group, False, "direct", silentMode)
-                if (len(group.tasks) > len(cands[-1].tasks)):
+                if cands[-1].isGroupCompletelyIn(group):
                     for i in range(len(group.tasks) + 1): fillSingleCand(group, False, "scroll", silentMode)
                     for i in range(len(group.tasks) + 1): fillSingleCand(group, False, "shuffle", silentMode)
             elif group.importance == "l":
                 fillSingleCand(group, False, "direct", silentMode)
-                if (len(group.tasks) > len(cands[-1].tasks)):
+                if cands[-1].isGroupCompletelyIn(group):
                     for i in range(len(group.tasks) + 1): fillSingleCand(group, False, "shuffle", silentMode)
             cands = cleanCandsFromClones(cands, "silent")
 
@@ -225,17 +225,17 @@ else:
                     if (basicCand.lastGroupId + 1 == group.groupId) and (not basicCand.isUsed):
                         if group.importance == "h":
                             fillSingleCand(group, basicCand, "direct", silentMode)
-                            if (len(group.tasks) > len(cands[-1].tasks)):
+                            if cands[-1].isGroupCompletelyIn(group):
                                 for i in range(len(group.tasks) + 1): fillSingleCand(group, basicCand, "scroll", silentMode)
                                 for i in range(len(group.tasks) * 2): fillSingleCand(group, basicCand, "shuffle", silentMode)
                         elif group.importance == "n":
                             fillSingleCand(group, basicCand, "direct", silentMode)
-                            if (len(group.tasks) > len(cands[-1].tasks)):
+                            if cands[-1].isGroupCompletelyIn(group):
                                 for i in range(len(group.tasks) + 1): fillSingleCand(group, basicCand, "scroll", silentMode)
                                 for i in range(len(group.tasks) + 1): fillSingleCand(group, basicCand, "shuffle", silentMode)
                         elif group.importance == "l":
                             fillSingleCand(group, basicCand, "direct", silentMode)
-                            if (len(group.tasks) > len(cands[-1].tasks)):
+                            if cands[-1].isGroupCompletelyIn(group):
                                 for i in range(len(group.tasks) + 1): fillSingleCand(group, basicCand, "shuffle", silentMode)
                         basicCand.isUsed = True
                         cands = cleanCandsFromClones(cands, "silent")

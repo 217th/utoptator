@@ -164,6 +164,7 @@ class Candidate:
     #   getScore - получить суммарную ценность состав-кандидата
     #   print - напечатать список вошедших задач
     #   tryToPutSingleTask - попытаться включить одну задачу
+    #   isGroupCompletelyIn - вернуть True, если группа целиком вошла в кандидата; иначе False
 
     @staticmethod
     def hl(funcName, color="g"):
@@ -224,13 +225,11 @@ class Candidate:
                 for task in group.tasks:
                     self.tryToPutSingleTask(task, overallTasksList, group.groupId, silentMode)
 
-
-
-
-
-
-
-
+    def isGroupCompletelyIn(self, group):
+        if len(group.tasks) > len(self.tasks):
+            return False
+        else:
+            return True
 
     def acceptTask(self, task, silentMode = "silent"):
         self.tasks.append(task)
