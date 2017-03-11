@@ -178,7 +178,15 @@ class Candidate:
                 return("\x1b[0;36;44m" + "(" + funcName + "):" + "\x1b[0m" + " ")
         else: return("")
 
-    def __init__(self, candId, hoursUnused, additionalTo, rels = [], silentMode = "silent"):
+    def __init__(
+            self,
+            candId,
+            hoursUnused,
+            additionalTo,
+            rels = [],
+            silentMode = "silent"
+    ):
+
         self.candId = candId
         self.hoursUnused = hoursUnused
         self.tasks = []

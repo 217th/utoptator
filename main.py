@@ -17,10 +17,11 @@ dictPriors = createDictPriors()
 dictDevs = createDictDevs(silentMode)
 listLabourHoursQuotas = createArrayLabourQuotas(list(dictDevs.keys()), silentMode)
 
+'''
 devsArray = utptr_from_file.readDevs(4, 28)
 for dev in devsArray:
     print(dev.devId, dev.devName, dev.devType)
-
+'''
 
 def сreateTasksArray(n, silentMode="silent"):
     tasksArray = []
@@ -70,6 +71,7 @@ for group in taskGroups:
 
 
 def createOverallRelationsArray(silentMode = "silent"):
+    # Временная функция для заполнения массива связей тестовыми данными
     relsNeatArray = []
     for group in taskGroups:
         for task in group.tasks:
@@ -129,55 +131,53 @@ else:
 
         def fillSingleCand(group, basicCand, method, silentmode="silent"):
             global candId
-            global cands
-            global forFileRawCandMetaArray
-            global forFileRawCandTasksArray
             candId += 1
+
+            # Создаём объект newCand, который потом добавим в массив cands
+            # Если есть basicCand, необходимо наследование от него различных данных
+            if basicCand == False:
+                newCand = utptr_classes.Candidate(candId, listLabourHoursQuotas, False, originalRelsArray, silentmode)
+            else:
+                newCand = utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, basicCand.rels, silentmode)
+
             if group.tasks:
-                if basicCand == False:
-                    cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas, False, originalRelsArray, silentmode))
-                else:
-                    cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, basicCand.rels, silentmode))
+                # Независимо от наличия basicCand, предпринимаем попытки заполнения созданного кандидата newCand
                 if method == "direct":
                     group.tasks.sort(key=lambda x: x.taskEstimatesSum, reverse=True)
                     for task in group.tasks:
-                        cands[-1].tryToPutSingleTask(task, originalTasksArray, group.groupId, silentmode)
+                        newCand.tryToPutSingleTask(task, originalTasksArray, group.groupId, silentmode)
                 elif method == "scroll":
                     group.scroll("silent")
                     for task in group.tasks:
-                        cands[-1].tryToPutSingleTask(task, originalTasksArray, group.groupId, silentmode)
+                        newCand.tryToPutSingleTask(task, originalTasksArray, group.groupId, silentmode)
                 elif method == "shuffle":
                     random.shuffle(group.tasks)
                     for task in group.tasks:
-                        cands[-1].tryToPutSingleTask(task, originalTasksArray, group.groupId, silentmode)
+                        newCand.tryToPutSingleTask(task, originalTasksArray, group.groupId, silentmode)
             else:
-                if basicCand == False:
-                    cands.append(utptr_classes.Candidate(candId, listLabourHoursQuotas, False, originalRelsArray, silentmode))
-                else:
-                    cands.append(utptr_classes.Candidate(candId, basicCand.hoursUnused, basicCand, basicCand.rels, silentmode))
-                cands[-1].lastGroupId = group.groupId
+                # Задач в группе нет, поэтому просто заполняем атрибут с id последней группы
+                newCand.lastGroupId = group.groupId
 
             # Заполняем мета-информацию о сырых кандидатах для вывода в файл
-            forFileCandMeta = []
-            if cands[-1].additionalTo:
-                forFileAddTo = 'addTo '+str(cands[-1].additionalTo.candId)
+            if newCand.additionalTo:
+                forFileAddTo = 'addTo '+str(newCand.additionalTo.candId)
             else:
                 forFileAddTo = False
-            forFileCandMeta.extend([
+            forFileCandMeta = list([
                 forFileAddTo,
-                cands[-1].candId,
-                cands[-1].lastGroupId,
-                round(cands[-1].checkSum, 1),
-                'amnt '+str(len(cands[-1].tasks)),
-                cands[-1].hoursUnused,
+                newCand.candId,
+                newCand.lastGroupId,
+                round(newCand.checkSum, 1),
+                'amnt '+str(len(newCand.tasks)),
+                newCand.hoursUnused,
                 method])
-            forFileRawCandMetaArray.append(forFileCandMeta)
 
             # Заполняем мета-информацию о задачах сырых кандидатов для вывода в файл
-            for task in cands[-1].tasks:
-                forFileRawCandTasksArray.append([
-                    cands[-1].candId,
-                    cands[-1].lastGroupId,
+            forFileRawCandTasks = list()
+            for task in newCand.tasks:
+                forFileRawCandTasks.append([
+                    newCand.candId,
+                    newCand.lastGroupId,
                     task.taskId,
                     task.taskPrior,
                     task.taskType,
@@ -188,7 +188,18 @@ else:
                     task.relSequent
                 ])
 
+            # Операции с глобальными объектами - кандидаты на вынос из функции
+            global cands
+            cands.append(newCand)
+            global forFileRawCandTasksArray
+            forFileRawCandTasksArray.extend(forFileRawCandTasks)
+            global forFileRawCandMetaArray
+            forFileRawCandMetaArray.append(forFileCandMeta)
+
             return ()
+
+        def makeSubsidiariesForSingleCand():
+            pass
 
         if len(taskGroups) > 0:
             group = taskGroups[0]
