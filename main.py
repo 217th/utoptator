@@ -17,8 +17,8 @@ dictPriors = createDictPriors()
 # dictDevs = createDictDevs(silentMode)
 # listLabourHoursQuotas = createArrayLabourQuotas(list(dictDevs.keys()), silentMode)
 
-devsArray = utptr_from_file.readDevs(4, 28)
-for dev in devsArray:
+initialDevsArray = utptr_from_file.readDevs(4, 28)
+for dev in initialDevsArray:
     print(dev.devId, dev.devName, dev.devType, dev.devHoursPrimary, dev.devHoursSecondary, dev.devHoursExcess)
 
 
@@ -26,7 +26,7 @@ def сreateTasksArray(n, silentMode="silent"):
     tasksArray = []
     if n > 0:
         for i in range(n):
-            task = utptr_classes.Task(dictPriors, dictTaskTypes, devsArray, silentMode)
+            task = utptr_classes.Task(dictPriors, dictTaskTypes, initialDevsArray, silentMode)
             tasksArray.append(task)
         for task in tasksArray:
             task.setRandomRelations(tasksArray, silentMode)
@@ -68,7 +68,6 @@ print("----- (%s) Распределяем задачи по группам ----
 for group in taskGroups:
     group.fillAndSort(originalTasksArray, "babble")
 
-'''
 def createOverallRelationsArray(silentMode = "silent"):
     # Временная функция для заполнения массива связей тестовыми данными
     relsNeatArray = []
@@ -128,6 +127,7 @@ else:
                             break
             return(cands)
 
+
         def fillSingleCand(group, basicCand, method, silentMode="silent"):
             # Создание кандидата - входы:
             #   - целочисленный идентификатор для нового кандидата
@@ -152,7 +152,7 @@ else:
                 group,
                 basicCand,
                 method,
-                listLabourHoursQuotas,
+                initialDevsArray,
                 originalRelsArray,
                 originalTasksArray,
                 silentMode
@@ -169,7 +169,7 @@ else:
                 newCand.lastGroupId,
                 round(newCand.checkSum, 1),
                 'amnt '+str(len(newCand.tasks)),
-                newCand.hoursUnused,
+                newCand.hoursUnused,                    # ПЕРЕДЕЛАТЬ ПОД НОВЫЙ ФОРМАТ ВРЕМЕННЫХ КВОТ
                 method])
 
             # Заполняем мета-информацию о задачах, вошедших в сырой кандидат, для вывода в файл
@@ -181,7 +181,7 @@ else:
                     task.taskId,
                     task.taskPrior,
                     task.taskType,
-                    task.taskEstimates,
+                    task.taskEstimates,                 # ПЕРЕДЕЛАТЬ ПОД НОВЫЙ ФОРМАТ ВРЕМЕННЫХ КВОТ
                     round(task.taskScore, 1),
                     task.relConcurrent,
                     task.relAlternative,
@@ -231,7 +231,7 @@ else:
                         cands = cleanCandsFromClones(cands, "silent")
 
     # ▼▼▼▼▼▼▼▼▼ Склейка в один проход, удаление всех кандидатов, заканчивающихся непоследней группой,▼▼▼▼▼▼▼▼▼▼
-
+'''
         candsAssembled = copy.deepcopy(cands)
         print("----- (%s) Склеиваем кандидатов -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
         for i in range(len(taskGroups)):

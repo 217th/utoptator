@@ -65,10 +65,11 @@ class Task:
         '''
 
         # Генерируем оценки по задаче "по-новому"
-        for dev in [x for x in devsArray if (x.devHoursPrimary > 0) or (x.devHoursSecondary > 0)]:
+        for dev in devsArray:
             taskEstimates.append(Estimate(dev.devId,
                                           dev.devType,
-                                          random.choice([0]*39 + list(range(1,11)) + list(range(1, 11)))))
+                                          random.choice([0]*39 + list(range(1,11)) + list(range(1, 11))))
+                                 )
         self.taskEstimates = copy.deepcopy(taskEstimates)
         self.taskEstimatesSum = sum([x.hours for x in taskEstimates])
         del taskEstimates
@@ -250,23 +251,45 @@ class Candidate:
     def acceptTask(self, task, silentMode = "silent"):
         self.tasks.append(task)
         if silentMode is not "silent":
-            print(self.hl("Candidate.acceptTask", "g") + "В состав-кандидат %s включена задача %s. Всего включено задач %s" %  (self.candId, self.tasks[len(self.tasks)-1].taskId, len(self.tasks)))
+            print(self.hl("Candidate.acceptTask", "g") +
+                  "В состав-кандидат %s включена задача %s. Всего включено задач %s" %
+                  (self.candId, self.tasks[len(self.tasks)-1].taskId, len(self.tasks))
+                  )
 
     def getScore(self):
         score = 0
         for task in self.tasks:
             score += task.taskScore
-        return (score)
+        return score
 
     def print(self):
         print("------------------------------\n------------------------------\n------------------------------")
         if self.additionalTo:
-            print(self.hl("Candidate.print", "g") + "\nСостав-кандидат № %s - всего %s задач - последняя группа %s - добавочный к %s - ценность %s" % (self.candId, len(self.tasks), self.lastGroupId, self.additionalTo.candId, round(self.getScore(), 1)))
+            print(self.hl("Candidate.print", "g") +
+                  "\nСостав-кандидат № %s - всего %s задач - последняя группа %s - добавочный к %s - ценность %s" %
+                  (self.candId,
+                   len(self.tasks),
+                   self.lastGroupId,
+                   self.additionalTo.candId,
+                   round(self.getScore(), 1))
+                  )
         else:
-            print(self.hl("Candidate.print", "g") + "\nСостав-кандидат № %s - всего %s задач - последняя группа %s - ценность %s" % (self.candId, len(self.tasks), self.lastGroupId, round(self.getScore(), 1)))
+            print(self.hl("Candidate.print", "g") +
+                  "\nСостав-кандидат № %s - всего %s задач - последняя группа %s - ценность %s" %
+                  (self.candId,
+                   len(self.tasks),
+                   self.lastGroupId,
+                   round(self.getScore(), 1))
+                  )
 
         for task in self.tasks:
-            print("Задача %s - тип %s - приоритет %s - оценки %s" % (task.taskId, task.taskType, task.taskPrior, task.taskEstimates))
+            print("Задача %s - тип %s - приоритет %s - оценки %s" %
+                  (task.taskId,
+                   task.taskType,
+                   task.taskPrior,
+                   task.taskEstimates)
+                  )
+
         print("Осталось часов: %s" % (self.hoursUnused))
 
     def tryToPutSingleTask(self, task, allTasks, groupId, silentMode = "silent"):
@@ -275,7 +298,7 @@ class Candidate:
 
         self.lastGroupId = groupId
 
-        tasksToPut = []
+        tasksToPut = list()
         tasksToPut.append(task)
 
         taskActiveRelsArray = [x for x in self.rels if x.isActive and task.taskId == x.subjTaskId]
@@ -294,8 +317,8 @@ class Candidate:
         # Проверяем, влезает ли список задач
         tasksToPutEstimates = [0] * len(self.hoursUnused)
         for task1 in tasksToPut:
-            tasksToPutEstimates = [x+y for x, y in zip(task1.taskEstimates, tasksToPutEstimates)]
-        tasksAreFit = [x <= y for x, y in zip(tasksToPutEstimates, self.hoursUnused)]
+            tasksToPutEstimates = [x.hours+y for x, y in zip(task1.taskEstimates, tasksToPutEstimates)]
+        tasksAreFit = [x <= y.devHoursPrimary for x, y in zip(tasksToPutEstimates, self.hoursUnused)]
 
         if not trialIsFreeOfLocks:
             if silentMode is not "silent":
@@ -310,7 +333,7 @@ class Candidate:
                     print(self.hl("Candidate.tryToPutSingleTask", "y") +
                           "--- Задача %s. Есть часов: %s, надо часов: %s" %
                           ([x.taskId for x in tasksToPut],
-                           self.hoursUnused,
+                           [x.devHoursPrimary for x in self.hoursUnused],
                            tasksToPutEstimates))
                     print(self.hl("Candidate.tryToPutSingleTask", "y") +
                           "Задача %s не влезает" %
@@ -320,16 +343,24 @@ class Candidate:
                     print(self.hl("Candidate.tryToPutSingleTask", "y") +
                           "--- Задача %s. Есть часов: %s, надо часов: %s." %
                           ([x.taskId for x in tasksToPut],
-                           self.hoursUnused,
+                           [x.devHoursPrimary for x in self.hoursUnused],
                            tasksToPutEstimates))
                     print(self.hl("Candidate.tryToPutSingleTask", "y") +
                           "Задача %s влезает" %
                           [x.taskId for x in tasksToPut])
-                self.hoursUnused = [y - x for x, y in zip(tasksToPutEstimates, self.hoursUnused)]
+
+                # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                # НЕОБХОДИМО ПЕРЕПИСАТЬ РАСЧЁТ КОЛИЧЕСТВА ЧАСОВ ПОСЛЕ ПОСТАНОВКИ ЗАДАЧИ - ОН ДОЛЖЕН ВОЗВРАЩАТЬ LIST OF DEVS, А НЕ LIST OF INTS
+                # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                self.hoursUnused = [y.devHoursPrimary - x for x, y in zip(tasksToPutEstimates, self.hoursUnused)]
+                # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                # НЕОБХОДИМО ПЕРЕПИСАТЬ РАСЧЁТ КОЛИЧЕСТВА ЧАСОВ ПОСЛЕ ПОСТАНОВКИ ЗАДАЧИ - ОН ДОЛЖЕН ВОЗВРАЩАТЬ LIST OF DEVS, А НЕ LIST OF INTS
+                # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
                 if silentMode is not "silent":
                     print(self.hl("Candidate.tryToPutSingleTask", "y") +
                           "Остаётся часов:",
-                          self.hoursUnused)
+                          [x for x in self.hoursUnused])
                 for task1 in tasksToPut:
                     self.acceptTask(task1, silentMode)
                     self.checkSum += task1.taskId
