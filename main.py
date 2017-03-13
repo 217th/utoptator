@@ -19,7 +19,7 @@ dictPriors = createDictPriors()
 
 initialDevsArray = utptr_from_file.readDevs(4, 28)
 for dev in initialDevsArray:
-    print(dev.devId, dev.devName, dev.devType, dev.devHoursPrimary, dev.devHoursSecondary, dev.devHoursExcess)
+    print(dev.devId, dev.devName, dev.devType, dev.hoursPrimary, dev.hoursSecondary, dev.hoursExcess)
 
 
 def сreateTasksArray(n, silentMode="silent"):
@@ -230,8 +230,7 @@ else:
                         basicCand.isUsed = True
                         cands = cleanCandsFromClones(cands, "silent")
 
-    # ▼▼▼▼▼▼▼▼▼ Склейка в один проход, удаление всех кандидатов, заканчивающихся непоследней группой,▼▼▼▼▼▼▼▼▼▼
-'''
+        # ▼▼▼▼▼▼▼ Склейка в один проход, удаление всех кандидатов, заканчивающихся непоследней группой,▼▼▼▼▼▼▼
         candsAssembled = copy.deepcopy(cands)
         print("----- (%s) Склеиваем кандидатов -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
         for i in range(len(taskGroups)):
@@ -250,14 +249,13 @@ else:
                 candsAssembled.pop(candsAssembled.index(cand))
 
         candsAssembled = cleanCandsFromClones(candsAssembled, "silent")
-
-    # ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+        # ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
         print("----- (%s) После склейки: -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
         for cand in candsAssembled:
             cand.print()
-
-    # ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ Заполнение всего необходимого для экспорта в excel ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+'''
+        # ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ Заполнение всего необходимого для экспорта в excel ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
 
         print("----- (%s) Выводим в файл -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
         # Заполнение исходного списка задач для экспорта в файл

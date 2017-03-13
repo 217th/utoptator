@@ -18,12 +18,12 @@ def readDevs(firstRow = 4, lastRow = 28):
         devsArray = []
 
         for i in range(firstRow, lastRow):
-            devsArray.append(utptr_classes.Dev(colDevId[i].value,
-                  colDevType[i].value,
-                  colDevName[i].value,
-                  colDevHoursPrimary[i].value,
-                  colDevHoursSecondary[i].value,
-                  colDevHoursExcess[i].value))
+            devsArray.append(utptr_classes.Quota(colDevId[i].value,
+                                                 colDevType[i].value,
+                                                 colDevName[i].value,
+                                                 colDevHoursPrimary[i].value,
+                                                 colDevHoursSecondary[i].value,
+                                                 colDevHoursExcess[i].value))
 
     else:
         print("Нет листа с разработчиками")

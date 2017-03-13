@@ -168,7 +168,7 @@ class Candidate:
     #   candId - уникальный id кандидата (int, генерируется инкрементально)
     #   additionalTo - указываем кандидата, состав которого полностью включает данный кандидат
     #   tasks - список задач, включённых в кандидат (list of Tasks)
-    #   hoursUnused - количество нераспределённых часов (list)
+    #   hoursUnused - list of Quota
     #   lastGroupId - идентификатор последней группы, из которой ПЫТАЛИСЬ включить задачи (могли и не включить)
     #   checkSum - контрольная сумма кандидата
     #   isUsed - статус того, что для данного кандидата созданы все дополнительные (дочерние) кандидаты
@@ -223,10 +223,6 @@ class Candidate:
             self.hoursUnused = basicCand.hoursUnused
             self.rels = basicCand.rels
 
-        if silentMode is not "silent":
-            print(self.hl("Candidate.__init__", "g") + "----- Создан состав-кандидат №", self.candId)
-            print(self.hl("Candidate.__init__", "g") + "Начальное количество часов:", self.hoursUnused)
-
         if group.tasks:
             # Независимо от наличия basicCand, предпринимаем попытки заполнения созданного кандидата newCand
             if method == "direct":
@@ -242,6 +238,12 @@ class Candidate:
                 for task in group.tasks:
                     self.tryToPutSingleTask(task, overallTasksList, group.groupId, silentMode)
 
+        if silentMode is not "silent":
+            print(self.hl("Candidate.__init__", "g") + "----- Создан состав-кандидат №", self.candId)
+            print(self.hl("Candidate.__init__", "g") + "Начальное количество часов:",
+                  [x.hoursPrimary for x in self.hoursUnused]
+                  )
+
     def isGroupCompletelyIn(self, group):
         if len(group.tasks) > len(self.tasks):
             return False
@@ -250,6 +252,9 @@ class Candidate:
 
     def acceptTask(self, task, silentMode = "silent"):
         self.tasks.append(task)
+        self.hoursUnused = [x.substractHours(y) for x, y in zip(self.hoursUnused, task.taskEstimates)]
+        self.checkSum += task.taskId
+        self.checkSum += task.taskScore
         if silentMode is not "silent":
             print(self.hl("Candidate.acceptTask", "g") +
                   "В состав-кандидат %s включена задача %s. Всего включено задач %s" %
@@ -287,10 +292,24 @@ class Candidate:
                   (task.taskId,
                    task.taskType,
                    task.taskPrior,
-                   task.taskEstimates)
+                   [x.hours for x in task.taskEstimates]
+                   )
                   )
 
-        print("Осталось часов: %s" % (self.hoursUnused))
+        print("Осталось часов: %s" % [x.hoursPrimary for x in self.hoursUnused])
+
+    @staticmethod
+    def areTasksFit(quotaList, taskList):
+        # Возвращает True, если все задачи влезают
+        # Пока делаем только постановку в основной состав всей кучи переданных задач
+        overallEstimates = [0] * len(quotaList)
+        for task in taskList:
+            overallEstimates = [x.hours+y for x, y in zip(task.taskEstimates, overallEstimates)]
+        areFit = [x <= y.hoursPrimary for x, y in zip(overallEstimates, quotaList)]
+        if False in areFit:
+            return False
+        else:
+            return True
 
     def tryToPutSingleTask(self, task, allTasks, groupId, silentMode = "silent"):
         # allTasks нужен только чтобы отработать связь relConcurrent
@@ -315,10 +334,7 @@ class Candidate:
                 trialIsFreeOfLocks = True
 
         # Проверяем, влезает ли список задач
-        tasksToPutEstimates = [0] * len(self.hoursUnused)
-        for task1 in tasksToPut:
-            tasksToPutEstimates = [x.hours+y for x, y in zip(task1.taskEstimates, tasksToPutEstimates)]
-        tasksAreFit = [x <= y.devHoursPrimary for x, y in zip(tasksToPutEstimates, self.hoursUnused)]
+        tasksAreFit = self.areTasksFit(self.hoursUnused, tasksToPut)
 
         if not trialIsFreeOfLocks:
             if silentMode is not "silent":
@@ -328,46 +344,26 @@ class Candidate:
                        [x.relType for x in taskActiveRelsArray],
                        [x.assocTaskId for x in taskActiveRelsArray]))
         else:
-            if False in tasksAreFit:
+            if not tasksAreFit:
                 if silentMode is not "silent":
                     print(self.hl("Candidate.tryToPutSingleTask", "y") +
-                          "--- Задача %s. Есть часов: %s, надо часов: %s" %
+                          "--- Задача %s. Есть часов: %s. Не влезает" %
                           ([x.taskId for x in tasksToPut],
-                           [x.devHoursPrimary for x in self.hoursUnused],
-                           tasksToPutEstimates))
-                    print(self.hl("Candidate.tryToPutSingleTask", "y") +
-                          "Задача %s не влезает" %
-                          [x.taskId for x in tasksToPut])
+                           [x.hoursPrimary for x in self.hoursUnused])
+                          )
             else:
                 if silentMode is not "silent":
                     print(self.hl("Candidate.tryToPutSingleTask", "y") +
-                          "--- Задача %s. Есть часов: %s, надо часов: %s." %
+                          "--- Задача %s. Есть часов: %s. Влезает" %
                           ([x.taskId for x in tasksToPut],
-                           [x.devHoursPrimary for x in self.hoursUnused],
-                           tasksToPutEstimates))
-                    print(self.hl("Candidate.tryToPutSingleTask", "y") +
-                          "Задача %s влезает" %
-                          [x.taskId for x in tasksToPut])
+                           [x.hoursPrimary for x in self.hoursUnused])
+                          )
 
-                # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                # НЕОБХОДИМО ПЕРЕПИСАТЬ РАСЧЁТ КОЛИЧЕСТВА ЧАСОВ ПОСЛЕ ПОСТАНОВКИ ЗАДАЧИ - ОН ДОЛЖЕН ВОЗВРАЩАТЬ LIST OF DEVS, А НЕ LIST OF INTS
-                # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                self.hoursUnused = [y.devHoursPrimary - x for x, y in zip(tasksToPutEstimates, self.hoursUnused)]
-                # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                # НЕОБХОДИМО ПЕРЕПИСАТЬ РАСЧЁТ КОЛИЧЕСТВА ЧАСОВ ПОСЛЕ ПОСТАНОВКИ ЗАДАЧИ - ОН ДОЛЖЕН ВОЗВРАЩАТЬ LIST OF DEVS, А НЕ LIST OF INTS
-                # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-                if silentMode is not "silent":
-                    print(self.hl("Candidate.tryToPutSingleTask", "y") +
-                          "Остаётся часов:",
-                          [x for x in self.hoursUnused])
                 for task1 in tasksToPut:
                     self.acceptTask(task1, silentMode)
-                    self.checkSum += task1.taskId
-                    self.checkSum += task1.taskScore
 
                     for rel in self.rels:
-                        if rel.assocTaskId == task1.taskId:
+                        if rel.assocTaskId is task1.taskId:
                             if rel.relType == "relSequent":
                                 rel.isActive = False
                             elif rel.relType == "relAlternative":
@@ -375,6 +371,11 @@ class Candidate:
                             elif rel.relType == "relConcurrent":
                                 rel.isActive = False
                                 self.rels.append(utptr_rels.Relation("relAlreadyTaken", task1.taskId, "", False, silentMode))
+
+                if silentMode is not "silent":
+                    print(self.hl("Candidate.tryToPutSingleTask", "y") +
+                          "Остаётся часов:",
+                          [x.hoursPrimary for x in self.hoursUnused])
 
 
 class Group:
@@ -458,11 +459,38 @@ class Estimate:
         self.hours = hours
 
 
-class Dev(Estimate):
+class Quota(Estimate):
 
-    def __init__(self, devId, devType, devName, devHoursPrimary, devHoursSecondary, devHoursExcess):
+    @staticmethod
+    def hl(funcName, color="g"):
+        silentMode = False
+        if not silentMode:
+            if color == "g":
+                return("\x1b[0;36;42m" + "(" + funcName + "):" + "\x1b[0m" + " ")
+        if color == "r":
+            return("\x1b[0;36;41m" + "(" + funcName + "):" + "\x1b[0m" + " ")
+        if color == "y":
+            return("\x1b[0;36;43m" + "(" + funcName + "):" + "\x1b[0m" + " ")
+        if color == "b":
+            return("\x1b[0;36;44m" + "(" + funcName + "):" + "\x1b[0m" + " ")
+        else:
+            return ""
+
+    def __init__(self, devId, devType, devName, hoursPrimary, hoursSecondary, hoursExcess):
         super().__init__(devId, devType, False)
         self.devName = devName
-        self.devHoursPrimary = devHoursPrimary
-        self.devHoursSecondary = devHoursSecondary
-        self.devHoursExcess = devHoursExcess
+        self.hoursPrimary = hoursPrimary
+        self.hoursSecondary = hoursSecondary
+        self.hoursExcess = hoursExcess
+
+    def substractHours(self, estimate):
+        # Пока только из основного состава (hoursPrimary)
+        if self.devId is estimate.devId:
+            self.hoursPrimary -= estimate.hours
+            return self
+        else:
+            print(self.hl("Quota.substractHours", "r") + "Несоответствие devId. Квоты: %s Оценки: %s" %
+                  (self.devId,
+                   estimate.devId)
+                  )
+            return False
