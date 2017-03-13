@@ -35,7 +35,7 @@ class Task:
                 return("\x1b[0;36;44m" + "(" + funcName + "):" + "\x1b[0m" + " ")
         else: return("")
 
-    def __init__(self, dictPriors, dictTaskTypes, dictDevs, silentMode="silent"):
+    def __init__(self, dictPriors, dictTaskTypes, devsArray, silentMode="silent"):
         import random, copy
 
         self.taskId = int(str(random.randint(0, 9)) + str(random.randint(0, 9)) + str(random.randint(0, 9)) + str(random.randint(0, 9)) + str(random.randint(0, 9))) # Сгенерили правдоподобно выглядищий номер задачи
@@ -46,9 +46,15 @@ class Task:
         self.relAlternative = []
         self.relSequent = []
 
-        taskEstimates = [] # Генерируем оценки по задаче для каждого разработчика _только из справочника_. Так, чтобы id записи с оценкой соответствовал id разработчика из справочника
+        taskEstimates = []
+
+        '''
+        # Генерируем оценки по задаче для каждого разработчика _только из справочника_.
+        # Так, чтобы id записи с оценкой соответствовал id разработчика из справочника
         for j in range(0, 1+max(list(dictDevs.keys()))):
-            if j in dictDevs: # Проверяем, есть ли значение j среди ключей справочника разработчиков; если есть, то присваиваем рандомную оценку (с очень большим весом нуля)
+            if j in dictDevs:
+                # Проверяем, есть ли значение j среди ключей справочника разработчиков;
+                # если есть, то присваиваем рандомную оценку (с очень большим весом нуля)
                 taskEstimates.append(random.choice([0]*9 + list(range(1,11)) + list(range(1, 11))))
             else: # Если в справочнике нет разработчика с таким ID
                 taskEstimates.append(0)
@@ -56,25 +62,35 @@ class Task:
         del taskEstimates
 
         self.taskEstimatesSum = sum(self.taskEstimates)
+        '''
+
+        # Генерируем оценки по задаче "по-новому"
+        for dev in [x for x in devsArray if (x.devHoursPrimary > 0) or (x.devHoursSecondary > 0)]:
+            taskEstimates.append(Estimate(dev.devId,
+                                          dev.devType,
+                                          random.choice([0]*39 + list(range(1,11)) + list(range(1, 11)))))
+        self.taskEstimates = copy.deepcopy(taskEstimates)
+        self.taskEstimatesSum = sum([x.hours for x in taskEstimates])
+        del taskEstimates
 
         if self.taskPrior == 0:          # Немедленный
-            self.taskScore = round(5.0 * sum(self.taskEstimates), 2)
+            self.taskScore = round(5.0 * self.taskEstimatesSum, 2)
         elif self.taskPrior == 1:        # Очень высокий
-            self.taskScore = round(2.0 * sum(self.taskEstimates), 2)
+            self.taskScore = round(2.0 * self.taskEstimatesSum, 2)
         elif self.taskPrior == 2:        # Высокий
-            self.taskScore = round(1.0 * sum(self.taskEstimates), 2)
+            self.taskScore = round(1.0 * self.taskEstimatesSum, 2)
         elif self.taskPrior == 3:        # Высокенький
-            self.taskScore = round(0.7 * sum(self.taskEstimates), 2)
+            self.taskScore = round(0.7 * self.taskEstimatesSum, 2)
         elif self.taskPrior == 4:        # Нормальный
-            self.taskScore = round(0.4 * sum(self.taskEstimates), 2)
+            self.taskScore = round(0.4 * self.taskEstimatesSum, 2)
         elif self.taskPrior == 5:        # Низкий
-            self.taskScore = round(0.2 * sum(self.taskEstimates), 2)
+            self.taskScore = round(0.2 * self.taskEstimatesSum, 2)
         else:
-            self.taskScore = round(0.4 * sum(self.taskEstimates), 2)
+            self.taskScore = round(0.4 * self.taskEstimatesSum, 2)
 
         if silentMode is not "silent":
             print("-----\n" + self.hl("Task.__init__", "g") + "Задача: %s Тип: %s Приоритет: %s Ценность: %s" % (self.taskId, self.taskType, self.taskPrior, self.taskScore))
-            print(self.hl("Task.__init__", "g") + "Часы по задаче: %s " % self.taskEstimates)
+            print(self.hl("Task.__init__", "g") + "Часы по задаче: %s " % [x.hours for x in self.taskEstimates])
 
     def setRandomRelations(self, tasks, silentMode="silent"):
         import random
@@ -403,12 +419,12 @@ class Estimate:
     # Атрибуты:
     #   - devId
     #   - devType
-    #   - devHours
+    #   - hours
 
     def __init__(self, devId, devType, hours):
         self.devId = devId
         self.devType = devType
-        self.Hours = hours
+        self.hours = hours
 
 
 class Dev(Estimate):

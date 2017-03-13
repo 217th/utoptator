@@ -14,20 +14,19 @@ print("----- (%s) Старт программы -----" % datetime.datetime.now()
 silentMode = "babble"  # Режим тишины. "silent" - сокращённые сообщения. "babble" - полные сообщения
 dictTaskTypes = createDictTaskTypes()
 dictPriors = createDictPriors()
-dictDevs = createDictDevs(silentMode)
-listLabourHoursQuotas = createArrayLabourQuotas(list(dictDevs.keys()), silentMode)
+# dictDevs = createDictDevs(silentMode)
+# listLabourHoursQuotas = createArrayLabourQuotas(list(dictDevs.keys()), silentMode)
 
 devsArray = utptr_from_file.readDevs(4, 28)
 for dev in devsArray:
-    print(dev.devId, dev.devName, dev.devType)
-''''''
+    print(dev.devId, dev.devName, dev.devType, dev.devHoursPrimary, dev.devHoursSecondary, dev.devHoursExcess)
 
 
 def сreateTasksArray(n, silentMode="silent"):
     tasksArray = []
     if n > 0:
         for i in range(n):
-            task = utptr_classes.Task(dictPriors, dictTaskTypes, dictDevs, silentMode)
+            task = utptr_classes.Task(dictPriors, dictTaskTypes, devsArray, silentMode)
             tasksArray.append(task)
         for task in tasksArray:
             task.setRandomRelations(tasksArray, silentMode)
@@ -69,7 +68,7 @@ print("----- (%s) Распределяем задачи по группам ----
 for group in taskGroups:
     group.fillAndSort(originalTasksArray, "babble")
 
-
+'''
 def createOverallRelationsArray(silentMode = "silent"):
     # Временная функция для заполнения массива связей тестовыми данными
     relsNeatArray = []
@@ -362,4 +361,5 @@ else:
 
     else:
         print("Все группы задач пусты.")
-''''''
+
+'''
