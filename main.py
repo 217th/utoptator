@@ -17,11 +17,11 @@ dictPriors = createDictPriors()
 dictDevs = createDictDevs(silentMode)
 listLabourHoursQuotas = createArrayLabourQuotas(list(dictDevs.keys()), silentMode)
 
-'''
 devsArray = utptr_from_file.readDevs(4, 28)
 for dev in devsArray:
     print(dev.devId, dev.devName, dev.devType)
-'''
+''''''
+
 
 def сreateTasksArray(n, silentMode="silent"):
     tasksArray = []

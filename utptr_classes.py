@@ -396,11 +396,25 @@ class Group:
         self.tasks = restTasks + firstTask
 
 
-class Dev:
+class Estimate:
+    # Класс Estimate
+    # Для каждой задачи будет list of Estimate.
+    # Если какая-то оценка нулевая, то для неё объект в листе не создаём.
+    # Атрибуты:
+    #   - devId
+    #   - devType
+    #   - devHours
 
-    def __init__(self, devId, devType, devName, devHoursPrimary, devHoursSecondary, devHoursExcess):
+    def __init__(self, devId, devType, hours):
         self.devId = devId
         self.devType = devType
+        self.Hours = hours
+
+
+class Dev(Estimate):
+
+    def __init__(self, devId, devType, devName, devHoursPrimary, devHoursSecondary, devHoursExcess):
+        super().__init__(devId, devType, False)
         self.devName = devName
         self.devHoursPrimary = devHoursPrimary
         self.devHoursSecondary = devHoursSecondary
