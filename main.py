@@ -1,6 +1,7 @@
 # https://www.tutorialspoint.com/python/
 
 from filloriginaldata import (createDictDevs, createDictPriors, createDictTaskTypes, createArrayLabourQuotas)
+import utptr_log as log
 import copy
 import random
 import utptr_classes
@@ -9,7 +10,7 @@ import utptr_to_file
 import utptr_rels
 import datetime
 
-print("----- (%s) Старт программы -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
+log.general('program launched')
 
 silentMode = "babble"  # Режим тишины. "silent" - сокращённые сообщения. "babble" - полные сообщения
 dictTaskTypes = createDictTaskTypes()
@@ -68,6 +69,7 @@ print("----- (%s) Распределяем задачи по группам ----
 for group in taskGroups:
     group.fillAndSort(originalTasksArray, "babble")
 
+'''
 def createOverallRelationsArray(silentMode = "silent"):
     # Временная функция для заполнения массива связей тестовыми данными
     relsNeatArray = []
@@ -254,7 +256,7 @@ else:
         print("----- (%s) После склейки: -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
         for cand in candsAssembled:
             cand.print()
-'''
+
         # ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ Заполнение всего необходимого для экспорта в excel ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
 
         print("----- (%s) Выводим в файл -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))

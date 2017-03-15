@@ -1,5 +1,6 @@
 import utptr_rels
 import random
+import utptr_log as log
 
 class Task:
     # Атрибуты класса Task. Заполняются в конструкторе.
@@ -39,8 +40,11 @@ class Task:
         import random, copy
 
         self.taskId = int(str(random.randint(0, 9)) + str(random.randint(0, 9)) + str(random.randint(0, 9)) + str(random.randint(0, 9)) + str(random.randint(0, 9))) # Сгенерили правдоподобно выглядищий номер задачи
+        log.task(self.taskId, 'created', '')
         self.taskPrior = random.choice(list(dictPriors.keys())) # Выбрали приоритет задачи
+        log.task(self.taskId, 'priority is set', self.taskPrior)
         self.taskType = random.choice(list(dictTaskTypes.keys())) # Выбрали тип задачи
+        log.task(self.taskId, 'type is set', self.taskType)
 
         self.relConcurrent = []
         self.relAlternative = []
@@ -66,10 +70,13 @@ class Task:
 
         # Генерируем оценки по задаче "по-новому"
         for dev in devsArray:
+            hours = random.choice([0]*39 + list(range(1,11)) + list(range(1, 11)))
             taskEstimates.append(Estimate(dev.devId,
                                           dev.devType,
-                                          random.choice([0]*39 + list(range(1,11)) + list(range(1, 11))))
+                                          hours)
                                  )
+            log.taskAndDev(self.taskId, dev.devId, 'dev hours are assigned to task as the estimate', hours)
+
         self.taskEstimates = copy.deepcopy(taskEstimates)
         self.taskEstimatesSum = sum([x.hours for x in taskEstimates])
         del taskEstimates
@@ -88,10 +95,14 @@ class Task:
             self.taskScore = round(0.2 * self.taskEstimatesSum, 2)
         else:
             self.taskScore = round(0.4 * self.taskEstimatesSum, 2)
+        log.task(self.taskId, 'task score is calculated', self.taskScore)
 
+'''
         if silentMode is not "silent":
-            print("-----\n" + self.hl("Task.__init__", "g") + "Задача: %s Тип: %s Приоритет: %s Ценность: %s" % (self.taskId, self.taskType, self.taskPrior, self.taskScore))
+            print("-----\n" + self.hl("Task.__init__", "g") + "Задача: %s Тип: %s Приоритет: %s Ценность: %s" %
+                  (self.taskId, self.taskType, self.taskPrior, self.taskScore))
             print(self.hl("Task.__init__", "g") + "Часы по задаче: %s " % [x.hours for x in self.taskEstimates])
+'''
 
     def setRandomRelations(self, tasks, silentMode="silent"):
         import random

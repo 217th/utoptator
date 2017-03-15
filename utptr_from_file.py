@@ -1,5 +1,6 @@
 import utptr_classes
 import openpyxl
+import utptr_log as log
 
 fileName = 'input/input.xlsx'
 
@@ -24,6 +25,9 @@ def readDevs(firstRow = 4, lastRow = 28):
                                                  colDevHoursPrimary[i].value,
                                                  colDevHoursSecondary[i].value,
                                                  colDevHoursExcess[i].value))
+            log.dev(colDevId[i].value, 'created with primary hours', colDevHoursPrimary[i].value)
+            log.dev(colDevId[i].value, 'created with secondary hours', colDevHoursSecondary[i].value)
+            log.dev(colDevId[i].value, 'created with extra hours', colDevHoursExcess[i].value)
 
     else:
         print("Нет листа с разработчиками")
