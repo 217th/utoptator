@@ -97,12 +97,6 @@ class Task:
             self.taskScore = round(0.4 * self.taskEstimatesSum, 2)
         log.task(self.taskId, 'task score is calculated', self.taskScore)
 
-'''
-        if silentMode is not "silent":
-            print("-----\n" + self.hl("Task.__init__", "g") + "Задача: %s Тип: %s Приоритет: %s Ценность: %s" %
-                  (self.taskId, self.taskType, self.taskPrior, self.taskScore))
-            print(self.hl("Task.__init__", "g") + "Часы по задаче: %s " % [x.hours for x in self.taskEstimates])
-'''
 
     def setRandomRelations(self, tasks, silentMode="silent"):
         import random
@@ -146,32 +140,48 @@ class Task:
         self.relAlternative = [x for x in self.relAlternative if x is not False]
         self.relSequent = [x for x in self.relSequent if x is not False]
 
+        log.task(self.taskId, 'random conс relations are created', [x for x in self.relConcurrent if x is not False])
+        log.task(self.taskId, 'random alt relations are created', [x for x in self.relAlternative if x is not False])
+        log.task(self.taskId, 'random seq relations are created', [x for x in self.relSequent if x is not False])
+
+        '''
         if silentMode is not "silent":
             print(self.hl("Task.setRandomRelations", "g") + "taskId %s ... start searching unsyncronized alternatives" % self.taskId)
+        '''
         for altTaskId in self.relAlternative:
             altTasks = [x for x in tasks if x.taskId == altTaskId]
             for altTask in altTasks:
                 altTask.relAlternative.append(self.taskId)
+        log.task(self.taskId, 'random alt relations are syncronized', [x for x in self.relAlternative if x is not False])
 
+        '''
         if silentMode is not "silent":
             print(self.hl("Task.setRandomRelations", "g") + "taskId %s ... start searching unsyncronized concurrences" % self.taskId)
+        '''
         for concTaskId in self.relConcurrent:
             concTasks = [x for x in tasks if x.taskId == concTaskId]
             for concTask in concTasks:
                 concTask.relConcurrent.append(self.taskId)
+        log.task(self.taskId, 'random conc relations are syncronized', [x for x in self.relConcurrent if x is not False])
 
+        '''
         if silentMode is not "silent":
             print(self.hl("Task.setRandomRelations", "g") + "taskId %s ... start searching unsyncronized sequences" % self.taskId)
+        '''
         for seqTaskId in self.relSequent:
             seqTasks = [x for x in tasks if x.taskId == seqTaskId]
             for seqTask in seqTasks:
                 for seqSeqTaskId in seqTask.relSequent:
                     if seqSeqTaskId == seqTaskId:
+                        log.task(self.taskId, 'mutual sequent relations found with taskId...', seqTaskId)
+                        '''
                         if silentMode is not "silent":
                             print(self.hl("Task.setRandomRelations", "g") + "setRandomRelations relSequent self %s seqTask %s" % (self.taskId, seqTask.taskId))
+                        '''
                         seqTask.relSequent = []
                         self.relSequent = []
                         break
+        log.task(self.taskId, 'random seq relations are syncronized', [x for x in self.relSequent if x is not False])
 
 
 class Candidate:
@@ -424,27 +434,36 @@ class Group:
         self.meta = []
         self.meta.append(tType)
         self.meta.append(tPrior)
+        '''
         if silentMode is not "silent":
             print(self.hl("Group.__init__", "g") + "Создана группа id %s - %s" % (self.groupId, self.meta))
+        '''
         self.importance = tImportance
         self.tasks = []
+        log.group(self.groupId, 'empty group with meta is created', self.meta)
 
     def fillAndSort(self, tasksArray, silentMode="silent"):
+        log.group(self.groupId, 'getting group filled', '')
+        '''
         if silentMode is not "silent":
             print(self.hl("Group.fillAndSort", "g") + "Метаданные группы (тип задачи, приоритет): %s" % (self.meta))
+        '''
         for task in tasksArray:
             for taskType in self.meta[0]:
                 for taskPrior in self.meta[1]:
                     if (taskType == task.taskType) and (taskPrior == task.taskPrior):
                         self.tasks.append(task)
+                        log.taskAndGroup(task.taskId, self.groupId, 'group has smallowed up the task', '')
         if self.tasks:
             self.tasks.sort(key=lambda x: x.taskEstimatesSum, reverse = True)
+            '''
             for task in self.tasks:
                 if silentMode is not "silent":
                     print(self.hl("Group.fillAndSort", "g") + "Задача №: %s. Суммарная оценка: %s" % (task.taskId, task.taskEstimatesSum))
+            '''
         else:
             if silentMode is not "silent":
-                print(self.hl("Group.fillAndSort", "g") + "Группа пуста")
+                log.group(self.groupId, 'group remains empty', '')
 
     def scroll(self, silentMode="silent"):
         if silentMode is not "silent":
@@ -453,6 +472,7 @@ class Group:
         restTasks = self.tasks[1:]
         self.tasks.clear()
         self.tasks = restTasks + firstTask
+        log.taskAndGroup(firstTask.taskId, self.groupId, 'group is scrolled', '')
 
 
 class Estimate:

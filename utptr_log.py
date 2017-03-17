@@ -7,28 +7,47 @@ logger = logging.getLogger('root')
 logger.setLevel(logging.DEBUG)
 file = logging.FileHandler('logs\log.' + datetime.datetime.now().strftime("%Y.%m.%d.%H.%M.%S") + '.csv')
 file.setLevel(logging.DEBUG)
-formatter = logging.Formatter(datetime.datetime.now().strftime("%H:%M:%S.%f") + ' ; %(levelname)s ; %(message)s')
+formatter = logging.Formatter('%(levelname)s ; %(message)s')
 file.setFormatter(formatter)
 logger.addHandler(file)
 
-logger.info('taskId ; '
+logger.info('time ; '
+            'taskId ; '
+            'groupId ; '
             'candId ; '
-            'relId ; '
+            'relType ; '
             'devId ; '
             'operationName ; '
             'value')
 
 def general(text):
-    logger.info('; ; ; ;' + text + ';')
+    logger.info(datetime.datetime.now().strftime("%H:%M:%S.%f") + '; ; ; ; ; ;' + text + ';')
 
 def dev(devId, operation, value):
-    logger.info(('; ; ; %s ; %s ; %s') % (devId, operation, value))
+    logger.info(datetime.datetime.now().strftime("%H:%M:%S.%f") +
+                ('; ; ; ; ; %s ;%s ; %s') % (devId, operation, value))
 
 def task(taskId, operation, value):
-    logger.info(('%s ; ; ; ; %s ; %s') % (taskId, operation, value))
+    logger.info(datetime.datetime.now().strftime("%H:%M:%S.%f") +
+                ('; %s ; ; ; ; ;%s ; %s') % (taskId, operation, value))
+
+def taskAndGroup(taskId, groupId, operation, value):
+    logger.info(datetime.datetime.now().strftime("%H:%M:%S.%f") +
+                ('; %s; %s; ; ; ;%s ;%s') % (taskId, groupId, operation, value))
+
+def taskAndRel(taskId, relType, operation, value):
+    logger.info(datetime.datetime.now().strftime("%H:%M:%S.%f") +
+                ('; %s ; ; ; %s ; ;%s ; %s') % (taskId, relType, operation, value))
 
 def taskAndDev(taskId, devId, operation, value):
-    logger.info(('%s ; ; ; %s ; %s ; %s') % (taskId, devId, operation, value))
+    logger.info(datetime.datetime.now().strftime("%H:%M:%S.%f") +
+                ('; %s ; ; ; ; %s ;%s ; %s') % (taskId, devId, operation, value))
+
+def group(groupId, operation, value):
+    logger.info(datetime.datetime.now().strftime("%H:%M:%S.%f") +
+                ('; ; %s; ; ; ;%s ; %s') % (groupId, operation, value))
+
+
 
 
 '''

@@ -10,6 +10,7 @@ import utptr_to_file
 import utptr_rels
 import datetime
 
+print("----- (%s) Начало программы -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
 log.general('program launched')
 
 silentMode = "babble"  # Режим тишины. "silent" - сокращённые сообщения. "babble" - полные сообщения
@@ -18,6 +19,7 @@ dictPriors = createDictPriors()
 # dictDevs = createDictDevs(silentMode)
 # listLabourHoursQuotas = createArrayLabourQuotas(list(dictDevs.keys()), silentMode)
 
+print("----- (%s) Импортируем разработчиков -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
 initialDevsArray = utptr_from_file.readDevs(4, 28)
 for dev in initialDevsArray:
     print(dev.devId, dev.devName, dev.devType, dev.hoursPrimary, dev.hoursSecondary, dev.hoursExcess)
@@ -36,8 +38,9 @@ def сreateTasksArray(n, silentMode="silent"):
     return (tasksArray)
 
 
-print("----- (%s) Формируем список задач -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
+print("----- (%s) Создаём задачи -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
 originalTasksArray = сreateTasksArray(100, "silent")
+log.general('list of %s tasks is created' % len(originalTasksArray))
 
 taskGroups = []
 i = 0
@@ -65,11 +68,11 @@ for groupMeta in [  # ПРОМЫШЛЕННЫЙ НАБОР МЕТАДАННЫХ
         i += 1
 del groupMeta
 
+log.general('start distributing tasks by groups')
 print("----- (%s) Распределяем задачи по группам -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
 for group in taskGroups:
     group.fillAndSort(originalTasksArray, "babble")
 
-'''
 def createOverallRelationsArray(silentMode = "silent"):
     # Временная функция для заполнения массива связей тестовыми данными
     relsNeatArray = []
@@ -96,12 +99,17 @@ originalRelsArray = createOverallRelationsArray("silent")
 print("----- (%s) Валидируем связи между задачами -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
 originalRelsConflictArray = utptr_rels.validateRels([x.taskId for x in originalTasksArray], originalRelsArray)
 
+
 if originalRelsConflictArray:
     for relConflict in originalRelsConflictArray:
         relConflict.print()
+
 else:
     print("Валидация пройдена. Связи между задачами - бесконлфиктные.")
+    log.general('no conflict in relations')
     del originalRelsConflictArray
+
+    # Логирование сделано до этого момента
 
     if any(len(x.tasks) > 0 for x in taskGroups):
         candId = -1
@@ -259,6 +267,7 @@ else:
 
         # ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ Заполнение всего необходимого для экспорта в excel ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
 
+        '''
         print("----- (%s) Выводим в файл -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
         # Заполнение исходного списка задач для экспорта в файл
         forFileTasksList = []
@@ -361,5 +370,4 @@ else:
 
     else:
         print("Все группы задач пусты.")
-
 '''
