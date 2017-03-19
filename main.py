@@ -117,6 +117,7 @@ else:
         forFileRawCandMetaArray = list()
         forFileRawCandTasksArray = list()
 
+
         def cleanCandsFromClones(cands, silentMode="silent"):
             for cand in reversed(cands):
                 if cands.index(cand) > 0:
@@ -208,29 +209,35 @@ else:
 
             return ()
 
+
         def fillCandsWithTasksFromSpecificGroupAndOnSpecificBasicCand(group, basicCand, silentMode="silent"):
             global cands
             if group.importance == "h":
                 fillSingleCand(group, basicCand, "direct", silentMode)
-                if cands[-1].isGroupCompletelyIn(group):
+                completelyIn = cands[-1].isGroupCompletelyIn(group)
+                if not completelyIn:
                     for i in range(len(group.tasks) + 1): fillSingleCand(group, basicCand, "scroll", silentMode)
                     for i in range(len(group.tasks) * 2): fillSingleCand(group, basicCand, "shuffle", silentMode)
             elif group.importance == "n":
                 fillSingleCand(group, basicCand, "direct", silentMode)
-                if cands[-1].isGroupCompletelyIn(group):
+                completelyIn = cands[-1].isGroupCompletelyIn(group)
+                if not completelyIn:
                     for i in range(len(group.tasks) + 1): fillSingleCand(group, basicCand, "scroll", silentMode)
                     for i in range(len(group.tasks) + 1): fillSingleCand(group, basicCand, "shuffle", silentMode)
             elif group.importance == "l":
                 fillSingleCand(group, basicCand, "direct", silentMode)
-                if cands[-1].isGroupCompletelyIn(group):
+                completelyIn = cands[-1].isGroupCompletelyIn(group)
+                if not completelyIn:
                     for i in range(len(group.tasks) + 1): fillSingleCand(group, basicCand, "shuffle", silentMode)
 
-        for group in taskGroups:
+
+        for i, group in enumerate(taskGroups):
+            log.group(group.groupId, 'start creating candidates for group', '')
             print("----- (%s) Формируем кандидатов для группы %s -----" % (
                 datetime.datetime.now().strftime("%H:%M:%S.%f"),
                 group.groupId)
                   )
-            if group is taskGroups[0]:
+            if i is 0:
                 fillCandsWithTasksFromSpecificGroupAndOnSpecificBasicCand(group, False, silentMode)
                 cands = cleanCandsFromClones(cands, "silent")
             else:

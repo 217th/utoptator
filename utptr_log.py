@@ -20,32 +20,44 @@ logger.info('time ; '
             'operationName ; '
             'value')
 
-def general(text):
-    logger.info(datetime.datetime.now().strftime("%H:%M:%S.%f") + '; ; ; ; ; ;' + text + ';')
+def general(operation):
+    logger.info(datetime.datetime.now().strftime("%H:%M:%S.%f") + '; ; ; ; ; ;' + operation + ';')
 
-def dev(devId, operation, value):
+def dev(devId, operation, value=''):
     logger.info(datetime.datetime.now().strftime("%H:%M:%S.%f") +
                 ('; ; ; ; ; %s ;%s ; %s') % (devId, operation, value))
 
-def task(taskId, operation, value):
+def task(taskId, operation, value=''):
     logger.info(datetime.datetime.now().strftime("%H:%M:%S.%f") +
                 ('; %s ; ; ; ; ;%s ; %s') % (taskId, operation, value))
 
-def taskAndGroup(taskId, groupId, operation, value):
+def taskAndGroup(taskId, groupId, operation, value=''):
     logger.info(datetime.datetime.now().strftime("%H:%M:%S.%f") +
                 ('; %s; %s; ; ; ;%s ;%s') % (taskId, groupId, operation, value))
 
-def taskAndRel(taskId, relType, operation, value):
+def taskAndCand(taskId, candId, operation, value=''):
+    logger.info(datetime.datetime.now().strftime("%H:%M:%S.%f") +
+                ('; %s; ; %s; ; ;%s ;%s') % (taskId, candId, operation, value))
+
+def taskAndRel(taskId, relType, operation, value=''):
     logger.info(datetime.datetime.now().strftime("%H:%M:%S.%f") +
                 ('; %s ; ; ; %s ; ;%s ; %s') % (taskId, relType, operation, value))
 
-def taskAndDev(taskId, devId, operation, value):
+def taskAndDev(taskId, devId, operation, value=''):
     logger.info(datetime.datetime.now().strftime("%H:%M:%S.%f") +
                 ('; %s ; ; ; ; %s ;%s ; %s') % (taskId, devId, operation, value))
 
-def group(groupId, operation, value):
+def group(groupId, operation, value=''):
     logger.info(datetime.datetime.now().strftime("%H:%M:%S.%f") +
                 ('; ; %s; ; ; ;%s ; %s') % (groupId, operation, value))
+
+def groupAndCand(groupId, candId, operation, value=''):
+    logger.info(datetime.datetime.now().strftime("%H:%M:%S.%f") +
+                ('; ; %s; %s; ; ;%s ; %s') % (groupId, candId, operation, value))
+
+def cand(candId, operation, value=''):
+    logger.info(datetime.datetime.now().strftime("%H:%M:%S.%f") +
+                ('; ; ; %s; ; ;%s ; %s') % (candId, operation, value))
 
 
 

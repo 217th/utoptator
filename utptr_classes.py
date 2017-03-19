@@ -1,5 +1,6 @@
 import utptr_rels
 import random
+import copy
 import utptr_log as log
 
 class Task:
@@ -237,12 +238,20 @@ class Candidate:
         self.checkSum = 0
         self.tasks = list()
 
+        log.groupAndCand(group.groupId, self.candId, 'candidate is created for group')
+        if self.additionalTo:
+            log.cand(self.candId, 'candidate is additional to other candidate:', self.additionalTo.candId)
+        log.cand(self.candId, 'candidate last group id is:', self.lastGroupId)
+
         if basicCand == False:
-            self.hoursUnused = ifNoBasicCandHoursUnused
-            self.rels = ifNoBasicCandOverallRels
+            self.hoursUnused = copy.deepcopy(ifNoBasicCandHoursUnused)
+            self.rels = copy.deepcopy(ifNoBasicCandOverallRels)
         else:
-            self.hoursUnused = basicCand.hoursUnused
-            self.rels = basicCand.rels
+            self.hoursUnused = copy.deepcopy(basicCand.hoursUnused)
+            self.rels = copy.deepcopy(basicCand.rels)
+
+        log.cand(self.candId, 'candidate\'s initial hours:', [x.hoursPrimary for x in self.hoursUnused])
+        log.cand(self.candId, 'method set for candidate:', method)
 
         if group.tasks:
             # Независимо от наличия basicCand, предпринимаем попытки заполнения созданного кандидата newCand
@@ -259,28 +268,41 @@ class Candidate:
                 for task in group.tasks:
                     self.tryToPutSingleTask(task, overallTasksList, group.groupId, silentMode)
 
+        '''
         if silentMode is not "silent":
             print(self.hl("Candidate.__init__", "g") + "----- Создан состав-кандидат №", self.candId)
             print(self.hl("Candidate.__init__", "g") + "Начальное количество часов:",
                   [x.hoursPrimary for x in self.hoursUnused]
                   )
+        '''
 
     def isGroupCompletelyIn(self, group):
-        if len(group.tasks) > len(self.tasks):
-            return False
-        else:
-            return True
+        completelyIn = True
+        for task in group.tasks:
+            if task not in self.tasks:
+                completelyIn = False
+                break
+        if not completelyIn:
+            log.groupAndCand(group.groupId, self.candId, 'group is NOT completely inside the candidate')
+        elif completelyIn:
+            log.groupAndCand(group.groupId, self.candId, 'group is completely in the candidate')
+        return completelyIn
+
 
     def acceptTask(self, task, silentMode = "silent"):
         self.tasks.append(task)
         self.hoursUnused = [x.substractHours(y) for x, y in zip(self.hoursUnused, task.taskEstimates)]
         self.checkSum += task.taskId
         self.checkSum += task.taskScore
+        log.taskAndCand(task.taskId, self.candId, 'task is accepted to candidate, total tasks inside:',
+                        len(self.tasks))
+        '''
         if silentMode is not "silent":
             print(self.hl("Candidate.acceptTask", "g") +
                   "В состав-кандидат %s включена задача %s. Всего включено задач %s" %
                   (self.candId, self.tasks[len(self.tasks)-1].taskId, len(self.tasks))
                   )
+        '''
 
     def getScore(self):
         score = 0
@@ -332,10 +354,11 @@ class Candidate:
         else:
             return True
 
-    def tryToPutSingleTask(self, task, allTasks, groupId, silentMode = "silent"):
+    def tryToPutSingleTask(self, task, allTasks, groupId, silentMode="silent"):
         # allTasks нужен только чтобы отработать связь relConcurrent
         # !!! Что-то придумать, чтобы не тащить !!!
 
+        log.taskAndCand(task.taskId, self.candId, 'trying to put task to candidate')
         self.lastGroupId = groupId
 
         tasksToPut = list()
@@ -354,31 +377,50 @@ class Candidate:
                 tasksToPut.extend([x for x in allTasks if x.taskId in [y.assocTaskId for y in taskActiveRelsArray]])
                 trialIsFreeOfLocks = True
 
-        # Проверяем, влезает ли список задач
-        tasksAreFit = self.areTasksFit(self.hoursUnused, tasksToPut)
+        if len(tasksToPut)>1:
+            log.taskAndCand(task.taskId, self.candId, 'trying to put task together with concurrents:',
+                            [x.taskId for x in tasksToPut])
+        else:
+            log.taskAndCand(task.taskId, self.candId, 'no concurrences for task')
 
         if not trialIsFreeOfLocks:
+            log.taskAndCand(task.taskId, self.candId, 'task is retired because of blocks, relations type...',
+                            [x.relType for x in taskActiveRelsArray])
+            log.taskAndCand(task.taskId, self.candId, 'task is retired because of blocks, tasks...',
+                            [x.assocTaskId for x in taskActiveRelsArray])
+            '''
             if silentMode is not "silent":
                 print(self.hl("Candidate.tryToPutSingleTask", "r") +
                       "Задача %s не рассматривается из-за блокировок %s %s" %
                       (task.taskId,
                        [x.relType for x in taskActiveRelsArray],
                        [x.assocTaskId for x in taskActiveRelsArray]))
+            '''
         else:
+            # Проверяем, влезает ли список задач
+            tasksAreFit = self.areTasksFit(self.hoursUnused, tasksToPut)
             if not tasksAreFit:
+                log.taskAndCand(task.taskId, self.candId, 'task (and its concurrents) are not fit',
+                                [x.taskId for x in tasksToPut])
+                '''
                 if silentMode is not "silent":
                     print(self.hl("Candidate.tryToPutSingleTask", "y") +
                           "--- Задача %s. Есть часов: %s. Не влезает" %
                           ([x.taskId for x in tasksToPut],
                            [x.hoursPrimary for x in self.hoursUnused])
                           )
+                '''
             else:
+                log.taskAndCand(task.taskId, self.candId, 'task (and its concurrents) are fit',
+                                [x.taskId for x in tasksToPut])
+                '''
                 if silentMode is not "silent":
                     print(self.hl("Candidate.tryToPutSingleTask", "y") +
                           "--- Задача %s. Есть часов: %s. Влезает" %
                           ([x.taskId for x in tasksToPut],
                            [x.hoursPrimary for x in self.hoursUnused])
                           )
+                '''
 
                 for task1 in tasksToPut:
                     self.acceptTask(task1, silentMode)
@@ -391,12 +433,21 @@ class Candidate:
                                 rel.isActive = True
                             elif rel.relType == "relConcurrent":
                                 rel.isActive = False
-                                self.rels.append(utptr_rels.Relation("relAlreadyTaken", task1.taskId, "", False, silentMode))
+                                self.rels.append(
+                                    utptr_rels.Relation("relAlreadyTaken",
+                                                        task1.taskId,
+                                                        "",
+                                                        False,
+                                                        silentMode)
+                                )
 
+                log.cand(self.candId, 'primary hours remaining:', [x.hoursPrimary for x in self.hoursUnused])
+                '''
                 if silentMode is not "silent":
                     print(self.hl("Candidate.tryToPutSingleTask", "y") +
                           "Остаётся часов:",
                           [x.hoursPrimary for x in self.hoursUnused])
+                '''
 
 
 class Group:
@@ -472,7 +523,7 @@ class Group:
         restTasks = self.tasks[1:]
         self.tasks.clear()
         self.tasks = restTasks + firstTask
-        log.taskAndGroup(firstTask.taskId, self.groupId, 'group is scrolled', '')
+        log.gr(firstTask[0].taskId, self.groupId, 'group is scrolled, first task was...', '')
 
 
 class Estimate:
