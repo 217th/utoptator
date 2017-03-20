@@ -358,7 +358,8 @@ class Candidate:
         # allTasks нужен только чтобы отработать связь relConcurrent
         # !!! Что-то придумать, чтобы не тащить !!!
 
-        log.taskAndCand(task.taskId, self.candId, 'trying to put task to candidate')
+        log.taskAndCand(task.taskId, self.candId, 'trying to put task to candidate with hours...',
+                        [x.hours for x in task.taskEstimates])
         self.lastGroupId = groupId
 
         tasksToPut = list()
@@ -523,7 +524,7 @@ class Group:
         restTasks = self.tasks[1:]
         self.tasks.clear()
         self.tasks = restTasks + firstTask
-        log.gr(firstTask[0].taskId, self.groupId, 'group is scrolled, first task was...', '')
+        log.taskAndGroup(firstTask[0].taskId, self.groupId, 'group is scrolled, first task was...')
 
 
 class Estimate:

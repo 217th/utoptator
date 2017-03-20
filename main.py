@@ -125,18 +125,19 @@ else:
                         if (round(cand.checkSum, 1) == round(candPrev.checkSum, 1)) and\
                                 (cand.lastGroupId == candPrev.lastGroupId) and\
                                 (cand.additionalTo == candPrev.additionalTo):
+                            log.cand(cand.candId, 'deleting candidate because it\'s equal to...', candPrev.candId)
+                            '''
                             if silentMode is not "silent":
                                 print("Дубли | id %s, checkSum %s, lastGroup %s | id %s, checkSum %s, lastGroup %s" % (
                                 cand.candId, cand.checkSum, cand.lastGroupId, candPrev.candId, candPrev.checkSum,
                                 candPrev.lastGroupId))
-
+                            '''
                             for i, j in enumerate(forFileRawCandMetaArray):
                                 if j[1] == cand.candId:
                                     forFileRawCandMetaArray[i].append("del")
-
                             cands.pop(cands.index(cand))
                             break
-            return(cands)
+            return cands
 
 
         def fillSingleCand(group, basicCand, method, silentMode="silent"):
@@ -250,8 +251,10 @@ else:
         # ▼▼▼▼▼▼▼ Склейка в один проход, удаление всех кандидатов, заканчивающихся непоследней группой,▼▼▼▼▼▼▼
         candsAssembled = copy.deepcopy(cands)
         print("----- (%s) Склеиваем кандидатов -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
+        log.general('start gluing the candidates last to first')
         for i in range(len(taskGroups)):
             for cand in reversed(candsAssembled):
+                log.cand(cand.candId, 'start gluing the candidate. pass...', i)
                 if cand.additionalTo:
                     # Приклеиваем к более позднему всё из более раннего
                     # hoursUnused остаётся от позднего
@@ -264,12 +267,14 @@ else:
         for cand in reversed(candsAssembled):
             if cand.lastGroupId < taskGroups[-1].groupId:
                 candsAssembled.pop(candsAssembled.index(cand))
+                log.cand(cand.candId, 'deleting candidate glued to the major. last group is...', cand.lastGroupId)
 
         candsAssembled = cleanCandsFromClones(candsAssembled, "silent")
         # ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
         print("----- (%s) После склейки: -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
         for cand in candsAssembled:
+            log.cand(cand.candId, 'candidate still alive after the gluing and cleaning clones')
             cand.print()
 
         # ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ Заполнение всего необходимого для экспорта в excel ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
