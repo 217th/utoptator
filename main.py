@@ -39,7 +39,7 @@ def сreateTasksArray(n, silentMode="silent"):
 
 
 print("----- (%s) Создаём задачи -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
-originalTasksArray = сreateTasksArray(100, "silent")
+originalTasksArray = сreateTasksArray(10, "silent")
 log.general('list of %s tasks is created' % len(originalTasksArray))
 
 taskGroups = []
@@ -181,7 +181,7 @@ else:
                 newCand.lastGroupId,
                 round(newCand.checkSum, 1),
                 'amnt '+str(len(newCand.tasks)),
-                newCand.hoursUnused,                    # ПЕРЕДЕЛАТЬ ПОД НОВЫЙ ФОРМАТ ВРЕМЕННЫХ КВОТ
+                [x.hoursPrimary for x in newCand.hoursUnused],
                 method])
 
             # Заполняем мета-информацию о задачах, вошедших в сырой кандидат, для вывода в файл
@@ -193,7 +193,7 @@ else:
                     task.taskId,
                     task.taskPrior,
                     task.taskType,
-                    task.taskEstimates,                 # ПЕРЕДЕЛАТЬ ПОД НОВЫЙ ФОРМАТ ВРЕМЕННЫХ КВОТ
+                    [x.hours for x in task.taskEstimates],
                     round(task.taskScore, 1),
                     task.relConcurrent,
                     task.relAlternative,
@@ -279,8 +279,8 @@ else:
 
         # ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ Заполнение всего необходимого для экспорта в excel ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
 
-        '''
-        print("----- (%s) Выводим в файл -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
+        log.general('start preparing data for export to excel')
+        print("----- (%s) Готовим данные для вывода в файл -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
         # Заполнение исходного списка задач для экспорта в файл
         forFileTasksList = []
         for group in taskGroups:
@@ -291,7 +291,7 @@ else:
                     task.taskId,
                     task.taskPrior,
                     task.taskType,
-                    task.taskEstimates,
+                    [x.hours for x in task.taskEstimates],
                     round(task.taskScore, 1),
                     task.relConcurrent,
                     task.relAlternative,
@@ -309,10 +309,10 @@ else:
             ])
 
         # Заполнение списка настроек попытки для экспорта в файл
-        forFileTrySettings = []
-        forFileTrySettings.append(listLabourHoursQuotas)
+        forFileTrySettings = list()
+        forFileTrySettings.append(initialDevsArray)
 
-        forFileRawCandOnlyActiveArray = []
+        forFileRawCandOnlyActiveArray = list()
         for record in forFileRawCandMetaArray:
             if 'del' in record:
                 pass
@@ -328,7 +328,7 @@ else:
                 cand.candId,
                 len(cand.tasks),
                 round(cand.getScore(), 1),
-                cand.hoursUnused,
+                [x.hoursPrimary for x in cand.hoursUnused],
                 round(cand.checkSum, 1)])
 
         # Заполнение массива с подробной информацией о задачах, вошедших в финальные кандидаты, для экспорта в файл
@@ -340,12 +340,12 @@ else:
                     cand.candId,
                     len(cand.tasks),
                     round(cand.getScore(), 1),
-                    cand.hoursUnused,
+                    [x.hoursPrimary for x in cand.hoursUnused],
                     round(cand.checkSum, 1),
                     task.taskId,
                     task.taskPrior,
                     task.taskType,
-                    task.taskEstimates,
+                    [x.hours for x in task.taskEstimates],
                     task.taskScore,
                     task.relConcurrent,
                     task.relAlternative,
@@ -367,6 +367,8 @@ else:
     # ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
         # Экспорт в excel
+        log.general('start exporting to excel')
+        print("----- (%s) Выводим в файл -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
         utptr_to_file.writeReportToXLS(
             forFileTrySettings,
             forFileTasksList,
@@ -382,4 +384,5 @@ else:
 
     else:
         print("Все группы задач пусты.")
-'''
+
+    log.general('program finished')
