@@ -61,7 +61,9 @@ class Task:
         log.task(self.taskId, 'type is set', self.taskType)
 
         # Устанавливаем предпочтения (основной, резерв)
-        self.primIsMandatory, self.secIsPreferred = random.choice(15*[[False, False]] + [[True, False]] + [[False, True]])
+        self.primIsMandatory, self.secIsPreferred = random.choice(15*[[False, False]] +
+                                                                  [[True, False]] +
+                                                                  [[False, True]])
         log.task(self.taskId, 'primary is mandatory', self.primIsMandatory)
         log.task(self.taskId, 'secondary is preferred', self.secIsPreferred)
 
