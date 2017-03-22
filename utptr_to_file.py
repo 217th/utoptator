@@ -89,15 +89,17 @@ def writeReportToXLS(
 
     ws = wb.add_sheet('allTasks', cell_overwrite_ok = True)
     header = ["groupId",
-                     "groupImportance",
-                     "taskId",
-                     "taskPrior",
-                     "taskType",
-                     "taskEstimates",
-                     "taskScore",
-                     "relConcurrent",
-                     "relAlternative",
-                     "relSequent"]
+              "groupImportance",
+              "taskId",
+              "taskPrior",
+              "taskType",
+              "taskEstimates",
+              "taskScore",
+              "primIsMandatory",
+              "secIsPreferred",
+              "relConcurrent",
+              "relAlternative",
+              "relSequent"]
     for i in range(len(header)):
         ws.write(0, i, header[i], styleOrange)
     for i in range(len(allTasks)):

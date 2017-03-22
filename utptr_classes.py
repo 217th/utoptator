@@ -11,6 +11,10 @@ class Task:
     #   taskEstimates - оценки (list, заполняются случайно только для разработчиков, которые есть в словаре)
     #   taskEstimatesSum - общая сумма трудозатрат по задаче (int)
     #   taskScore - ценность (float, рассчитывается из приоритета и оценок)
+    #   primIsMandatory - True, если задачу только в основной состав
+    #       (иначе - можно в основной или резервный)
+    #   secIsPreferred - True, если задачу нужно стараться в резервный состав
+    #       (иначе - по умолчанию ставим в основной)
     #
     #   relConcurrent - список задач, с которыми эта должна выполняться только одновременно
     #       (одинаковый для всех одновременных задач)
@@ -40,12 +44,26 @@ class Task:
     def __init__(self, dictPriors, dictTaskTypes, devsArray, silentMode="silent"):
         import random, copy
 
-        self.taskId = int(str(random.randint(0, 9)) + str(random.randint(0, 9)) + str(random.randint(0, 9)) + str(random.randint(0, 9)) + str(random.randint(0, 9))) # Сгенерили правдоподобно выглядищий номер задачи
+        # Генерируем правдоподобно выглядищий номер задачи
+        self.taskId = int(str(random.randint(0, 9)) +
+                          str(random.randint(0, 9)) +
+                          str(random.randint(0, 9)) +
+                          str(random.randint(0, 9)) +
+                          str(random.randint(0, 9)))
         log.task(self.taskId, 'created', '')
-        self.taskPrior = random.choice(list(dictPriors.keys())) # Выбрали приоритет задачи
+
+        # Выбираем приоритет задачи
+        self.taskPrior = random.choice(list(dictPriors.keys()))
         log.task(self.taskId, 'priority is set', self.taskPrior)
-        self.taskType = random.choice(list(dictTaskTypes.keys())) # Выбрали тип задачи
+
+        # Выбираем тип задачи
+        self.taskType = random.choice(list(dictTaskTypes.keys()))
         log.task(self.taskId, 'type is set', self.taskType)
+
+        # Устанавливаем предпочтения (основной, резерв)
+        self.primIsMandatory, self.secIsPreferred = random.choice(15*[[False, False]] + [[True, False]] + [[False, True]])
+        log.task(self.taskId, 'primary is mandatory', self.primIsMandatory)
+        log.task(self.taskId, 'secondary is preferred', self.secIsPreferred)
 
         self.relConcurrent = []
         self.relAlternative = []

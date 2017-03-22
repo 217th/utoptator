@@ -293,6 +293,8 @@ else:
                     task.taskType,
                     [x.hours for x in task.taskEstimates],
                     round(task.taskScore, 1),
+                    task.primIsMandatory,
+                    task.secIsPreferred,
                     task.relConcurrent,
                     task.relAlternative,
                     task.relSequent
