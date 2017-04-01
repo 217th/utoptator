@@ -107,7 +107,7 @@ class Task:
         self.taskScore = self.getTaskScore()
 
 
-    def getTaskScore(self, completeness='completely'):
+    def getTaskScore(self, completeness='completely', isExtraHoursUsed=False):
         priorityFactor = {
             0: 5.0,
             1: 2.0,
@@ -122,14 +122,24 @@ class Task:
             'backendOnly': 0.5,
             'htmlcssOnly': 0.5
         }
+        extraHoursFactor = {
+            True: 0.8,
+            False: 1
+        }
         if completeness is 'completely':
             sumOfHours = self.taskEstimatesSum
         elif completeness is 'backendOnly':
             sumOfHours = sum([x.hours for x in self.taskEstimates if x.devType == 'backenddev'])
         elif completeness is 'htmlcssOnly':
             sumOfHours = sum([x.hours for x in self.taskEstimates if x.devType == 'htmlcssdev'])
-        score = round(priorityFactor[self.taskPrior] * sumOfHours * completenessFactor[completeness], 2)
-        log.task(self.taskId, 'task (%s) score is calculated' % completeness, score)
+        score = round(priorityFactor[self.taskPrior] *
+                      sumOfHours *
+                      completenessFactor[completeness] *
+                      extraHoursFactor[isExtraHoursUsed],
+                      2)
+        log.task(self.taskId,
+                 'task (completeness = %s, extra hours = %s) score is calculated' % (completeness, isExtraHoursUsed),
+                 score)
         return score
 
 
