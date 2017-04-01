@@ -26,6 +26,7 @@ class Task:
     #
     # Методы класса Task.
     #   setRandomRelations - метод (вероятно, временный) для заполнения relConcurrent, relSequent, relAlternative
+    #   getTaskScore - расчёт score задачи целиком или для отдельной части
 
     @staticmethod
     def hl(funcName, color="g"):
@@ -102,21 +103,34 @@ class Task:
         self.taskEstimatesSum = sum([x.hours for x in taskEstimates])
         del taskEstimates
 
-        if self.taskPrior == 0:          # Немедленный
-            self.taskScore = round(5.0 * self.taskEstimatesSum, 2)
-        elif self.taskPrior == 1:        # Очень высокий
-            self.taskScore = round(2.0 * self.taskEstimatesSum, 2)
-        elif self.taskPrior == 2:        # Высокий
-            self.taskScore = round(1.0 * self.taskEstimatesSum, 2)
-        elif self.taskPrior == 3:        # Высокенький
-            self.taskScore = round(0.7 * self.taskEstimatesSum, 2)
-        elif self.taskPrior == 4:        # Нормальный
-            self.taskScore = round(0.4 * self.taskEstimatesSum, 2)
-        elif self.taskPrior == 5:        # Низкий
-            self.taskScore = round(0.2 * self.taskEstimatesSum, 2)
-        else:
-            self.taskScore = round(0.4 * self.taskEstimatesSum, 2)
-        log.task(self.taskId, 'task score is calculated', self.taskScore)
+        # Расчитываем taskScore
+        self.taskScore = self.getTaskScore()
+
+
+    def getTaskScore(self, completeness='completely'):
+        priorityFactor = {
+            0: 5.0,
+            1: 2.0,
+            2: 1.0,
+            3: 0.7,
+            4: 0.4,
+            5: 0.2,
+            None: 0.4
+        }
+        completenessFactor = {
+            'completely': 1.0,
+            'backendOnly': 0.5,
+            'htmlcssOnly': 0.5
+        }
+        if completeness is 'completely':
+            sumOfHours = self.taskEstimatesSum
+        elif completeness is 'backendOnly':
+            sumOfHours = sum([x.hours for x in self.taskEstimates if x.devType == 'backenddev'])
+        elif completeness is 'htmlcssOnly':
+            sumOfHours = sum([x.hours for x in self.taskEstimates if x.devType == 'htmlcssdev'])
+        score = round(priorityFactor[self.taskPrior] * sumOfHours * completenessFactor[completeness], 2)
+        log.task(self.taskId, 'task (%s) score is calculated' % completeness, score)
+        return score
 
 
     def setRandomRelations(self, tasks, silentMode="silent"):
