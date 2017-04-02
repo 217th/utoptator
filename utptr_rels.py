@@ -73,7 +73,7 @@ class Relation:
             else:
                 return ("")
 
-    def __init__(self, relType, subjectTaskId, subjectTaskGroupId, associatedTaskId, silentMode = "silent"):
+    def __init__(self, relType, subjectTaskId, subjectTaskGroupId, associatedTaskId):
         self.relType = relType
         self.subjTaskGroupId = subjectTaskGroupId
         self.subjTaskId = subjectTaskId
@@ -201,9 +201,9 @@ def completeConcurrentRelations(rels, silentMode="silent"):
         for i in range(len(assocTaskIds) - 1):
             for j in range(i + 1, len(assocTaskIds)):
                 rels.append(
-                    Relation("relConcurrent", assocTaskIds[i], -1, assocTaskIds[j], silentMode))
+                    Relation("relConcurrent", assocTaskIds[i], -1, assocTaskIds[j]))
                 rels.append(
-                    Relation("relConcurrent", assocTaskIds[j], -1, assocTaskIds[i], silentMode))
+                    Relation("relConcurrent", assocTaskIds[j], -1, assocTaskIds[i]))
 
     # Выводим отладочные данные в excel
     if True:
@@ -272,7 +272,7 @@ def completeSequentRelations(rels, silentMode="silent"):
     # Наполняем исходный массив (который будет отдан наружу из функции) элементами, формируемыми из overall массива
     for assocTaskIds in clearListOfAssociations:
         for i in range(1, len(assocTaskIds)):
-            rels.append(Relation("relSequent", assocTaskIds[0], -2, assocTaskIds[i], silentMode))
+            rels.append(Relation("relSequent", assocTaskIds[0], -2, assocTaskIds[i]))
 
     # Выводим отладочные данные в excel
     if True:

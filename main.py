@@ -25,21 +25,21 @@ for dev in initialDevsArray:
     print(dev.devId, dev.devName, dev.devType, dev.hoursPrimary, dev.hoursSecondary, dev.hoursExcess)
 
 
-def сreateTasksArray(n, silentMode="silent"):
+def сreateTasksArray(n):
     tasksArray = []
     if n > 0:
         for i in range(n):
-            task = utptr_classes.Task(dictPriors, dictTaskTypes, initialDevsArray, silentMode)
+            task = utptr_classes.Task(dictPriors, dictTaskTypes, initialDevsArray)
             tasksArray.append(task)
         for task in tasksArray:
-            task.setRandomRelations(tasksArray, silentMode)
+            task.setRandomRelations(tasksArray)
     else:
         print('Попросили слишком мало задач. Массив задач не заполнен.')
     return (tasksArray)
 
 
 print("----- (%s) Создаём задачи -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
-originalTasksArray = сreateTasksArray(10, "silent")
+originalTasksArray = сreateTasksArray(10)
 log.general('list of %s tasks is created' % len(originalTasksArray))
 
 taskGroups = []
@@ -73,20 +73,21 @@ print("----- (%s) Распределяем задачи по группам ----
 for group in taskGroups:
     group.fillAndSort(originalTasksArray, "babble")
 
-def createOverallRelationsArray(silentMode = "silent"):
+def createOverallRelationsArray():
     # Временная функция для заполнения массива связей тестовыми данными
+    # Всё, что связано с relations, оставляем пока использующим в качестве идентификатора человекопонятный taskId
     relsNeatArray = []
     for group in taskGroups:
         for task in group.tasks:
             if task.relAlternative:
                 for assocTaskId in task.relAlternative:
-                    relsNeatArray.append(utptr_rels.Relation("relAlternative", task.taskId, group.groupId, assocTaskId, silentMode))
+                    relsNeatArray.append(utptr_rels.Relation("relAlternative", task.taskId, group.groupId, assocTaskId))
             if task.relConcurrent:
                 for assocTaskId in task.relConcurrent:
-                    relsNeatArray.append(utptr_rels.Relation("relConcurrent", task.taskId, group.groupId, assocTaskId, silentMode))
+                    relsNeatArray.append(utptr_rels.Relation("relConcurrent", task.taskId, group.groupId, assocTaskId))
             if task.relSequent:
                 for assocTaskId in task.relSequent:
-                    relsNeatArray.append(utptr_rels.Relation("relSequent", task.taskId, group.groupId, assocTaskId, silentMode))
+                    relsNeatArray.append(utptr_rels.Relation("relSequent", task.taskId, group.groupId, assocTaskId))
 
     relsNeatArray = utptr_rels.cleanRelsFromClones(relsNeatArray)
     relsNeatArray = utptr_rels.completeConcurrentRelations(relsNeatArray)
@@ -94,10 +95,13 @@ def createOverallRelationsArray(silentMode = "silent"):
 
     return relsNeatArray
 
+
+# Всё, что связано с relations, оставляем пока использующим в качестве идентификатора человекопонятный taskId
 print("----- (%s) Заполняем связи между задачами -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
-originalRelsArray = createOverallRelationsArray("silent")
+originalRelsArray = createOverallRelationsArray()
 print("----- (%s) Валидируем связи между задачами -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
 originalRelsConflictArray = utptr_rels.validateRels([x.taskId for x in originalTasksArray], originalRelsArray)
+# Всё, что связано с relations, оставляем пока использующим в качестве идентификатора человекопонятный taskId
 
 
 if originalRelsConflictArray:
@@ -109,8 +113,6 @@ else:
     log.general('no conflict in relations')
     del originalRelsConflictArray
 
-    # Логирование сделано до этого момента
-
     if any(len(x.tasks) > 0 for x in taskGroups):
         candId = -1
         cands = []
@@ -118,11 +120,11 @@ else:
         forFileRawCandTasksArray = list()
 
 
-        def cleanCandsFromClones(cands, silentMode="silent"):
+        def cleanCandsFromClones(cands):
             for cand in reversed(cands):
                 if cands.index(cand) > 0:
                     for candPrev in cands[0: cands.index(cand)]:
-                        if (round(cand.checkSum, 1) == round(candPrev.checkSum, 1)) and\
+                        if cand.checkSum == candPrev.checkSum and\
                                 (cand.lastGroupId == candPrev.lastGroupId) and\
                                 (cand.additionalTo == candPrev.additionalTo):
                             log.cand(cand.candId, 'deleting candidate because it\'s equal to...', candPrev.candId)
@@ -134,7 +136,7 @@ else:
             return cands
 
 
-        def fillSingleCand(group, basicCand, method, silentMode="silent"):
+        def fillSingleCand(group, basicCand, method):
             # Создание кандидата - входы:
             #   - целочисленный идентификатор для нового кандидата
             #   - объект класса Group (включая и задачи, отнесённые к группе)
@@ -160,8 +162,7 @@ else:
                 method,
                 initialDevsArray,
                 originalRelsArray,
-                originalTasksArray,
-                silentMode
+                originalTasksArray
             )
 
             # Заполняем мета-информацию о сырых кандидатах для вывода в файл
@@ -173,7 +174,7 @@ else:
                 forFileAddTo,
                 newCand.candId,
                 newCand.lastGroupId,
-                round(newCand.checkSum, 1),
+                newCand.checkSum,
                 'amnt '+str(len(newCand.tasks)),
                 [x.hoursPrimary for x in newCand.hoursUnused],
                 method])
@@ -205,25 +206,25 @@ else:
             return ()
 
 
-        def fillCandsWithTasksFromSpecificGroupAndOnSpecificBasicCand(group, basicCand, silentMode="silent"):
+        def fillCandsWithTasksFromSpecificGroupAndOnSpecificBasicCand(group, basicCand):
             global cands
             if group.importance == "h":
-                fillSingleCand(group, basicCand, "direct", silentMode)
+                fillSingleCand(group, basicCand, "direct")
                 completelyIn = cands[-1].isGroupCompletelyIn(group)
                 if not completelyIn:
-                    for i in range(len(group.tasks) + 1): fillSingleCand(group, basicCand, "scroll", silentMode)
-                    for i in range(len(group.tasks) * 2): fillSingleCand(group, basicCand, "shuffle", silentMode)
+                    for i in range(len(group.tasks) + 1): fillSingleCand(group, basicCand, "scroll")
+                    for i in range(len(group.tasks) * 2): fillSingleCand(group, basicCand, "shuffle")
             elif group.importance == "n":
-                fillSingleCand(group, basicCand, "direct", silentMode)
+                fillSingleCand(group, basicCand, "direct")
                 completelyIn = cands[-1].isGroupCompletelyIn(group)
                 if not completelyIn:
-                    for i in range(len(group.tasks) + 1): fillSingleCand(group, basicCand, "scroll", silentMode)
-                    for i in range(len(group.tasks) + 1): fillSingleCand(group, basicCand, "shuffle", silentMode)
+                    for i in range(len(group.tasks) + 1): fillSingleCand(group, basicCand, "scroll")
+                    for i in range(len(group.tasks) + 1): fillSingleCand(group, basicCand, "shuffle")
             elif group.importance == "l":
-                fillSingleCand(group, basicCand, "direct", silentMode)
+                fillSingleCand(group, basicCand, "direct")
                 completelyIn = cands[-1].isGroupCompletelyIn(group)
                 if not completelyIn:
-                    for i in range(len(group.tasks) + 1): fillSingleCand(group, basicCand, "shuffle", silentMode)
+                    for i in range(len(group.tasks) + 1): fillSingleCand(group, basicCand, "shuffle")
 
 
         for i, group in enumerate(taskGroups):
@@ -233,14 +234,14 @@ else:
                 group.groupId)
                   )
             if i is 0:
-                fillCandsWithTasksFromSpecificGroupAndOnSpecificBasicCand(group, False, silentMode)
-                cands = cleanCandsFromClones(cands, "silent")
+                fillCandsWithTasksFromSpecificGroupAndOnSpecificBasicCand(group, False)
+                cands = cleanCandsFromClones(cands)
             else:
                 for basicCand in cands:
                     if (basicCand.lastGroupId + 1 == group.groupId) and (not basicCand.isUsed):
-                        fillCandsWithTasksFromSpecificGroupAndOnSpecificBasicCand(group, basicCand, silentMode)
+                        fillCandsWithTasksFromSpecificGroupAndOnSpecificBasicCand(group, basicCand)
                         basicCand.isUsed = True
-                        cands = cleanCandsFromClones(cands, "silent")
+                        cands = cleanCandsFromClones(cands)
 
         # ▼▼▼▼▼▼▼ Склейка в один проход, удаление всех кандидатов, заканчивающихся непоследней группой,▼▼▼▼▼▼▼
         candsAssembled = copy.deepcopy(cands)
@@ -263,7 +264,7 @@ else:
                 candsAssembled.pop(candsAssembled.index(cand))
                 log.cand(cand.candId, 'deleting candidate glued to the major. last group is...', cand.lastGroupId)
 
-        candsAssembled = cleanCandsFromClones(candsAssembled, "silent")
+        candsAssembled = cleanCandsFromClones(candsAssembled)
         # ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
         print("----- (%s) После склейки: -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
@@ -325,7 +326,7 @@ else:
                 len(cand.tasks),
                 round(cand.getScore(), 1),
                 [x.hoursPrimary for x in cand.hoursUnused],
-                round(cand.checkSum, 1)])
+                cand.checkSum])
 
         # Заполнение массива с подробной информацией о задачах, вошедших в финальные кандидаты, для экспорта в файл
         forFileFinalCandsTasksList = []
@@ -337,7 +338,7 @@ else:
                     len(cand.tasks),
                     round(cand.getScore(), 1),
                     [x.hoursPrimary for x in cand.hoursUnused],
-                    round(cand.checkSum, 1),
+                    cand.checkSum,
                     task.taskId,
                     task.taskPrior,
                     task.taskType,

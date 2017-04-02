@@ -6,7 +6,7 @@ import utptr_log as log
 
 class Task:
     # Атрибуты класса Task. Заполняются в конструкторе.
-    #   uuid - уникальный id задачи
+    #   id - uuid задачи, генерируется программой
     #   taskId - номер задачи, получаемый снаружи (int, генерируется случайно), может быть неуникальным
     #   taskPrior - приоритет (int, выбирается случайно из словаря)
     #   taskType - тип (int, выбирается случайно из словаря)
@@ -33,6 +33,7 @@ class Task:
     def __init__(self, dictPriors, dictTaskTypes, devsArray, silentMode="silent"):
         import random, copy
 
+        # То, что будет заменено получением реальных данных о задачах:
         # Генерируем правдоподобно выглядищий номер задачи
         self.taskId = int(str(random.randint(0, 9)) +
                           str(random.randint(0, 9)) +
@@ -40,22 +41,18 @@ class Task:
                           str(random.randint(0, 9)) +
                           str(random.randint(0, 9)))
         log.task(self.taskId, 'created', '')
-
         # Выбираем приоритет задачи
         self.taskPrior = random.choice(list(dictPriors.keys()))
         log.task(self.taskId, 'priority is set', self.taskPrior)
-
         # Выбираем тип задачи
         self.taskType = random.choice(list(dictTaskTypes.keys()))
         log.task(self.taskId, 'type is set', self.taskType)
-
         # Устанавливаем предпочтения (основной, резерв)
         self.primIsMandatory, self.secIsPreferred = random.choice(15*[[False, False]] +
                                                                   [[True, False]] +
                                                                   [[False, True]])
         log.task(self.taskId, 'primary is mandatory', self.primIsMandatory)
         log.task(self.taskId, 'secondary is preferred', self.secIsPreferred)
-
         self.relConcurrent = []
         self.relAlternative = []
         self.relSequent = []
@@ -74,6 +71,9 @@ class Task:
         self.taskEstimates = copy.deepcopy(taskEstimates)
         self.taskEstimatesSum = sum([x.hours for x in taskEstimates])
         del taskEstimates
+
+        self.id = uuid.uuid1()
+        # Всё, что связано с relations, оставляем пока использующим в качестве идентификатора человекопонятный taskId
 
         # Расчитываем taskScore
         self.taskScore = self.getTaskScore()
@@ -116,6 +116,7 @@ class Task:
 
 
     def setRandomRelations(self, tasks, silentMode="silent"):
+        # Всё, что связано с relations, оставляем пока использующим в качестве идентификатора человекопонятный taskId
         import random
 
         r = random.randint(0, 10)
@@ -235,7 +236,7 @@ class Candidate:
         self.candId = candId
         self.additionalTo = basicCand
         self.lastGroupId = group.groupId
-        self.checkSum = 0
+        self.checkSum = ''
         self.tasks = list()
 
         log.groupAndCand(group.groupId, self.candId, 'candidate is created for group')
@@ -258,15 +259,15 @@ class Candidate:
             if method == "direct":
                 group.tasks.sort(key=lambda x: x.taskEstimatesSum, reverse=True)
                 for task in group.tasks:
-                    self.tryToPutSingleTask(task, overallTasksList, group.groupId, silentMode)
+                    self.tryToPutSingleTask(task, overallTasksList, group.groupId)
             elif method == "scroll":
                 group.scroll("silent")
                 for task in group.tasks:
-                    self.tryToPutSingleTask(task, overallTasksList, group.groupId, silentMode)
+                    self.tryToPutSingleTask(task, overallTasksList, group.groupId)
             elif method == "shuffle":
                 random.shuffle(group.tasks)
                 for task in group.tasks:
-                    self.tryToPutSingleTask(task, overallTasksList, group.groupId, silentMode)
+                    self.tryToPutSingleTask(task, overallTasksList, group.groupId)
 
     def isGroupCompletelyIn(self, group):
         completelyIn = True
@@ -280,12 +281,23 @@ class Candidate:
             log.groupAndCand(group.groupId, self.candId, 'group is completely in the candidate')
         return completelyIn
 
+    def refreshChecksum(self):
+        import hashlib
+        h = hashlib.md5()
+        dataList = sorted([x.id.hex for x in self.tasks])
+        # Потом в расчёт контрольной суммы нужно будет добавить расширенный статус вхождения задачи
+        for element in dataList:
+            h.update(element.encode())
+        return h.hexdigest()
 
-    def acceptTask(self, task, silentMode = "silent"):
+    def acceptTask(self, task):
         self.tasks.append(task)
         self.hoursUnused = [x.substractHours(y) for x, y in zip(self.hoursUnused, task.taskEstimates)]
+        self.checkSum = self.refreshChecksum()
+        '''
         self.checkSum += task.taskId
         self.checkSum += task.taskScore
+        '''
         log.taskAndCand(task.taskId, self.candId, 'task is accepted to candidate, total tasks inside:',
                         len(self.tasks))
 
@@ -339,7 +351,7 @@ class Candidate:
         else:
             return True
 
-    def tryToPutSingleTask(self, task, allTasks, groupId, silentMode="silent"):
+    def tryToPutSingleTask(self, task, allTasks, groupId):
         # allTasks нужен только чтобы отработать связь relConcurrent
         # !!! Что-то придумать, чтобы не тащить !!!
 
@@ -385,7 +397,7 @@ class Candidate:
                                 [x.taskId for x in tasksToPut])
 
                 for task1 in tasksToPut:
-                    self.acceptTask(task1, silentMode)
+                    self.acceptTask(task1)
 
                     for rel in self.rels:
                         if rel.assocTaskId is task1.taskId:
@@ -399,8 +411,7 @@ class Candidate:
                                     utptr_rels.Relation("relAlreadyTaken",
                                                         task1.taskId,
                                                         "",
-                                                        False,
-                                                        silentMode)
+                                                        False)
                                 )
 
                 log.cand(self.candId, 'primary hours remaining:', [x.hoursPrimary for x in self.hoursUnused])
