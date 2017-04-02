@@ -62,22 +62,6 @@ class Task:
 
         taskEstimates = []
 
-        '''
-        # Генерируем оценки по задаче для каждого разработчика _только из справочника_.
-        # Так, чтобы id записи с оценкой соответствовал id разработчика из справочника
-        for j in range(0, 1+max(list(dictDevs.keys()))):
-            if j in dictDevs:
-                # Проверяем, есть ли значение j среди ключей справочника разработчиков;
-                # если есть, то присваиваем рандомную оценку (с очень большим весом нуля)
-                taskEstimates.append(random.choice([0]*9 + list(range(1,11)) + list(range(1, 11))))
-            else: # Если в справочнике нет разработчика с таким ID
-                taskEstimates.append(0)
-        self.taskEstimates = copy.deepcopy(taskEstimates)
-        del taskEstimates
-
-        self.taskEstimatesSum = sum(self.taskEstimates)
-        '''
-
         # Генерируем оценки по задаче "по-новому"
         for dev in devsArray:
             hours = random.choice([0]*39 + list(range(1,11)) + list(range(1, 11)))
@@ -177,40 +161,24 @@ class Task:
         log.task(self.taskId, 'random alt relations are created', [x for x in self.relAlternative if x is not False])
         log.task(self.taskId, 'random seq relations are created', [x for x in self.relSequent if x is not False])
 
-        '''
-        if silentMode is not "silent":
-            print(self.hl("Task.setRandomRelations", "g") + "taskId %s ... start searching unsyncronized alternatives" % self.taskId)
-        '''
         for altTaskId in self.relAlternative:
             altTasks = [x for x in tasks if x.taskId == altTaskId]
             for altTask in altTasks:
                 altTask.relAlternative.append(self.taskId)
         log.task(self.taskId, 'random alt relations are syncronized', [x for x in self.relAlternative if x is not False])
 
-        '''
-        if silentMode is not "silent":
-            print(self.hl("Task.setRandomRelations", "g") + "taskId %s ... start searching unsyncronized concurrences" % self.taskId)
-        '''
         for concTaskId in self.relConcurrent:
             concTasks = [x for x in tasks if x.taskId == concTaskId]
             for concTask in concTasks:
                 concTask.relConcurrent.append(self.taskId)
         log.task(self.taskId, 'random conc relations are syncronized', [x for x in self.relConcurrent if x is not False])
 
-        '''
-        if silentMode is not "silent":
-            print(self.hl("Task.setRandomRelations", "g") + "taskId %s ... start searching unsyncronized sequences" % self.taskId)
-        '''
         for seqTaskId in self.relSequent:
             seqTasks = [x for x in tasks if x.taskId == seqTaskId]
             for seqTask in seqTasks:
                 for seqSeqTaskId in seqTask.relSequent:
                     if seqSeqTaskId == seqTaskId:
                         log.task(self.taskId, 'mutual sequent relations found with taskId...', seqTaskId)
-                        '''
-                        if silentMode is not "silent":
-                            print(self.hl("Task.setRandomRelations", "g") + "setRandomRelations relSequent self %s seqTask %s" % (self.taskId, seqTask.taskId))
-                        '''
                         seqTask.relSequent = []
                         self.relSequent = []
                         break
