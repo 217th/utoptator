@@ -39,7 +39,7 @@ def сreateTasksArray(n):
 
 
 print("----- (%s) Создаём задачи -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
-originalTasksArray = сreateTasksArray(10)
+originalTasksArray = сreateTasksArray(100)
 log.general('list of %s tasks is created' % len(originalTasksArray))
 
 taskGroups = []
@@ -255,8 +255,8 @@ else:
                     # hoursUnused остаётся от позднего
                     # lastGroupId остаётся от позднего
                     cand.tasks.extend(cand.additionalTo.tasks)
-                    cand.checkSum += cand.additionalTo.checkSum
                     cand.additionalTo = cand.additionalTo.additionalTo
+                    cand.refreshChecksum()
 
         candsAssembled.sort(key=lambda x: x.lastGroupId, reverse=True)
         for cand in reversed(candsAssembled):

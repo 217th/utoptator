@@ -288,12 +288,13 @@ class Candidate:
         # Потом в расчёт контрольной суммы нужно будет добавить расширенный статус вхождения задачи
         for element in dataList:
             h.update(element.encode())
-        return h.hexdigest()
+        self.checkSum = h.hexdigest()
+        return ()
 
     def acceptTask(self, task):
         self.tasks.append(task)
         self.hoursUnused = [x.substractHours(y) for x, y in zip(self.hoursUnused, task.taskEstimates)]
-        self.checkSum = self.refreshChecksum()
+        self.refreshChecksum()
         '''
         self.checkSum += task.taskId
         self.checkSum += task.taskScore
