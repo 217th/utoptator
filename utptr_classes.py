@@ -1,7 +1,6 @@
 import utptr_rels
 import random
 import copy
-import uuid
 import utptr_log as log
 
 class Task:
@@ -45,8 +44,6 @@ class Task:
 
     def __init__(self, dictPriors, dictTaskTypes, devsArray, silentMode="silent"):
         import random, copy
-
-        self.id = uuid.uuid1()
 
         # Генерируем правдоподобно выглядищий номер задачи
         self.taskId = int(str(random.randint(0, 9)) +
@@ -109,6 +106,7 @@ class Task:
         # Расчитываем taskScore
         self.taskScore = self.getTaskScore()
 
+
     def getTaskScore(self, completeness='completely', isExtraHoursUsed=False):
         priorityFactor = {
             0: 5.0,
@@ -143,6 +141,7 @@ class Task:
                  'task (completeness = %s, extra hours = %s) score is calculated' % (completeness, isExtraHoursUsed),
                  score)
         return score
+
 
     def setRandomRelations(self, tasks, silentMode="silent"):
         import random
@@ -230,18 +229,11 @@ class Task:
         log.task(self.taskId, 'random seq relations are syncronized', [x for x in self.relSequent if x is not False])
 
 
-class TaskAccepted:
-
-    def __init__(self, task, target):
-        self.task = task
-        self.target = target
-
-
 class Candidate:
     # Атрибуты класса Candidate.
     #   candId - уникальный id кандидата (int, генерируется инкрементально)
     #   additionalTo - указываем кандидата, состав которого полностью включает данный кандидат
-    #   t - список задач, включённых в кандидат (list of TaskAccepted)
+    #   tasks - список задач, включённых в кандидат (list of Tasks)
     #   hoursUnused - list of Quota
     #   lastGroupId - идентификатор последней группы, из которой ПЫТАЛИСЬ включить задачи (могли и не включить)
     #   checkSum - контрольная сумма кандидата
@@ -288,7 +280,7 @@ class Candidate:
         self.additionalTo = basicCand
         self.lastGroupId = group.groupId
         self.checkSum = 0
-        self.t = list()
+        self.tasks = list()
 
         log.groupAndCand(group.groupId, self.candId, 'candidate is created for group')
         if self.additionalTo:
@@ -331,7 +323,7 @@ class Candidate:
     def isGroupCompletelyIn(self, group):
         completelyIn = True
         for task in group.tasks:
-            if task not in self.t:
+            if task not in self.tasks:
                 completelyIn = False
                 break
         if not completelyIn:
@@ -342,12 +334,12 @@ class Candidate:
 
 
     def acceptTask(self, task, silentMode = "silent"):
-        self.t.append(task)
+        self.tasks.append(task)
         self.hoursUnused = [x.substractHours(y) for x, y in zip(self.hoursUnused, task.taskEstimates)]
         self.checkSum += task.taskId
         self.checkSum += task.taskScore
         log.taskAndCand(task.taskId, self.candId, 'task is accepted to candidate, total tasks inside:',
-                        len(self.t))
+                        len(self.tasks))
         '''
         if silentMode is not "silent":
             print(self.hl("Candidate.acceptTask", "g") +
@@ -358,7 +350,7 @@ class Candidate:
 
     def getScore(self):
         score = 0
-        for task in self.t:
+        for task in self.tasks:
             score += task.taskScore
         return score
 
@@ -368,7 +360,7 @@ class Candidate:
             print(self.hl("Candidate.print", "g") +
                   "\nСостав-кандидат № %s - всего %s задач - последняя группа %s - добавочный к %s - ценность %s" %
                   (self.candId,
-                   len(self.t),
+                   len(self.tasks),
                    self.lastGroupId,
                    self.additionalTo.candId,
                    round(self.getScore(), 1))
@@ -377,12 +369,12 @@ class Candidate:
             print(self.hl("Candidate.print", "g") +
                   "\nСостав-кандидат № %s - всего %s задач - последняя группа %s - ценность %s" %
                   (self.candId,
-                   len(self.t),
+                   len(self.tasks),
                    self.lastGroupId,
                    round(self.getScore(), 1))
                   )
 
-        for task in self.t:
+        for task in self.tasks:
             print("Задача %s - тип %s - приоритет %s - оценки %s" %
                   (task.taskId,
                    task.taskType,

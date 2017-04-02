@@ -180,13 +180,13 @@ else:
                 newCand.candId,
                 newCand.lastGroupId,
                 round(newCand.checkSum, 1),
-                'amnt '+str(len(newCand.t)),
+                'amnt '+str(len(newCand.tasks)),
                 [x.hoursPrimary for x in newCand.hoursUnused],
                 method])
 
             # Заполняем мета-информацию о задачах, вошедших в сырой кандидат, для вывода в файл
             forFileRawCandTasks = list()
-            for task in newCand.t:
+            for task in newCand.tasks:
                 forFileRawCandTasks.append([
                     newCand.candId,
                     newCand.lastGroupId,
@@ -259,7 +259,7 @@ else:
                     # Приклеиваем к более позднему всё из более раннего
                     # hoursUnused остаётся от позднего
                     # lastGroupId остаётся от позднего
-                    cand.t.extend(cand.additionalTo.t)
+                    cand.tasks.extend(cand.additionalTo.tasks)
                     cand.checkSum += cand.additionalTo.checkSum
                     cand.additionalTo = cand.additionalTo.additionalTo
 
@@ -328,7 +328,7 @@ else:
         for cand in candsAssembled:
             forFileFinalCandMetaArray.append([
                 cand.candId,
-                len(cand.t),
+                len(cand.tasks),
                 round(cand.getScore(), 1),
                 [x.hoursPrimary for x in cand.hoursUnused],
                 round(cand.checkSum, 1)])
@@ -337,10 +337,10 @@ else:
         forFileFinalCandsTasksList = []
         for cand in candsAssembled:
             forFileSingleFinalCandTasksList = []
-            for task in cand.t:
+            for task in cand.tasks:
                 forFileSingleFinalCandTasksList.append([
                     cand.candId,
-                    len(cand.t),
+                    len(cand.tasks),
                     round(cand.getScore(), 1),
                     [x.hoursPrimary for x in cand.hoursUnused],
                     round(cand.checkSum, 1),
