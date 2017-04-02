@@ -1,5 +1,6 @@
 import utptr_classes
 import openpyxl
+import utptr_log as log
 
 fileName = 'input/input.xlsx'
 
@@ -18,12 +19,15 @@ def readDevs(firstRow = 4, lastRow = 28):
         devsArray = []
 
         for i in range(firstRow, lastRow):
-            devsArray.append(utptr_classes.Dev(colDevId[i].value,
-                  colDevType[i].value,
-                  colDevName[i].value,
-                  colDevHoursPrimary[i].value,
-                  colDevHoursSecondary[i].value,
-                  colDevHoursExcess[i].value))
+            devsArray.append(utptr_classes.Quota(colDevId[i].value,
+                                                 colDevType[i].value,
+                                                 colDevName[i].value,
+                                                 colDevHoursPrimary[i].value,
+                                                 colDevHoursSecondary[i].value,
+                                                 colDevHoursExcess[i].value))
+            log.dev(colDevId[i].value, 'created with primary hours', colDevHoursPrimary[i].value)
+            log.dev(colDevId[i].value, 'created with secondary hours', colDevHoursSecondary[i].value)
+            log.dev(colDevId[i].value, 'created with extra hours', colDevHoursExcess[i].value)
 
     else:
         print("Нет листа с разработчиками")

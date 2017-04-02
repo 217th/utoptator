@@ -40,6 +40,7 @@ relAlreadyTaken:
         - не делаем ничего
 '''
 
+import utptr_log as log
 import utptr_to_file
 import operator
 import copy
@@ -86,8 +87,11 @@ class Relation:
         }
         self.isActive = relTypesAndValues[relType]
 
+        log.taskAndRel(self.subjTaskId, self.relType, 'instance of Relation is created, assocTask is...', self.assocTaskId)
+        '''
         if silentMode is not "silent":
             print(self.hl("Relation.__init__", "g") + "Создана связь типа %s - %s (группа %s) - %s" % (self.relType, self.subjTaskId, self.subjTaskGroupId, self.assocTaskId))
+        '''
 
 
 class RelConflict:
@@ -119,17 +123,31 @@ class RelConflict:
     def print(self):
         print(self.hl("RelConflict.print", "r") + "Конфликт у задач %s и %s. Связи: %s, %s" %
               (self.taskId1, self.taskId2, self.rels, self.description))
-
+        log.task(self.taskId1, 'conflict found %s %s' % (self.rels, self.description))
+        log.task(self.taskId2, 'conflict found %s %s' % (self.rels, self.description))
 
 def cleanRelsFromClones(rels, silentMode = "silent"):
+    l = len(rels)
     for rel in reversed(rels):
         if rels.index(rel) > 0:
             for relPrev in rels[0: rels.index(rel)]:
-                if (rel.relType == relPrev.relType) and (rel.subjTaskId == relPrev.subjTaskId) and (rel.assocTaskId == relPrev.assocTaskId):
+                if (rel.relType == relPrev.relType) and \
+                        (rel.subjTaskId == relPrev.subjTaskId) and \
+                        (rel.assocTaskId == relPrev.assocTaskId):
+                    log.taskAndRel(rel.subjTaskId, rel.relType, 'deleting duplicated relation',
+                                   rel.assocTaskId)
+                    log.taskAndRel(rel.assocTaskId, rel.relType, 'deleting duplicated relation',
+                                   rel.subjTaskId)
+                    '''
                     if silentMode is not "silent":
                         print("Удаляем дубль: %s %s - %s" % (rel.relType, rel.subjTaskId, rel.assocTaskId))
+                    '''
                     rels.pop(rels.index(rel))
                     break
+    if l == len(rels):
+        log.general('no duplicated relations found')
+    else:
+        log.general('duplicated relations are deleted: %s' % (l-len(rels)))
     return rels
 
 
@@ -148,6 +166,7 @@ def completeConcurrentRelations(rels, silentMode="silent"):
     #   - вместо старых записей для каждого элемента clearListOfAssociations заводим новые записи в rels
     #   - возвращаем rels
 
+    log.general('starting complete concurrent relations')
     relsConc = [x for x in rels if x.relType == "relConcurrent"]
 
     neatListOfAssociations = []
@@ -201,6 +220,7 @@ def completeConcurrentRelations(rels, silentMode="silent"):
         utptr_to_file.writeDebugData1ToXLS(relsConc, forFileNeatConcurrentTaskGroups,
                                            forFileClearConcurrentTaskGroups, forFileRelsConcOverall)
 
+    log.general('completion concurrent relations finished')
     return rels
 
 
@@ -215,6 +235,7 @@ def completeSequentRelations(rels, silentMode="silent"):
     #   - добавляем в rels недостающие связи (или удаляем все, а потом заново создаём ???)
     #   - возвращаем rels
 
+    log.general('starting complete sequent relations')
     relsSeq = [x for x in rels if x.relType == "relSequent"]
 
     neatListOfAssociations = []
@@ -267,6 +288,7 @@ def completeSequentRelations(rels, silentMode="silent"):
         forFileRelsSeqOverall = [x for x in rels if x.relType == "relSequent"]
         utptr_to_file.writeDebugData2ToXLS(relsSeq, forFileNeatSequentTaskGroups, forFileClearSequentTaskGroups, forFileRelsSeqOverall)
 
+    log.general('completion sequent relations finished')
     return rels
 
 
@@ -277,6 +299,8 @@ def validateRels(taskIds, rels):
     #   - (A seq B) xor (B seq A) == True
     #   - ((A alt B) or (B alt A)) xor ((A conc B) or (B conc A)) == True
     #   - ((A conc B) or (B conc A)) xor ((A seq B) or (B seq A)) == True
+
+    log.general('searching the conflicting relations')
     relConflictsArray = []
     
     for taskId1 in taskIds[:(len(taskIds)-1)]:
@@ -303,5 +327,6 @@ def validateRels(taskIds, rels):
                 relConflictsArray.append(RelConflict(taskId1, taskId2, [x.relType for x in relsForCouple],
                                                      "одновременно relConcurrent и relSequent"))
 
+    log.general('search of the conflicting relations finished')
     return relConflictsArray
 
