@@ -126,12 +126,6 @@ else:
                                 (cand.lastGroupId == candPrev.lastGroupId) and\
                                 (cand.additionalTo == candPrev.additionalTo):
                             log.cand(cand.candId, 'deleting candidate because it\'s equal to...', candPrev.candId)
-                            '''
-                            if silentMode is not "silent":
-                                print("Дубли | id %s, checkSum %s, lastGroup %s | id %s, checkSum %s, lastGroup %s" % (
-                                cand.candId, cand.checkSum, cand.lastGroupId, candPrev.candId, candPrev.checkSum,
-                                candPrev.lastGroupId))
-                            '''
                             for i, j in enumerate(forFileRawCandMetaArray):
                                 if j[1] == cand.candId:
                                     forFileRawCandMetaArray[i].append("del")

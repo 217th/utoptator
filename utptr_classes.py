@@ -1,11 +1,13 @@
 import utptr_rels
 import random
 import copy
+import uuid
 import utptr_log as log
 
 class Task:
     # Атрибуты класса Task. Заполняются в конструкторе.
-    #   taskId - номер задачи (int, генерируется случайно)
+    #   uuid - уникальный id задачи
+    #   taskId - номер задачи, получаемый снаружи (int, генерируется случайно), может быть неуникальным
     #   taskPrior - приоритет (int, выбирается случайно из словаря)
     #   taskType - тип (int, выбирается случайно из словаря)
     #   taskEstimates - оценки (list, заполняются случайно только для разработчиков, которые есть в словаре)
@@ -27,20 +29,6 @@ class Task:
     # Методы класса Task.
     #   setRandomRelations - метод (вероятно, временный) для заполнения relConcurrent, relSequent, relAlternative
     #   getTaskScore - расчёт score задачи целиком или для отдельной части
-
-    @staticmethod
-    def hl(funcName, color="g"):
-        silentMode = False
-        if not silentMode:
-            if color == "g":
-                return("\x1b[0;36;42m" + "(" + funcName + "):" + "\x1b[0m" + " ")
-            if color == "r":
-                return("\x1b[0;36;41m" + "(" + funcName + "):" + "\x1b[0m" + " ")
-            if color == "y":
-                return("\x1b[0;36;43m" + "(" + funcName + "):" + "\x1b[0m" + " ")
-            if color == "b":
-                return("\x1b[0;36;44m" + "(" + funcName + "):" + "\x1b[0m" + " ")
-        else: return("")
 
     def __init__(self, dictPriors, dictTaskTypes, devsArray, silentMode="silent"):
         import random, copy
@@ -312,14 +300,6 @@ class Candidate:
                 for task in group.tasks:
                     self.tryToPutSingleTask(task, overallTasksList, group.groupId, silentMode)
 
-        '''
-        if silentMode is not "silent":
-            print(self.hl("Candidate.__init__", "g") + "----- Создан состав-кандидат №", self.candId)
-            print(self.hl("Candidate.__init__", "g") + "Начальное количество часов:",
-                  [x.hoursPrimary for x in self.hoursUnused]
-                  )
-        '''
-
     def isGroupCompletelyIn(self, group):
         completelyIn = True
         for task in group.tasks:
@@ -340,13 +320,6 @@ class Candidate:
         self.checkSum += task.taskScore
         log.taskAndCand(task.taskId, self.candId, 'task is accepted to candidate, total tasks inside:',
                         len(self.tasks))
-        '''
-        if silentMode is not "silent":
-            print(self.hl("Candidate.acceptTask", "g") +
-                  "В состав-кандидат %s включена задача %s. Всего включено задач %s" %
-                  (self.candId, self.tasks[len(self.tasks)-1].taskId, len(self.tasks))
-                  )
-        '''
 
     def getScore(self):
         score = 0
@@ -433,39 +406,15 @@ class Candidate:
                             [x.relType for x in taskActiveRelsArray])
             log.taskAndCand(task.taskId, self.candId, 'task is retired because of blocks, tasks...',
                             [x.assocTaskId for x in taskActiveRelsArray])
-            '''
-            if silentMode is not "silent":
-                print(self.hl("Candidate.tryToPutSingleTask", "r") +
-                      "Задача %s не рассматривается из-за блокировок %s %s" %
-                      (task.taskId,
-                       [x.relType for x in taskActiveRelsArray],
-                       [x.assocTaskId for x in taskActiveRelsArray]))
-            '''
         else:
             # Проверяем, влезает ли список задач
             tasksAreFit = self.areTasksFit(self.hoursUnused, tasksToPut)
             if not tasksAreFit:
                 log.taskAndCand(task.taskId, self.candId, 'task (and its concurrents) are not fit',
                                 [x.taskId for x in tasksToPut])
-                '''
-                if silentMode is not "silent":
-                    print(self.hl("Candidate.tryToPutSingleTask", "y") +
-                          "--- Задача %s. Есть часов: %s. Не влезает" %
-                          ([x.taskId for x in tasksToPut],
-                           [x.hoursPrimary for x in self.hoursUnused])
-                          )
-                '''
             else:
                 log.taskAndCand(task.taskId, self.candId, 'task (and its concurrents) are fit',
                                 [x.taskId for x in tasksToPut])
-                '''
-                if silentMode is not "silent":
-                    print(self.hl("Candidate.tryToPutSingleTask", "y") +
-                          "--- Задача %s. Есть часов: %s. Влезает" %
-                          ([x.taskId for x in tasksToPut],
-                           [x.hoursPrimary for x in self.hoursUnused])
-                          )
-                '''
 
                 for task1 in tasksToPut:
                     self.acceptTask(task1, silentMode)
@@ -487,12 +436,6 @@ class Candidate:
                                 )
 
                 log.cand(self.candId, 'primary hours remaining:', [x.hoursPrimary for x in self.hoursUnused])
-                '''
-                if silentMode is not "silent":
-                    print(self.hl("Candidate.tryToPutSingleTask", "y") +
-                          "Остаётся часов:",
-                          [x.hoursPrimary for x in self.hoursUnused])
-                '''
 
 
 class Group:
@@ -530,20 +473,12 @@ class Group:
         self.meta = []
         self.meta.append(tType)
         self.meta.append(tPrior)
-        '''
-        if silentMode is not "silent":
-            print(self.hl("Group.__init__", "g") + "Создана группа id %s - %s" % (self.groupId, self.meta))
-        '''
         self.importance = tImportance
         self.tasks = []
         log.group(self.groupId, 'empty group with meta is created', self.meta)
 
     def fillAndSort(self, tasksArray, silentMode="silent"):
         log.group(self.groupId, 'getting group filled', '')
-        '''
-        if silentMode is not "silent":
-            print(self.hl("Group.fillAndSort", "g") + "Метаданные группы (тип задачи, приоритет): %s" % (self.meta))
-        '''
         for task in tasksArray:
             for taskType in self.meta[0]:
                 for taskPrior in self.meta[1]:
@@ -552,11 +487,6 @@ class Group:
                         log.taskAndGroup(task.taskId, self.groupId, 'group has smallowed up the task', '')
         if self.tasks:
             self.tasks.sort(key=lambda x: x.taskEstimatesSum, reverse = True)
-            '''
-            for task in self.tasks:
-                if silentMode is not "silent":
-                    print(self.hl("Group.fillAndSort", "g") + "Задача №: %s. Суммарная оценка: %s" % (task.taskId, task.taskEstimatesSum))
-            '''
         else:
             if silentMode is not "silent":
                 log.group(self.groupId, 'group remains empty', '')

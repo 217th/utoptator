@@ -88,10 +88,6 @@ class Relation:
         self.isActive = relTypesAndValues[relType]
 
         log.taskAndRel(self.subjTaskId, self.relType, 'instance of Relation is created, assocTask is...', self.assocTaskId)
-        '''
-        if silentMode is not "silent":
-            print(self.hl("Relation.__init__", "g") + "Создана связь типа %s - %s (группа %s) - %s" % (self.relType, self.subjTaskId, self.subjTaskGroupId, self.assocTaskId))
-        '''
 
 
 class RelConflict:
@@ -138,10 +134,6 @@ def cleanRelsFromClones(rels, silentMode = "silent"):
                                    rel.assocTaskId)
                     log.taskAndRel(rel.assocTaskId, rel.relType, 'deleting duplicated relation',
                                    rel.subjTaskId)
-                    '''
-                    if silentMode is not "silent":
-                        print("Удаляем дубль: %s %s - %s" % (rel.relType, rel.subjTaskId, rel.assocTaskId))
-                    '''
                     rels.pop(rels.index(rel))
                     break
     if l == len(rels):
