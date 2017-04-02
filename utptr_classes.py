@@ -149,36 +149,36 @@ class Task:
 
         r = random.randint(0, 10)
         if r in range(0, 7):
-            self.relConcurrent.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*5*[False]))
+            self.relConcurrent.append(random.choice([x.id for x in tasks if x.id != self.id] + len(tasks)*5*[False]))
         elif r in range(8, 9):
-            self.relConcurrent.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*5*[False]))
-            self.relConcurrent.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*5*[False]))
+            self.relConcurrent.append(random.choice([x.id for x in tasks if x.id != self.id] + len(tasks)*5*[False]))
+            self.relConcurrent.append(random.choice([x.id for x in tasks if x.id != self.id] + len(tasks)*5*[False]))
         elif r == 10:
-            self.relConcurrent.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*5*[False]))
-            self.relConcurrent.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*5*[False]))
-            self.relConcurrent.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*5*[False]))
+            self.relConcurrent.append(random.choice([x.id for x in tasks if x.id != self.id] + len(tasks)*5*[False]))
+            self.relConcurrent.append(random.choice([x.id for x in tasks if x.id != self.id] + len(tasks)*5*[False]))
+            self.relConcurrent.append(random.choice([x.id for x in tasks if x.id != self.id] + len(tasks)*5*[False]))
 
         r = random.randint(0, 10)
         if r in range(0, 7):
-            self.relAlternative.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*5*[False]))
+            self.relAlternative.append(random.choice([x.id for x in tasks if x.id != self.id] + len(tasks)*5*[False]))
         elif r in range(8, 9):
-            self.relAlternative.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*5*[False]))
-            self.relAlternative.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*5*[False]))
+            self.relAlternative.append(random.choice([x.id for x in tasks if x.id != self.id] + len(tasks)*5*[False]))
+            self.relAlternative.append(random.choice([x.id for x in tasks if x.id != self.id] + len(tasks)*5*[False]))
         elif r == 10:
-            self.relAlternative.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*5*[False]))
-            self.relAlternative.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*5*[False]))
-            self.relAlternative.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*5*[False]))
+            self.relAlternative.append(random.choice([x.id for x in tasks if x.id != self.id] + len(tasks)*5*[False]))
+            self.relAlternative.append(random.choice([x.id for x in tasks if x.id != self.id] + len(tasks)*5*[False]))
+            self.relAlternative.append(random.choice([x.id for x in tasks if x.id != self.id] + len(tasks)*5*[False]))
 
         r = random.randint(0, 10)
         if r in range(0, 7):
-            self.relSequent.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*5*[False]))
+            self.relSequent.append(random.choice([x.id for x in tasks if x.id != self.id] + len(tasks)*5*[False]))
         elif r in range(8, 9):
-            self.relSequent.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*5*[False]))
-            self.relSequent.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*5*[False]))
+            self.relSequent.append(random.choice([x.id for x in tasks if x.id != self.id] + len(tasks)*5*[False]))
+            self.relSequent.append(random.choice([x.id for x in tasks if x.id != self.id] + len(tasks)*5*[False]))
         elif r == 10:
-            self.relSequent.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*5*[False]))
-            self.relSequent.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*5*[False]))
-            self.relSequent.append(random.choice([x.taskId for x in tasks if x.taskId != self.taskId] + len(tasks)*5*[False]))
+            self.relSequent.append(random.choice([x.id for x in tasks if x.id != self.id] + len(tasks)*5*[False]))
+            self.relSequent.append(random.choice([x.id for x in tasks if x.id != self.id] + len(tasks)*5*[False]))
+            self.relSequent.append(random.choice([x.id for x in tasks if x.id != self.id] + len(tasks)*5*[False]))
 
         if silentMode is not "silent":
             print(self.hl("Task.setRandomRelations", "g") + "taskId %s ... start deleting falses" % self.taskId)
@@ -194,32 +194,32 @@ class Task:
         if silentMode is not "silent":
             print(self.hl("Task.setRandomRelations", "g") + "taskId %s ... start searching unsyncronized alternatives" % self.taskId)
         '''
-        for altTaskId in self.relAlternative:
-            altTasks = [x for x in tasks if x.taskId == altTaskId]
+        for altId in self.relAlternative:
+            altTasks = [x for x in tasks if x.id == altId]
             for altTask in altTasks:
-                altTask.relAlternative.append(self.taskId)
+                altTask.relAlternative.append(self.id)
         log.task(self.taskId, 'random alt relations are syncronized', [x for x in self.relAlternative if x is not False])
 
         '''
         if silentMode is not "silent":
             print(self.hl("Task.setRandomRelations", "g") + "taskId %s ... start searching unsyncronized concurrences" % self.taskId)
         '''
-        for concTaskId in self.relConcurrent:
-            concTasks = [x for x in tasks if x.taskId == concTaskId]
+        for concId in self.relConcurrent:
+            concTasks = [x for x in tasks if x.id == concId]
             for concTask in concTasks:
-                concTask.relConcurrent.append(self.taskId)
+                concTask.relConcurrent.append(self.id)
         log.task(self.taskId, 'random conc relations are syncronized', [x for x in self.relConcurrent if x is not False])
 
         '''
         if silentMode is not "silent":
             print(self.hl("Task.setRandomRelations", "g") + "taskId %s ... start searching unsyncronized sequences" % self.taskId)
         '''
-        for seqTaskId in self.relSequent:
-            seqTasks = [x for x in tasks if x.taskId == seqTaskId]
+        for seqId in self.relSequent:
+            seqTasks = [x for x in tasks if x.id == seqId]
             for seqTask in seqTasks:
-                for seqSeqTaskId in seqTask.relSequent:
-                    if seqSeqTaskId == seqTaskId:
-                        log.task(self.taskId, 'mutual sequent relations found with taskId...', seqTaskId)
+                for seqSeqId in seqTask.relSequent:
+                    if seqSeqId == seqId:
+                        log.task(self.taskId, 'mutual sequent relations found with taskId...', seqId)
                         '''
                         if silentMode is not "silent":
                             print(self.hl("Task.setRandomRelations", "g") + "setRandomRelations relSequent self %s seqTask %s" % (self.taskId, seqTask.taskId))
@@ -417,7 +417,7 @@ class Candidate:
         tasksToPut = list()
         tasksToPut.append(task)
 
-        taskActiveRelsArray = [x for x in self.rels if x.isActive and task.taskId == x.subjTaskId]
+        taskActiveRelsArray = [x for x in self.rels if x.isActive and task.id == x.subjId]
         if not taskActiveRelsArray:
             trialIsFreeOfLocks = True
         else:
@@ -427,12 +427,12 @@ class Candidate:
                 trialIsFreeOfLocks = False
             elif "relConcurrent" in [x.relType for x in taskActiveRelsArray]:
                 # Формируем список задач, которые будут пытаться установиться совместно
-                tasksToPut.extend([x for x in allTasks if x.taskId in [y.assocTaskId for y in taskActiveRelsArray]])
+                tasksToPut.extend([x for x in allTasks if x.id in [y.assocTaskId for y in taskActiveRelsArray]])
                 trialIsFreeOfLocks = True
 
         if len(tasksToPut)>1:
             log.taskAndCand(task.taskId, self.candId, 'trying to put task together with concurrents:',
-                            [x.taskId for x in tasksToPut])
+                            [x.id for x in tasksToPut])
         else:
             log.taskAndCand(task.taskId, self.candId, 'no concurrences for task')
 
@@ -454,7 +454,7 @@ class Candidate:
             tasksAreFit = self.areTasksFit(self.hoursUnused, tasksToPut)
             if not tasksAreFit:
                 log.taskAndCand(task.taskId, self.candId, 'task (and its concurrents) are not fit',
-                                [x.taskId for x in tasksToPut])
+                                [x.id for x in tasksToPut])
                 '''
                 if silentMode is not "silent":
                     print(self.hl("Candidate.tryToPutSingleTask", "y") +
@@ -465,7 +465,7 @@ class Candidate:
                 '''
             else:
                 log.taskAndCand(task.taskId, self.candId, 'task (and its concurrents) are fit',
-                                [x.taskId for x in tasksToPut])
+                                [x.id for x in tasksToPut])
                 '''
                 if silentMode is not "silent":
                     print(self.hl("Candidate.tryToPutSingleTask", "y") +
