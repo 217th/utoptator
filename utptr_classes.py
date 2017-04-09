@@ -270,16 +270,12 @@ class Candidate:
                     self.tryToPutSingleTask(task, overallTasksList, group.groupId)
 
     def isGroupCompletelyIn(self, group):
-        completelyIn = True
         for task in group.tasks:
             if task not in self.tasks:
-                completelyIn = False
-                break
-        if not completelyIn:
-            log.groupAndCand(group.groupId, self.candId, 'group is NOT completely inside the candidate')
-        elif completelyIn:
-            log.groupAndCand(group.groupId, self.candId, 'group is completely in the candidate')
-        return completelyIn
+                log.groupAndCand(group.groupId, self.candId, 'group is NOT completely inside the candidate')
+                return False
+        log.groupAndCand(group.groupId, self.candId, 'group is completely in the candidate')
+        return True
 
     def refreshChecksum(self):
         import hashlib
