@@ -186,6 +186,27 @@ class Task:
         log.task(self.taskId, 'random seq relations are syncronized', [x for x in self.relSequent if x is not False])
 
 
+class TaskEnrolled:
+    """
+    Атрибуты класса TaskEnrolled:
+        task - экземпляр класса Task
+        completeness - одно из текстовых значений:
+            'completely'
+            'backendOnly'
+            'htmlcssOnly'
+        dest - одно из текстовых значений:
+            'prim'
+            'sec'
+        score - ценность включения, которая может отличаться от "базовой" ценности задачи за счёт девальвации
+    """
+
+    def __init__(self, task, completeness, dest, isExtraHoursUsed=False):
+        self.task = task
+        self.completeness = completeness
+        self.dest = dest
+        self.score = task.getTaskScore(completeness, isExtraHoursUsed)
+
+
 class Candidate:
     # Атрибуты класса Candidate.
     #   candId - уникальный id кандидата (int, генерируется инкрементально)
@@ -295,10 +316,11 @@ class Candidate:
                         len(self.tasks))
 
     def getScore(self):
-        score = 0
+        scorePrim = 0
+        scoreSec = 0
         for task in self.tasks:
-            score += task.taskScore
-        return score
+            scorePrim += task.taskScore
+        return (scorePrim, scoreSec)
 
     def print(self):
         print("------------------------------\n------------------------------\n------------------------------")
@@ -309,7 +331,7 @@ class Candidate:
                    len(self.tasks),
                    self.lastGroupId,
                    self.additionalTo.candId,
-                   round(self.getScore(), 1))
+                   round(self.getScore()[0], 1))
                   )
         else:
             print(self.hl("Candidate.print", "g") +
@@ -317,7 +339,7 @@ class Candidate:
                   (self.candId,
                    len(self.tasks),
                    self.lastGroupId,
-                   round(self.getScore(), 1))
+                   round(self.getScore()[0], 1))
                   )
 
         for task in self.tasks:

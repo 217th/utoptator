@@ -340,7 +340,7 @@ else:
             forFileFinalCandMetaArray.append([
                 cand.candId,
                 len(cand.tasks),
-                round(cand.getScore(), 1),
+                round(cand.getScore()[0], 1),
                 [x.hoursPrimary for x in cand.hoursUnused],
                 cand.checkSum])
 
@@ -352,7 +352,7 @@ else:
                 forFileSingleFinalCandTasksList.append([
                     cand.candId,
                     len(cand.tasks),
-                    round(cand.getScore(), 1),
+                    round(cand.getScore()[0], 1),
                     [x.hoursPrimary for x in cand.hoursUnused],
                     cand.checkSum,
                     task.taskId,
