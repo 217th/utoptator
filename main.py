@@ -136,6 +136,19 @@ else:
             return cands
 
 
+        def isCandUnique(candNew):
+            if cands:
+                for candExisted in cands:
+                    if candExisted.checkSum == candNew.checkSum\
+                            and candExisted.lastGroupId == candNew.lastGroupId\
+                            and candExisted.additionalTo == candNew.additionalTo:
+                        log.cand(candNew.candId,
+                                 'candidate is declined from final list because it is a clone of another cand',
+                                 candExisted.candId)
+                        return False
+            return True
+
+
         def fillSingleCand(group, basicCand, method):
             # Создание кандидата - входы:
             #   - целочисленный идентификатор для нового кандидата
@@ -165,43 +178,44 @@ else:
                 originalTasksArray
             )
 
-            # Заполняем мета-информацию о сырых кандидатах для вывода в файл
-            if newCand.additionalTo:
-                forFileAddTo = 'addTo '+str(newCand.additionalTo.candId)
-            else:
-                forFileAddTo = False
-            forFileCandMeta = list([
-                forFileAddTo,
-                newCand.candId,
-                newCand.lastGroupId,
-                newCand.checkSum,
-                'amnt '+str(len(newCand.tasks)),
-                [x.hoursPrimary for x in newCand.hoursUnused],
-                method])
-
-            # Заполняем мета-информацию о задачах, вошедших в сырой кандидат, для вывода в файл
-            forFileRawCandTasks = list()
-            for task in newCand.tasks:
-                forFileRawCandTasks.append([
+            if isCandUnique(newCand):
+                # Заполняем мета-информацию о сырых кандидатах для вывода в файл
+                if newCand.additionalTo:
+                    forFileAddTo = 'addTo '+str(newCand.additionalTo.candId)
+                else:
+                    forFileAddTo = False
+                forFileCandMeta = list([
+                    forFileAddTo,
                     newCand.candId,
                     newCand.lastGroupId,
-                    task.taskId,
-                    task.taskPrior,
-                    task.taskType,
-                    [x.hours for x in task.taskEstimates],
-                    round(task.taskScore, 1),
-                    task.relConcurrent,
-                    task.relAlternative,
-                    task.relSequent
-                ])
+                    newCand.checkSum,
+                    'amnt '+str(len(newCand.tasks)),
+                    [x.hoursPrimary for x in newCand.hoursUnused],
+                    method])
 
-            # Операции с глобальными объектами - кандидаты на вынос из функции
-            global cands
-            cands.append(newCand)
-            global forFileRawCandTasksArray
-            forFileRawCandTasksArray.extend(forFileRawCandTasks)
-            global forFileRawCandMetaArray
-            forFileRawCandMetaArray.append(forFileCandMeta)
+                # Заполняем мета-информацию о задачах, вошедших в сырой кандидат, для вывода в файл
+                forFileRawCandTasks = list()
+                for task in newCand.tasks:
+                    forFileRawCandTasks.append([
+                        newCand.candId,
+                        newCand.lastGroupId,
+                        task.taskId,
+                        task.taskPrior,
+                        task.taskType,
+                        [x.hours for x in task.taskEstimates],
+                        round(task.taskScore, 1),
+                        task.relConcurrent,
+                        task.relAlternative,
+                        task.relSequent
+                    ])
+
+                # Операции с глобальными объектами - кандидаты на вынос из функции
+                global cands
+                cands.append(newCand)
+                global forFileRawCandTasksArray
+                forFileRawCandTasksArray.extend(forFileRawCandTasks)
+                global forFileRawCandMetaArray
+                forFileRawCandMetaArray.append(forFileCandMeta)
 
             return ()
 
