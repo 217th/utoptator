@@ -138,7 +138,7 @@ else:
 
         def isCandUnique(candNew):
             if cands:
-                for candExisted in cands:
+                for candExisted in reversed(cands):
                     if candExisted.checkSum == candNew.checkSum\
                             and candExisted.lastGroupId == candNew.lastGroupId\
                             and candExisted.additionalTo == candNew.additionalTo:
@@ -178,44 +178,46 @@ else:
                 originalTasksArray
             )
 
-            if isCandUnique(newCand):
-                # Заполняем мета-информацию о сырых кандидатах для вывода в файл
-                if newCand.additionalTo:
-                    forFileAddTo = 'addTo '+str(newCand.additionalTo.candId)
-                else:
-                    forFileAddTo = False
-                forFileCandMeta = list([
-                    forFileAddTo,
+            # Заполняем мета-информацию о сырых кандидатах для вывода в файл
+            if newCand.additionalTo:
+                forFileAddTo = 'addTo '+str(newCand.additionalTo.candId)
+            else:
+                forFileAddTo = False
+            forFileCandMeta = list([
+                forFileAddTo,
+                newCand.candId,
+                newCand.lastGroupId,
+                newCand.checkSum,
+                'amnt '+str(len(newCand.tasks)),
+                [x.hoursPrimary for x in newCand.hoursUnused],
+                method])
+            if not isCandUnique(newCand):
+                forFileCandMeta.append('del')
+
+            # Заполняем мета-информацию о задачах, вошедших в сырой кандидат, для вывода в файл
+            forFileRawCandTasks = list()
+            for task in newCand.tasks:
+                forFileRawCandTasks.append([
                     newCand.candId,
                     newCand.lastGroupId,
-                    newCand.checkSum,
-                    'amnt '+str(len(newCand.tasks)),
-                    [x.hoursPrimary for x in newCand.hoursUnused],
-                    method])
+                    task.taskId,
+                    task.taskPrior,
+                    task.taskType,
+                    [x.hours for x in task.taskEstimates],
+                    round(task.taskScore, 1),
+                    task.relConcurrent,
+                    task.relAlternative,
+                    task.relSequent
+                ])
 
-                # Заполняем мета-информацию о задачах, вошедших в сырой кандидат, для вывода в файл
-                forFileRawCandTasks = list()
-                for task in newCand.tasks:
-                    forFileRawCandTasks.append([
-                        newCand.candId,
-                        newCand.lastGroupId,
-                        task.taskId,
-                        task.taskPrior,
-                        task.taskType,
-                        [x.hours for x in task.taskEstimates],
-                        round(task.taskScore, 1),
-                        task.relConcurrent,
-                        task.relAlternative,
-                        task.relSequent
-                    ])
-
-                # Операции с глобальными объектами - кандидаты на вынос из функции
+            if isCandUnique(newCand):
                 global cands
                 cands.append(newCand)
-                global forFileRawCandTasksArray
-                forFileRawCandTasksArray.extend(forFileRawCandTasks)
-                global forFileRawCandMetaArray
-                forFileRawCandMetaArray.append(forFileCandMeta)
+
+            global forFileRawCandTasksArray
+            forFileRawCandTasksArray.extend(forFileRawCandTasks)
+            global forFileRawCandMetaArray
+            forFileRawCandMetaArray.append(forFileCandMeta)
 
             return ()
 
@@ -249,13 +251,13 @@ else:
                   )
             if i is 0:
                 fillCandsWithTasksFromSpecificGroupAndOnSpecificBasicCand(group, False)
-                cands = cleanCandsFromClones(cands)
+                # cands = cleanCandsFromClones(cands)
             else:
                 for basicCand in cands:
                     if (basicCand.lastGroupId + 1 == group.groupId) and (not basicCand.isUsed):
                         fillCandsWithTasksFromSpecificGroupAndOnSpecificBasicCand(group, basicCand)
                         basicCand.isUsed = True
-                        cands = cleanCandsFromClones(cands)
+                        # cands = cleanCandsFromClones(cands)
 
         # ▼▼▼▼▼▼▼ Склейка в один проход, удаление всех кандидатов, заканчивающихся непоследней группой,▼▼▼▼▼▼▼
         candsAssembled = copy.deepcopy(cands)
