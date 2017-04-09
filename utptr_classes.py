@@ -295,10 +295,6 @@ class Candidate:
         self.tasks.append(task)
         self.hoursUnused = [x.substractHours(y) for x, y in zip(self.hoursUnused, task.taskEstimates)]
         self.refreshChecksum()
-        '''
-        self.checkSum += task.taskId
-        self.checkSum += task.taskScore
-        '''
         log.taskAndCand(task.taskId, self.candId, 'task is accepted to candidate, total tasks inside:',
                         len(self.tasks))
 
@@ -353,6 +349,28 @@ class Candidate:
             return True
 
     def tryToPutSingleTask(self, task, allTasks, groupId):
+        """
+            * Создаём список задач, которые будут разом ставиться в кандидата
+            * Добавляем в список задачу, для которой вызвали функцию
+            * Проверяем наличие связей для данной задачи
+                * Если связей нет, сразу trialIsFreeOfLocks = True
+                * Если связи есть:
+                    * Если есть активные связи типов "альтернатива", "последовательность", либо "уже взято", тогда:
+                        * trialIsFreeOfLocks = False
+                    * Если есть активные связи типа "одновременно", тогда:
+                        * добавляем в список задач, которые будем пытаться ставить, все одновременные задачи. По taskId
+                        * trialIsFreeOfLocks = True
+            * Если блокировка по связям отсутствует, проверяем, влезает ли список отобранных задач в основной состав:
+                self.areTasksFit(self.hoursUnused, tasksToPut)
+            * Если влезает:
+                * Для каждой задачи из списка:
+                    * вызываем self.acceptTask(task1)
+                    * изменяем статусы связей для всех связей кандидата, где текущая задача является ассоциированной:
+                        * если связь - "последовательно", связь деактивируем (т.е. она в будущем уже 
+                            не будет учитываться при постановке задач)
+                        * если связь - "альтернатива", связь активируем
+                        * если связь - "одновременно", связь деактивируем И создаём активную связь типа "уже взято"
+        """
         # allTasks нужен только чтобы отработать связь relConcurrent
         # !!! Что-то придумать, чтобы не тащить !!!
 
