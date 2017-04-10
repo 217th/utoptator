@@ -51,6 +51,7 @@ class Task:
         self.primIsMandatory, self.secIsPreferred = random.choice(15*[[False, False]] +
                                                                   [[True, False]] +
                                                                   [[False, True]])
+        self.partialIsPermitted = random.choice(15*[False] + [True])
         log.task(self.taskId, 'primary is mandatory', self.primIsMandatory)
         log.task(self.taskId, 'secondary is preferred', self.secIsPreferred)
         self.relConcurrent = []
@@ -212,6 +213,7 @@ class Candidate:
     #   candId - уникальный id кандидата (int, генерируется инкрементально)
     #   additionalTo - указываем кандидата, состав которого полностью включает данный кандидат
     #   tasks - список задач, включённых в кандидат (list of Tasks)
+    #   tEnrld - список экземпляров класса TaskEnrolled - задач и их кусков, включённых в кандидата
     #   hoursUnused - list of Quota
     #   lastGroupId - идентификатор последней группы, из которой ПЫТАЛИСЬ включить задачи (могли и не включить)
     #   checkSum - контрольная сумма кандидата
@@ -249,8 +251,7 @@ class Candidate:
             method,
             ifNoBasicCandHoursUnused,
             ifNoBasicCandOverallRels,
-            overallTasksList,
-            silentMode = "silent"
+            overallTasksList
     ):
 
         self.isUsed = False
@@ -258,6 +259,7 @@ class Candidate:
         self.additionalTo = basicCand
         self.lastGroupId = group.groupId
         self.checkSum = ''
+        self.tEnrld = list()
         self.tasks = list()
 
         log.groupAndCand(group.groupId, self.candId, 'candidate is created for group')
@@ -272,7 +274,8 @@ class Candidate:
             self.hoursUnused = copy.deepcopy(basicCand.hoursUnused)
             self.rels = copy.deepcopy(basicCand.rels)
 
-        log.cand(self.candId, 'candidate\'s initial hours:', [x.hoursPrimary for x in self.hoursUnused])
+        log.cand(self.candId, 'candidate\'s initial primary hours:', [x.hoursPrimary for x in self.hoursUnused])
+        log.cand(self.candId, 'candidate\'s initial secondary hours:', [x.hoursSecondary for x in self.hoursUnused])
         log.cand(self.candId, 'method set for candidate:', method)
 
         if group.tasks:
@@ -350,21 +353,51 @@ class Candidate:
                    [x.hours for x in task.taskEstimates]
                    )
                   )
-
         print("Осталось часов: %s" % [x.hoursPrimary for x in self.hoursUnused])
 
     @staticmethod
     def areTasksFit(quotaList, taskList):
         # Возвращает True, если все задачи влезают
         # Пока делаем только постановку в основной состав всей кучи переданных задач
+
+        # Считаем суммарные оценки всех задач, которые надо поставить
         overallEstimates = [0] * len(quotaList)
         for task in taskList:
             overallEstimates = [x.hours+y for x, y in zip(task.taskEstimates, overallEstimates)]
-        areFit = [x <= y.hoursPrimary for x, y in zip(overallEstimates, quotaList)]
+
+        # Сравниваем с квотами основного состава,
+        #   основного состава + резерва,
+        #   основного состава + резерва + экстра часов
+        areFitToPrim = [x <= y.hoursPrimary
+                        for x, y in zip(overallEstimates, quotaList)]
+        areFitToPrimSec = [x <= (y.hoursPrimary+y.hoursSecondary)
+                           for x, y in zip(overallEstimates, quotaList)]
+        areFitToPrimSecExcess = [x <= (y.hoursPrimary+y.hoursSecondary+y.hoursExcess)
+                           for x, y in zip(overallEstimates, quotaList)]
+
+        # Возвращаем:
+        #   False, False, False - если НЕ входит в основной+резерв+экстра
+        #   False, False, True - если входит только в основной+резерв+экстра
+        #   False, True, True - если входит в основной+резерв
+        #   True, True, True - если входит в основной
+        #   True, False, True - если входит в основной+экстра
+        #    - если входит в резерв
+        #    - если входит в резерв+экстра
+        if False in areFitToPrimSecExcess:
+            return False, False, False
+        elif False not in areFitToPrimSecExcess and False in areFitToPrimSec:
+            return False, False, True
+        elif False not in areFitToPrimSecExcess and False not in areFitToPrimSec and False in areFitToPrim:
+            return
+
+
+
+
         if False in areFit:
             return False
         else:
             return True
+
 
     def tryToPutSingleTask(self, task, allTasks, groupId):
         """
@@ -423,12 +456,14 @@ class Candidate:
                             [x.relType for x in taskActiveRelsArray])
             log.taskAndCand(task.taskId, self.candId, 'task is retired because of blocks, tasks...',
                             [x.assocTaskId for x in taskActiveRelsArray])
+            return "notEnrolledBecauseOfLocks"
         else:
             # Проверяем, влезает ли список задач
             tasksAreFit = self.areTasksFit(self.hoursUnused, tasksToPut)
             if not tasksAreFit:
                 log.taskAndCand(task.taskId, self.candId, 'task (and its concurrents) are not fit',
                                 [x.taskId for x in tasksToPut])
+                return "notEnrolledBecauseOfHours"
             else:
                 log.taskAndCand(task.taskId, self.candId, 'task (and its concurrents) are fit',
                                 [x.taskId for x in tasksToPut])
@@ -452,6 +487,7 @@ class Candidate:
                                 )
 
                 log.cand(self.candId, 'primary hours remaining:', [x.hoursPrimary for x in self.hoursUnused])
+                return "sucessfullyEnrolled"
 
 
 class Group:
