@@ -356,47 +356,57 @@ class Candidate:
         print("Осталось часов: %s" % [x.hoursPrimary for x in self.hoursUnused])
 
     @staticmethod
-    def areTasksFit(quotaList, taskList):
-        # Возвращает True, если все задачи влезают
-        # Пока делаем только постановку в основной состав всей кучи переданных задач
+    def areTasksFit(quotaList, taskList, partsAreAllowed=False):
+        """
+        Для задач, июмеющих связи relConcurrent, частичная постановка НЕ ПОДДЕРЖИВАЕТСЯ
+        
+        partsAreAllowed - если True, предпринимаем попытки частичной постановки задачи
+        """
 
         # Считаем суммарные оценки всех задач, которые надо поставить
         overallEstimates = [0] * len(quotaList)
         for task in taskList:
             overallEstimates = [x.hours+y for x, y in zip(task.taskEstimates, overallEstimates)]
 
-        # Сравниваем с квотами основного состава,
+        # Сравниваем с квотами:
+        #   основного состава,
+        #   резерва,
         #   основного состава + резерва,
         #   основного состава + резерва + экстра часов
         areFitToPrim = [x <= y.hoursPrimary
+                        for x, y in zip(overallEstimates, quotaList)]
+        areFitToSec = [x <= y.hoursSecondary
                         for x, y in zip(overallEstimates, quotaList)]
         areFitToPrimSec = [x <= (y.hoursPrimary+y.hoursSecondary)
                            for x, y in zip(overallEstimates, quotaList)]
         areFitToPrimSecExcess = [x <= (y.hoursPrimary+y.hoursSecondary+y.hoursExcess)
                            for x, y in zip(overallEstimates, quotaList)]
 
-        # Возвращаем:
-        #   False, False, False - если НЕ входит в основной+резерв+экстра
-        #   False, False, True - если входит только в основной+резерв+экстра
-        #   False, True, True - если входит в основной+резерв
-        #   True, True, True - если входит в основной
-        #   True, False, True - если входит в основной+экстра
-        #    - если входит в резерв
-        #    - если входит в резерв+экстра
-        if False in areFitToPrimSecExcess:
-            return False, False, False
-        elif False not in areFitToPrimSecExcess and False in areFitToPrimSec:
-            return False, False, True
-        elif False not in areFitToPrimSecExcess and False not in areFitToPrimSec and False in areFitToPrim:
-            return
+        # Если False в areFitToPrimSecExcess - не влезает никак
+        # Если нет False в areFitToPrimSecExcess, но есть в areFitToPrimSec -
+        #       влезает в сумму основного и резерва и экстра (в таком случае ставим в резерв, добавляя экстра
+        #       и перераспределяя часы)
+        # Если нет False в areFitToPrimSec, но есть в areFitToPrim И есть в areFitToSec -
+        #       влезает в сумму основного и резерва (в таком случае ставим в резерв, перераспределяя часы)
+        # Если нет False в areFitToPrim -
+        #       влезает в основной состав (туда и ставим)
+        # Если нет False в areFitToSec -
+        #       влезает в резервный состав (туда и ставим)
+        # Помимо влезаемости, нужно анализировать условия:
+        #       primIsMandatory
+        #       secIsPreferred
+        # Если среди одновременных задач есть primIsMandatory, рассматривается только постановка в основной состав
+        # Если среди одновременных задач есть secIsPreferred, приоритетно рассматривается постановка в резерв
+        # Если среди одновременных задач есть и primIsMandatory, и secIsPreferred, рассматривается только постановка
+        #       в основной состав
+
+        if len(taskList) == 1:
+            pass
+        elif len(taskList) > 1:
+            if False in areFitToPrimSecExcess:
+                return False
 
 
-
-
-        if False in areFit:
-            return False
-        else:
-            return True
 
 
     def tryToPutSingleTask(self, task, allTasks, groupId):
@@ -448,7 +458,7 @@ class Candidate:
         if len(tasksToPut)>1:
             log.taskAndCand(task.taskId, self.candId, 'trying to put task together with concurrents:',
                             [x.taskId for x in tasksToPut])
-        else:
+        elif len(tasksToPut) == 1:
             log.taskAndCand(task.taskId, self.candId, 'no concurrences for task')
 
         if not trialIsFreeOfLocks:
@@ -459,6 +469,8 @@ class Candidate:
             return "notEnrolledBecauseOfLocks"
         else:
             # Проверяем, влезает ли список задач
+            # Если в tasksToPut БОЛЕЕ ОДНОЙ задачи,
+            #   ЧАСТИЧНАЯ постановка задач НЕ ПОДДЕРЖИВАЕТСЯ
             tasksAreFit = self.areTasksFit(self.hoursUnused, tasksToPut)
             if not tasksAreFit:
                 log.taskAndCand(task.taskId, self.candId, 'task (and its concurrents) are not fit',
