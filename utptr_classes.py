@@ -268,7 +268,7 @@ class Candidate:
             log.cand(self.candId, 'candidate is additional to other candidate:', self.additionalTo.candId)
         log.cand(self.candId, 'candidate last group id is:', self.lastGroupId)
 
-        if basicCand == False:
+        if basicCand is False:
             self.hoursUnused = copy.deepcopy(ifNoBasicCandHoursUnused)
             self.rels = copy.deepcopy(ifNoBasicCandOverallRels)
         else:
@@ -312,9 +312,34 @@ class Candidate:
         self.checkSum = h.hexdigest()
         return ()
 
-    def acceptTask(self, task):
+    def acceptTask(self, task, target, completeness='complete'):
+        """
+        Возможные значения target:
+            False
+            'fitToPrim'
+            'fitToSec'
+            'fitToPrimSec'
+            'fitToPrimSecExcess'
+        """
         self.tasks.append(task)
-        self.hoursUnused = [x.substractHours(y) for x, y in zip(self.hoursUnused, task.taskEstimates)]
+
+        if target in ['fitToSec', 'fitToPrimSec']:
+            dest = 'sec'
+            isExtraHoursUsed = False
+        if target in ['fitToPrimSecExcess']:
+            dest = 'sec'
+            isExtraHoursUsed = True
+        elif target in ['fitToPrim']:
+            dest = 'prim'
+            isExtraHoursUsed = False
+        else:
+            print(self.hl("Candidate.acceptTask", "r") + "В задаче %s передан target неизвестный или False" % task.id)
+            return False
+        taskEnrolled = TaskEnrolled(task, completeness, dest, isExtraHoursUsed)
+        self.tEnrld.append(taskEnrolled)
+
+        self.hoursUnused = [x.substractHours(target, y) for x, y in zip(self.hoursUnused, task.taskEstimates)]
+
         self.refreshChecksum()
         log.taskAndCand(task.taskId, self.candId, 'task is accepted to candidate, total tasks inside:',
                         len(self.tasks))
@@ -576,8 +601,8 @@ class Candidate:
             # Если в tasksToPut БОЛЕЕ ОДНОЙ задачи,
             #   ЧАСТИЧНАЯ постановка задач НЕ ПОДДЕРЖИВАЕТСЯ
 
-            multiplicity, areFit = self.areTasksFit(self.hoursUnused, tasksToPut)
-            if not areFit:
+            multiplicity, dest = self.areTasksFit(self.hoursUnused, tasksToPut)
+            if not dest:
                 log.taskAndCand(task.taskId, self.candId, 'task (and its concurrents) are not fit',
                                 [x.taskId for x in tasksToPut])
                 # return "notEnrolledBecauseOfHours"
@@ -586,7 +611,7 @@ class Candidate:
                                 [x.taskId for x in tasksToPut])
 
                 for task1 in tasksToPut:
-                    self.acceptTask(task1, areFit)
+                    self.acceptTask(task1, dest)
 
                     for rel in self.rels:
                         if rel.assocTaskId is task1.taskId:
@@ -602,18 +627,6 @@ class Candidate:
                                                         "",
                                                         False)
                                 )
-
-
-
-
-
-
-
-
-
-
-
-
 
             log.cand(self.candId, 'primary hours remaining:', [x.hoursPrimary for x in self.hoursUnused])
             log.cand(self.candId, 'secondary hours remaining:', [x.hoursSecondary for x in self.hoursUnused])
@@ -723,10 +736,53 @@ class Quota(Estimate):
         self.hoursSecondary = hoursSecondary
         self.hoursExcess = hoursExcess
 
-    def substractHours(self, estimate):
-        # Пока только из основного состава (hoursPrimary)
+    def substractHours(self, target, estimate):
+        """
+        Возможные значения target:
+            False
+            'fitToPrim'
+            'fitToSec'
+            'fitToPrimSec'
+            'fitToPrimSecExcess'
+        """
         if self.devId is estimate.devId:
-            self.hoursPrimary -= estimate.hours
+            if not target:
+                return False
+            elif target == 'fitToPrim':
+                self.hoursPrimary -= estimate.hours
+            elif target == 'fitToSec':
+                self.hoursSecondary -= estimate.hours
+            elif target == 'fitToPrimSec':
+                self.hoursSecondary -= estimate.hours
+                if self.hoursSecondary < 0:
+                    hoursToMoveBetween = -self.hoursSecondary
+                    self.hoursPrimary -= hoursToMoveBetween
+                    self.hoursSecondary += hoursToMoveBetween
+            elif target == 'fitToPrimSecExcess':
+                self.hoursSecondary -= estimate.hours
+                if self.hoursSecondary < 0:
+                    hoursToMoveBetween = -self.hoursSecondary
+                    self.hoursPrimary -= hoursToMoveBetween
+                    self.hoursSecondary += hoursToMoveBetween
+                    if self.hoursPrimary < 0:
+                        hoursToMoveFromExtra = -self.hoursPrimary
+                        self.hoursExcess -= hoursToMoveFromExtra
+                        self.hoursPrimary += hoursToMoveFromExtra
+            if self.hoursPrimary < 0:
+                print(self.hl("Quota.substractHours", "r") +
+                      "Отрицательный остаток часов %s в основном составе" % self.hoursPrimary
+                      )
+                return False
+            if self.hoursSecondary < 0:
+                print(self.hl("Quota.substractHours", "r") +
+                      "Отрицательный остаток часов %s в резервном составе" % self.hoursSecondary
+                      )
+                return False
+            if self.hoursExcess < 0:
+                print(self.hl("Quota.substractHours", "r") +
+                      "Отрицательный остаток часов %s в экстра часах" % self.hoursExcess
+                      )
+                return False
             return self
         else:
             print(self.hl("Quota.substractHours", "r") + "Несоответствие devId. Квоты: %s Оценки: %s" %
