@@ -261,6 +261,7 @@ class Candidate:
         self.checkSum = ''
         self.tEnrld = list()
         self.tasks = list()
+        self.overallGroupIsCompletelyInExceptRelLocks = True
 
         log.groupAndCand(group.groupId, self.candId, 'candidate is created for group')
         if self.additionalTo:
@@ -356,11 +357,32 @@ class Candidate:
         print("Осталось часов: %s" % [x.hoursPrimary for x in self.hoursUnused])
 
     @staticmethod
-    def areTasksFit(quotaList, taskList, partsAreAllowed=False):
+    def areTasksFit(quotaList, taskList):
         """
+        Применяется, если надо проверить вхождение нескольких задач разом.
+        То есть либо все разом входят (в основной или резерв), либо НЕ входят.
         Для задач, июмеющих связи relConcurrent, частичная постановка НЕ ПОДДЕРЖИВАЕТСЯ
+
+        Результат выполнения функции воспринимается как однозначная рекомендация по способу постановки задач.
+        Собствено постановка задач выполняется за пределами данной функции.
         
-        partsAreAllowed - если True, предпринимаем попытки частичной постановки задачи
+        Функция возвращает tuple, у которого:
+            первое значение - в отношении какой части задачи/задач применяется результат
+            второе значение - куда можно поставить
+        
+        Возможные первые значения:
+            'multipleTasks'
+            'singleTask'
+            'backendOnly' - !!! пока не поддерживается
+            'htmlCssOnly' - !!! пока не поддерживается
+            'backendAndHtmlCssOnly' - !!! пока не поддерживается
+
+        Возможные вторые значения:
+            False
+            'fitToPrim'
+            'fitToSec'
+            'fitToPrimSec'
+            'fitToPrimSecExcess'
         """
 
         # Считаем суммарные оценки всех задач, которые надо поставить
@@ -382,6 +404,96 @@ class Candidate:
         areFitToPrimSecExcess = [x <= (y.hoursPrimary+y.hoursSecondary+y.hoursExcess)
                            for x, y in zip(overallEstimates, quotaList)]
 
+        if True in [task.primIsMandatory for task in taskList]:
+            isPrimMandatory = True
+        else:
+            isPrimMandatory = False
+
+        if True in [task.secIsPreferred for task in taskList]:
+            isSecPreferred = True
+        else:
+            isSecPreferred = False
+
+        if len(taskList) > 1:
+            """Обработка случая, когда пытаемся поставить сразу несколько задач"""
+            if False in areFitToPrimSecExcess:
+                self.overallGroupIsCompletelyInExceptRelLocks = False
+                return 'multipleTasks', False
+            elif (False not in areFitToPrimSecExcess
+                  and False in areFitToPrimSec
+                  and not isPrimMandatory):
+                return 'multipleTasks', 'fitToPrimSecExcess'
+            elif (False not in areFitToPrimSecExcess
+                  and False not in areFitToPrimSec
+                  and False in areFitToSec
+                  and False in areFitToPrim
+                  and not isPrimMandatory):
+                return 'multipleTasks', 'fitToPrimSec'
+            elif (False not in areFitToPrimSecExcess
+                  and False not in areFitToPrimSec
+                  and False not in areFitToSec
+                  and False in areFitToPrim
+                  and not isPrimMandatory):
+                return 'multipleTasks', 'fitToSec'
+            elif (False not in areFitToPrimSecExcess
+                  and False not in areFitToPrimSec
+                  and False in areFitToSec
+                  and False not in areFitToPrim):
+                return 'multipleTasks', 'fitToPrim'
+            elif (False not in areFitToPrimSecExcess
+                  and False not in areFitToPrimSec
+                  and False not in areFitToSec
+                  and False not in areFitToPrim):
+                if not isPrimMandatory and isSecPreferred:
+                    return 'multipleTasks', 'fitToSec'
+                elif not isPrimMandatory and not isSecPreferred:
+                    return 'multipleTasks', 'fitToPrim'
+                elif isPrimMandatory:
+                    return 'multipleTasks', 'fitToPrim'
+            else:
+                self.overallGroupIsCompletelyInExceptRelLocks = False
+                return 'multipleTasks', False
+
+        elif len(taskList) == 1:
+            """Обработка случая, когда пытаемся поставить сразу ТОЛЬКО ОДНУ задачу"""
+            if False in areFitToPrimSecExcess:
+                self.overallGroupIsCompletelyInExceptRelLocks = False
+                return 'singleTask', False
+            elif (False not in areFitToPrimSecExcess
+                  and False in areFitToPrimSec
+                  and not isPrimMandatory):
+                return 'singleTask', 'fitToPrimSecExcess'
+            elif (False not in areFitToPrimSecExcess
+                  and False not in areFitToPrimSec
+                  and False in areFitToSec
+                  and False in areFitToPrim
+                  and not isPrimMandatory):
+                return 'singleTask', 'fitToPrimSec'
+            elif (False not in areFitToPrimSecExcess
+                  and False not in areFitToPrimSec
+                  and False not in areFitToSec
+                  and False in areFitToPrim
+                  and not isPrimMandatory):
+                return 'singleTask', 'fitToSec'
+            elif (False not in areFitToPrimSecExcess
+                  and False not in areFitToPrimSec
+                  and False in areFitToSec
+                  and False not in areFitToPrim):
+                return 'singleTask', 'fitToPrim'
+            elif (False not in areFitToPrimSecExcess
+                  and False not in areFitToPrimSec
+                  and False not in areFitToSec
+                  and False not in areFitToPrim):
+                if not isPrimMandatory and isSecPreferred:
+                    return 'singleTask', 'fitToSec'
+                elif not isPrimMandatory and not isSecPreferred:
+                    return 'singleTask', 'fitToPrim'
+                elif isPrimMandatory:
+                    return 'singleTask', 'fitToPrim'
+            else:
+                self.overallGroupIsCompletelyInExceptRelLocks = False
+                return 'singleTask', False
+
         # Если False в areFitToPrimSecExcess - не влезает никак
         # Если нет False в areFitToPrimSecExcess, но есть в areFitToPrimSec -
         #       влезает в сумму основного и резерва и экстра (в таком случае ставим в резерв, добавляя экстра
@@ -395,18 +507,10 @@ class Candidate:
         # Помимо влезаемости, нужно анализировать условия:
         #       primIsMandatory
         #       secIsPreferred
-        # Если среди одновременных задач есть primIsMandatory, рассматривается только постановка в основной состав
+        # Если среди одновременных задач есть primIsMandatory, рассматривается ТОЛЬКО постановка в основной состав
         # Если среди одновременных задач есть secIsPreferred, приоритетно рассматривается постановка в резерв
         # Если среди одновременных задач есть и primIsMandatory, и secIsPreferred, рассматривается только постановка
         #       в основной состав
-
-        if len(taskList) == 1:
-            pass
-        elif len(taskList) > 1:
-            if False in areFitToPrimSecExcess:
-                return False
-
-
 
 
     def tryToPutSingleTask(self, task, allTasks, groupId):
@@ -466,22 +570,23 @@ class Candidate:
                             [x.relType for x in taskActiveRelsArray])
             log.taskAndCand(task.taskId, self.candId, 'task is retired because of blocks, tasks...',
                             [x.assocTaskId for x in taskActiveRelsArray])
-            return "notEnrolledBecauseOfLocks"
+            # return "notEnrolledBecauseOfLocks"
         else:
             # Проверяем, влезает ли список задач
             # Если в tasksToPut БОЛЕЕ ОДНОЙ задачи,
             #   ЧАСТИЧНАЯ постановка задач НЕ ПОДДЕРЖИВАЕТСЯ
-            tasksAreFit = self.areTasksFit(self.hoursUnused, tasksToPut)
-            if not tasksAreFit:
+
+            multiplicity, areFit = self.areTasksFit(self.hoursUnused, tasksToPut)
+            if not areFit:
                 log.taskAndCand(task.taskId, self.candId, 'task (and its concurrents) are not fit',
                                 [x.taskId for x in tasksToPut])
-                return "notEnrolledBecauseOfHours"
+                # return "notEnrolledBecauseOfHours"
             else:
                 log.taskAndCand(task.taskId, self.candId, 'task (and its concurrents) are fit',
                                 [x.taskId for x in tasksToPut])
 
                 for task1 in tasksToPut:
-                    self.acceptTask(task1)
+                    self.acceptTask(task1, areFit)
 
                     for rel in self.rels:
                         if rel.assocTaskId is task1.taskId:
@@ -498,8 +603,22 @@ class Candidate:
                                                         False)
                                 )
 
-                log.cand(self.candId, 'primary hours remaining:', [x.hoursPrimary for x in self.hoursUnused])
-                return "sucessfullyEnrolled"
+
+
+
+
+
+
+
+
+
+
+
+
+            log.cand(self.candId, 'primary hours remaining:', [x.hoursPrimary for x in self.hoursUnused])
+            log.cand(self.candId, 'secondary hours remaining:', [x.hoursSecondary for x in self.hoursUnused])
+            log.cand(self.candId, 'extra hours remaining:', [x.hoursExcess for x in self.hoursUnused])
+            # return "sucessfullyEnrolled"
 
 
 class Group:
