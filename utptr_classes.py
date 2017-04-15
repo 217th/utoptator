@@ -105,6 +105,8 @@ class Task:
             sumOfHours = sum([x.hours for x in self.taskEstimates if x.devType == 'backenddev'])
         elif completeness is 'htmlcssOnly':
             sumOfHours = sum([x.hours for x in self.taskEstimates if x.devType == 'htmlcssdev'])
+        else:
+            sumOfHours = self.taskEstimatesSum
         score = round(priorityFactor[self.taskPrior] *
                       sumOfHours *
                       completenessFactor[completeness] *
@@ -305,14 +307,15 @@ class Candidate:
     def refreshChecksum(self):
         import hashlib
         h = hashlib.md5()
-        dataList = sorted([x.id.hex for x in self.tasks])
+        dataList = sorted([(taskEnrolled.task.id.hex + taskEnrolled.dest + taskEnrolled.completeness)
+                           for taskEnrolled in self.tEnrld])
         # Потом в расчёт контрольной суммы нужно будет добавить расширенный статус вхождения задачи
         for element in dataList:
             h.update(element.encode())
         self.checkSum = h.hexdigest()
         return ()
 
-    def acceptTask(self, task, target, completeness='complete'):
+    def acceptTask(self, task, target, completeness='completely'):
         """
         Возможные значения target:
             False
@@ -321,12 +324,12 @@ class Candidate:
             'fitToPrimSec'
             'fitToPrimSecExcess'
         """
-        self.tasks.append(task)
+        # self.tasks.append(task)
 
         if target in ['fitToSec', 'fitToPrimSec']:
             dest = 'sec'
             isExtraHoursUsed = False
-        if target in ['fitToPrimSecExcess']:
+        elif target in ['fitToPrimSecExcess']:
             dest = 'sec'
             isExtraHoursUsed = True
         elif target in ['fitToPrim']:
@@ -343,13 +346,19 @@ class Candidate:
         self.refreshChecksum()
         log.taskAndCand(task.taskId, self.candId, 'task is accepted to candidate, total tasks inside:',
                         len(self.tasks))
+        log.taskAndCand(task.taskId, self.candId, 'task is accepted to candidate, destination is:',
+                        dest)
+
 
     def getScore(self):
         scorePrim = 0
         scoreSec = 0
-        for task in self.tasks:
-            scorePrim += task.taskScore
-        return (scorePrim, scoreSec)
+        for taskEnrolled in self.tEnrld:
+            if taskEnrolled.dest == 'prim':
+                scorePrim += taskEnrolled.score
+            elif taskEnrolled.dest == 'sec':
+                scoreSec += taskEnrolled.score
+        return scorePrim, scoreSec
 
     def print(self):
         print("------------------------------\n------------------------------\n------------------------------")
@@ -357,7 +366,7 @@ class Candidate:
             print(self.hl("Candidate.print", "g") +
                   "\nСостав-кандидат № %s - всего %s задач - последняя группа %s - добавочный к %s - ценность %s" %
                   (self.candId,
-                   len(self.tasks),
+                   len(self.tEnrld),
                    self.lastGroupId,
                    self.additionalTo.candId,
                    round(self.getScore()[0], 1))
@@ -366,23 +375,22 @@ class Candidate:
             print(self.hl("Candidate.print", "g") +
                   "\nСостав-кандидат № %s - всего %s задач - последняя группа %s - ценность %s" %
                   (self.candId,
-                   len(self.tasks),
+                   len(self.tEnrld),
                    self.lastGroupId,
                    round(self.getScore()[0], 1))
                   )
 
-        for task in self.tasks:
+        for taskEnrolled in self.tEnrld:
             print("Задача %s - тип %s - приоритет %s - оценки %s" %
-                  (task.taskId,
-                   task.taskType,
-                   task.taskPrior,
-                   [x.hours for x in task.taskEstimates]
+                  (taskEnrolled.task.taskId,
+                   taskEnrolled.task.taskType,
+                   taskEnrolled.task.taskPrior,
+                   [x.hours for x in taskEnrolled.task.taskEstimates]
                    )
                   )
         print("Осталось часов: %s" % [x.hoursPrimary for x in self.hoursUnused])
 
-    @staticmethod
-    def areTasksFit(quotaList, taskList):
+    def areTasksFit(self, quotaList, taskList):
         """
         Применяется, если надо проверить вхождение нескольких задач разом.
         То есть либо все разом входят (в основной или резерв), либо НЕ входят.
@@ -426,8 +434,8 @@ class Candidate:
                         for x, y in zip(overallEstimates, quotaList)]
         areFitToPrimSec = [x <= (y.hoursPrimary+y.hoursSecondary)
                            for x, y in zip(overallEstimates, quotaList)]
-        areFitToPrimSecExcess = [x <= (y.hoursPrimary+y.hoursSecondary+y.hoursExcess)
-                           for x, y in zip(overallEstimates, quotaList)]
+        areFitToPrimSecExcess = [x <= (y.hoursPrimary+y.hoursSecondary+y.hoursExcess) \
+                                 for x, y in zip(overallEstimates, quotaList)]
 
         if True in [task.primIsMandatory for task in taskList]:
             isPrimMandatory = True
@@ -601,8 +609,8 @@ class Candidate:
             # Если в tasksToPut БОЛЕЕ ОДНОЙ задачи,
             #   ЧАСТИЧНАЯ постановка задач НЕ ПОДДЕРЖИВАЕТСЯ
 
-            multiplicity, dest = self.areTasksFit(self.hoursUnused, tasksToPut)
-            if not dest:
+            multiplicity, target = self.areTasksFit(self.hoursUnused, tasksToPut)
+            if not target:
                 log.taskAndCand(task.taskId, self.candId, 'task (and its concurrents) are not fit',
                                 [x.taskId for x in tasksToPut])
                 # return "notEnrolledBecauseOfHours"
@@ -611,7 +619,7 @@ class Candidate:
                                 [x.taskId for x in tasksToPut])
 
                 for task1 in tasksToPut:
-                    self.acceptTask(task1, dest)
+                    self.acceptTask(task1, target)
 
                     for rel in self.rels:
                         if rel.assocTaskId is task1.taskId:

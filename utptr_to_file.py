@@ -119,18 +119,20 @@ def writeReportToXLS(
 
     ws = wb.add_sheet('rawCands', cell_overwrite_ok = True)
     for cand in rawCandsList:
-        ws.write(cand[1], cand[2] * 8, str(cand[0]))
-        if len(cand) > 7:
-            ws.write(cand[1], cand[2] * 8 + 1, str(cand[1]), styleYellow)
+        ws.write(cand[1], cand[2] * 10, str(cand[0]))
+        if len(cand) > 9:
+            ws.write(cand[1], cand[2] * 10 + 1, str(cand[1]), styleYellow)
         else:
-            ws.write(cand[1], cand[2] * 8 + 1, str(cand[1]), styleRed)
-        ws.write(cand[1], cand[2]*8+2, str(cand[2]))
-        ws.write(cand[1], cand[2]*8+3, str(cand[3]))
-        ws.write(cand[1], cand[2]*8+4, str(cand[4]))
-        ws.write(cand[1], cand[2]*8+5, str(cand[5]))
-        ws.write(cand[1], cand[2]*8+6, cand[6])
-        if len(cand) > 7:
-            ws.write(cand[1], cand[2] * 8 + 7, cand[7])
+            ws.write(cand[1], cand[2] * 10 + 1, str(cand[1]), styleRed)
+        ws.write(cand[1], cand[2]*10+2, str(cand[2]))
+        ws.write(cand[1], cand[2]*10+3, str(cand[3]))
+        ws.write(cand[1], cand[2]*10+4, str(cand[4]))
+        ws.write(cand[1], cand[2]*10+5, str(cand[5]))
+        ws.write(cand[1], cand[2]*10+6, str(cand[6]))
+        ws.write(cand[1], cand[2]*10+7, str(cand[7]))
+        ws.write(cand[1], cand[2]*10+8, cand[8])
+        if len(cand) > 9:
+            ws.write(cand[1], cand[2] * 10 + 9, cand[9])
 
     ws = wb.add_sheet('rawCandsActive', cell_overwrite_ok = True)
     rawCandsOnlyActiveList.sort(key=lambda x: x[0], reverse=False)
@@ -139,7 +141,9 @@ def writeReportToXLS(
               "lastGroupId",
               "checkSum",
               "numberOfTasks",
-              "hoursUnused",
+              "hoursUnusedPrim",
+              "hoursUnusedSec",
+              "hoursUnusedExcess",
               "method"]
     for i in range(len(header)):
         ws.write(0, i, header[i], styleOrange)
@@ -150,6 +154,7 @@ def writeReportToXLS(
     ws = wb.add_sheet('rawCandsTasks', cell_overwrite_ok = True)
     header = ["candId",
               "groupId",
+              "dest",
               "taskId",
               "taskPrior",
               "taskType",
@@ -171,7 +176,9 @@ def writeReportToXLS(
     header = ["candId",
                      "len(tasks)",
                      "candScore",
-                     "hoursUnused",
+                     "hoursUnusedPrim",
+                     "hoursUnusedSec",
+                     "hoursUnusedExcess",
                      "checkSum"]
     for i in range(len(header)):
         ws.write(0, i, header[i], styleOrange)
@@ -189,32 +196,40 @@ def writeReportToXLS(
         ws.write(1, 1, str(cand[0][1]))
         ws.write(2, 0, "score:")
         ws.write(2, 1, str(cand[0][2]))
-        ws.write(3, 0, "hoursUnused:")
+        ws.write(3, 0, "hoursUnusedPrim:")
         ws.write(3, 1, str(cand[0][3]))
-        ws.write(4, 0, "checkSum:")
+        ws.write(4, 0, "hoursUnusedSec:")
         ws.write(4, 1, str(cand[0][4]))
+        ws.write(5, 0, "hoursUnusedExcess:")
+        ws.write(5, 1, str(cand[0][5]))
+        ws.write(6, 0, "checkSum:")
+        ws.write(6, 1, str(cand[0][6]))
 
-        header = ["taskId",
+        header = ["dest",
+                "taskId",
                 "taskPrior",
                 "taskType",
                 "taskEstimates",
                 "taskScore",
+                "taskEnrolledScore",
                 "relConcurrent",
                 "relAlternative",
                 "relSequent"
               ]
         for i in range(len(header)):
-            ws.write(6, i, header[i], styleOrange)
+            ws.write(8, i, header[i], styleOrange)
 
         for i in range(len(cand)):
-            ws.write(i+7, 0, str(cand[i][5]))
-            ws.write(i+7, 1, str(cand[i][6]))
-            ws.write(i+7, 2, str(cand[i][7]))
-            ws.write(i+7, 3, str(cand[i][8]))
-            ws.write(i+7, 4, str(cand[i][9]))
-            ws.write(i+7, 5, str(cand[i][10]))
-            ws.write(i+7, 6, str(cand[i][11]))
-            ws.write(i+7, 7, str(cand[i][12]))
+            ws.write(i+9, 0, str(cand[i][7]))
+            ws.write(i+9, 1, str(cand[i][8]))
+            ws.write(i+9, 2, str(cand[i][9]))
+            ws.write(i+9, 3, str(cand[i][10]))
+            ws.write(i+9, 4, str(cand[i][11]))
+            ws.write(i+9, 5, str(cand[i][12]))
+            ws.write(i+9, 6, str(cand[i][13]))
+            ws.write(i+9, 7, str(cand[i][14]))
+            ws.write(i+9, 8, str(cand[i][15]))
+            ws.write(i+9, 9, str(cand[i][16]))
 
         header = ["relType",
                 "subjTaskId",
@@ -222,14 +237,14 @@ def writeReportToXLS(
                 "isActive"
               ]
         for i in range(len(header)):
-            ws.write(6, 9+i, header[i], styleOrange)
+            ws.write(6, 11+i, header[i], styleOrange)
 
         finalRelsForCand = [x for x in finalRelsList if x[0] == cand[0][0]]
         for i in range(len(finalRelsForCand)):
-            ws.write(i+7, 9, str(finalRelsForCand[i][1]))
-            ws.write(i+7, 10, str(finalRelsForCand[i][2]))
-            ws.write(i+7, 11, str(finalRelsForCand[i][3]))
-            ws.write(i+7, 12, str(finalRelsForCand[i][4]))
+            ws.write(i+7, 11, str(finalRelsForCand[i][1]))
+            ws.write(i+7, 12, str(finalRelsForCand[i][2]))
+            ws.write(i+7, 13, str(finalRelsForCand[i][3]))
+            ws.write(i+7, 14, str(finalRelsForCand[i][4]))
 
     wb.save("results/try." + time.strftime("%Y.%m.%d.%H.%M.%S", time.localtime()) + ".xls")
 

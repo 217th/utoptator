@@ -188,26 +188,29 @@ else:
                 newCand.candId,
                 newCand.lastGroupId,
                 newCand.checkSum,
-                'amnt '+str(len(newCand.tasks)),
+                'amnt '+str(len(newCand.tEnrld)),
                 [x.hoursPrimary for x in newCand.hoursUnused],
+                [x.hoursSecondary for x in newCand.hoursUnused],
+                [x.hoursExcess for x in newCand.hoursUnused],
                 method])
             if not isCandUnique(newCand):
                 forFileCandMeta.append('del')
 
             # Заполняем мета-информацию о задачах, вошедших в сырой кандидат, для вывода в файл
             forFileRawCandTasks = list()
-            for task in newCand.tasks:
+            for taskEnrolled in newCand.tEnrld:
                 forFileRawCandTasks.append([
                     newCand.candId,
                     newCand.lastGroupId,
-                    task.taskId,
-                    task.taskPrior,
-                    task.taskType,
-                    [x.hours for x in task.taskEstimates],
-                    round(task.taskScore, 1),
-                    task.relConcurrent,
-                    task.relAlternative,
-                    task.relSequent
+                    taskEnrolled.dest,
+                    taskEnrolled.task.taskId,
+                    taskEnrolled.task.taskPrior,
+                    taskEnrolled.task.taskType,
+                    [x.hours for x in taskEnrolled.task.taskEstimates],
+                    round(taskEnrolled.task.taskScore, 1),
+                    taskEnrolled.task.relConcurrent,
+                    taskEnrolled.task.relAlternative,
+                    taskEnrolled.task.relSequent
                 ])
 
             if isCandUnique(newCand):
@@ -270,7 +273,7 @@ else:
                     # Приклеиваем к более позднему всё из более раннего
                     # hoursUnused остаётся от позднего
                     # lastGroupId остаётся от позднего
-                    cand.tasks.extend(cand.additionalTo.tasks)
+                    cand.tEnrld.extend(cand.additionalTo.tEnrld)
                     cand.additionalTo = cand.additionalTo.additionalTo
                     cand.refreshChecksum()
 
@@ -340,29 +343,35 @@ else:
             forFileFinalCandMetaArray.append([
                 cand.candId,
                 len(cand.tasks),
-                round(cand.getScore()[0], 1),
+                cand.getScore(),
                 [x.hoursPrimary for x in cand.hoursUnused],
+                [x.hoursSecondary for x in cand.hoursUnused],
+                [x.hoursExcess for x in cand.hoursUnused],
                 cand.checkSum])
 
         # Заполнение массива с подробной информацией о задачах, вошедших в финальные кандидаты, для экспорта в файл
         forFileFinalCandsTasksList = []
         for cand in candsAssembled:
             forFileSingleFinalCandTasksList = []
-            for task in cand.tasks:
+            for taskEnrolled in cand.tEnrld:
                 forFileSingleFinalCandTasksList.append([
                     cand.candId,
-                    len(cand.tasks),
-                    round(cand.getScore()[0], 1),
+                    len(cand.tEnrld),
+                    cand.getScore(),
                     [x.hoursPrimary for x in cand.hoursUnused],
+                    [x.hoursSecondary for x in cand.hoursUnused],
+                    [x.hoursExcess for x in cand.hoursUnused],
                     cand.checkSum,
-                    task.taskId,
-                    task.taskPrior,
-                    task.taskType,
-                    [x.hours for x in task.taskEstimates],
-                    task.taskScore,
-                    task.relConcurrent,
-                    task.relAlternative,
-                    task.relSequent
+                    taskEnrolled.dest,
+                    taskEnrolled.task.taskId,
+                    taskEnrolled.task.taskPrior,
+                    taskEnrolled.task.taskType,
+                    [task.hours for task in taskEnrolled.task.taskEstimates],
+                    taskEnrolled.task.taskScore,
+                    taskEnrolled.score,
+                    taskEnrolled.task.relConcurrent,
+                    taskEnrolled.task.relAlternative,
+                    taskEnrolled.task.relSequent
                     ])
             forFileFinalCandsTasksList.append(forFileSingleFinalCandTasksList)
 

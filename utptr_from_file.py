@@ -18,16 +18,22 @@ def readDevs(firstRow = 4, lastRow = 28):
 
         devsArray = []
 
+        def notNumberToZero(val):
+            if not isinstance(val, int) and not isinstance(val, float):
+                return 0
+            else:
+                return val
+
         for i in range(firstRow, lastRow):
             devsArray.append(utptr_classes.Quota(colDevId[i].value,
                                                  colDevType[i].value,
                                                  colDevName[i].value,
-                                                 colDevHoursPrimary[i].value,
-                                                 colDevHoursSecondary[i].value,
-                                                 colDevHoursExcess[i].value))
-            log.dev(colDevId[i].value, 'created with primary hours', colDevHoursPrimary[i].value)
-            log.dev(colDevId[i].value, 'created with secondary hours', colDevHoursSecondary[i].value)
-            log.dev(colDevId[i].value, 'created with extra hours', colDevHoursExcess[i].value)
+                                                 notNumberToZero(colDevHoursPrimary[i].value),
+                                                 notNumberToZero(colDevHoursSecondary[i].value),
+                                                 notNumberToZero(colDevHoursExcess[i].value)))
+            log.dev(colDevId[i].value, 'created with primary hours', notNumberToZero(colDevHoursPrimary[i].value))
+            log.dev(colDevId[i].value, 'created with secondary hours', notNumberToZero(colDevHoursSecondary[i].value))
+            log.dev(colDevId[i].value, 'created with extra hours', notNumberToZero(colDevHoursExcess[i].value))
 
     else:
         print("Нет листа с разработчиками")
