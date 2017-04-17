@@ -136,9 +136,9 @@ else:
             return cands
 
 
-        def isCandUnique(candNew):
-            if cands:
-                for candExisted in reversed(cands):
+        def isCandUnique(candList, candNew):
+            if candList:
+                for candExisted in reversed(candList):
                     if candExisted.checkSum == candNew.checkSum\
                             and candExisted.lastGroupId == candNew.lastGroupId\
                             and candExisted.additionalTo == candNew.additionalTo:
@@ -193,7 +193,7 @@ else:
                 [x.hoursSecondary for x in newCand.hoursUnused],
                 [x.hoursExcess for x in newCand.hoursUnused],
                 method])
-            if not isCandUnique(newCand):
+            if not isCandUnique(cands, newCand):
                 forFileCandMeta.append('del')
 
             # Заполняем мета-информацию о задачах, вошедших в сырой кандидат, для вывода в файл
@@ -213,7 +213,7 @@ else:
                     taskEnrolled.task.relSequent
                 ])
 
-            if isCandUnique(newCand):
+            if isCandUnique(cands, newCand):
                 global cands
                 cands.append(newCand)
 
