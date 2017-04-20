@@ -35,43 +35,56 @@ def сreateTasksArray(n):
             task.setRandomRelations(tasksArray)
     else:
         print('Попросили слишком мало задач. Массив задач не заполнен.')
-    return (tasksArray)
+    return tasksArray
 
 
 print("----- (%s) Создаём задачи -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
 originalTasksArray = сreateTasksArray(100)
 log.general('list of %s tasks is created' % len(originalTasksArray))
 
-taskGroups = []
-i = 0
 
-'''
-for groupMeta in [     # ТЕСТОВЫЙ НАБОР МЕТАДАННЫХ
-    [[2], [0], "h"], [[2], [1], "h"], [[2], [2], "n"],
-    [[3, 1], [5], "l"]
-    ]:
-        taskGroups.append(utptr_classes.Group(i, groupMeta[0], groupMeta[1], groupMeta[2]))
-        i += 1
-del groupMeta
-'''
+def createTaskGroups(taskList, mode="prod"):
+    log.general('start creating blank groups')
+    if mode == 'test':
+        metaList = [
+            [[2], [0], "h"],
+            [[2], [1], "h"],
+            [[2], [2], "n"],
+            [[3, 1], [5], "l"]
+        ]
+    elif mode == 'prod':
+        # Немедл., оч. выс., выс. - сначала ошибки, потом разработка
+        # Высокенький - ошибки и разработка в одной группе
+        # Нормальный - ошибки и разработка в одной группе
+        # Низкий - ошибки и разрбаботка в одной группе
+        metaList = [
+            [[2], [0], "h"],
+            [[2], [1], "h"],
+            [[2], [2], "h"],
+            [[2], [3], "n"],
+            [[2], [4], "n"],
+            [[2], [5], "l"],
+            [[3], [0], "h"],
+            [[1], [0], "h"],
+            [[3], [1], "h"],
+            [[1], [1], "h"],
+            [[3], [2], "h"],
+            [[1], [2], "h"],
+            [[3, 1], [3], "n"],
+            [[3, 1], [4], "n"],
+            [[3, 1], [5], "l"]
+        ]
+    groupList = list()
+    for i1, meta in enumerate(metaList):
+        groupList.append(utptr_classes.Group(i1, meta[0], meta[1], meta[2]))
+    log.general('start distributing tasks to groups')
+    print("----- (%s) Распределяем задачи по группам -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
+    for gr in groupList:
+        gr.fillAndSort(taskList)
+    return groupList
 
-for groupMeta in [  # ПРОМЫШЛЕННЫЙ НАБОР МЕТАДАННЫХ
-    [[2], [0], "h"], [[2], [1], "h"], [[2], [2], "h"], [[2], [3], "n"], [[2], [4], "n"], [[2], [5], "l"],
-    # Вся поддержка
-    [[3], [0], "h"], [[1], [0], "h"], [[3], [1], "h"], [[1], [1], "h"], [[3], [2], "h"], [[1], [2], "h"],
-    # Немедл., оч. выс., выс. - сначала ошибки, потом разработка
-    [[3, 1], [3], "n"],  # Высокенький - ошибки и разработка в одной группе
-    [[3, 1], [4], "n"],  # Нормальный - ошибки и разработка в одной группе
-    [[3, 1], [5], "l"]  # Низкий - ошибки и разрбаботка в одной группе
-    ]:
-        taskGroups.append(utptr_classes.Group(i, groupMeta[0], groupMeta[1], groupMeta[2], "bubble"))
-        i += 1
-del groupMeta
+taskGroups = createTaskGroups(originalTasksArray, 'prod')
 
-log.general('start distributing tasks by groups')
-print("----- (%s) Распределяем задачи по группам -----" % datetime.datetime.now().strftime("%H:%M:%S.%f"))
-for group in taskGroups:
-    group.fillAndSort(originalTasksArray, "babble")
 
 def createOverallRelationsArray():
     # Временная функция для заполнения массива связей тестовыми данными
@@ -214,7 +227,6 @@ else:
                 ])
 
             if isCandUnique(cands, newCand):
-                global cands
                 cands.append(newCand)
 
             global forFileRawCandTasksArray

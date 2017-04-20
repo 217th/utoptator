@@ -1,7 +1,7 @@
-'''
+"""
 https://pythonworld.ru/moduli/modul-unittest.html
 https://docs.python.org/3/library/unittest.html
-'''
+"""
 
 import unittest
 import utptr_classes
